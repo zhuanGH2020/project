@@ -1,0 +1,2 @@
+# project
+cursor game demo
