@@ -1,0 +1,11 @@
+# Unity generated directories
+Client/Library/
+Client/Temp/
+
+# Additional Unity directories that are commonly ignored
+Client/Logs/
+Client/UserSettings/
+Client/.vs/
+Client/obj/ 
+
+*.csproj
