@@ -1,5 +1,13 @@
 {
   "dependencies": {
+    "com.boxqkrtm.ide.cursor": {
+      "version": "file:com.boxqkrtm.ide.cursor@38fecf55e4",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.test-framework": "1.1.9"
+      }
+    },
     "com.unity.collab-proxy": {
       "version": "2.3.1",
       "depth": 0,
