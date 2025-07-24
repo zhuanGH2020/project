@@ -1,0 +1,5 @@
+<linker>
+    <assembly fullname="Unity.Timeline">
+        <type fullname="UnityEngine.Timeline.SignalTrack" preserve="all"/>
+    </assembly>
+</linker>
