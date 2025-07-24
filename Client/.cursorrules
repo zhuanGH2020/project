@@ -78,16 +78,16 @@ Assets/
 │   │       └── Example/              # 示例代码
 │   │           └── ConfigExample.cs   # 使用示例
 │   ├── Actor/        # 角色系统
-│   ├── Objects/      # 建造对象系统
+│   ├── Object/      # 建造对象系统
 │   ├── UI/           # UI系统（MVC架构）
-│   ├── Managers/     # 管理器
+│   ├── Manager/     # 管理器
 │   └── Utils/        # 工具类
-├── Resources/        # 资源文件
-│   ├── Scenes/       # 场景
-│   ├── Prefabs/      # 预制体
-│   ├── Materials/    # 材质
-│   ├── Textures/     # 贴图
-│   ├── Models/       # 模型
+├── Res/        # 资源文件
+│   ├── Scene/       # 场景
+│   ├── Prefab/      # 预制体
+│   ├── Material/    # 材质
+│   ├── Texture/     # 贴图
+│   ├── Model/       # 模型
 │   └── Audio/        # 音频
 └── Plugins/          # 插件
 ```
