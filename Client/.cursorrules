@@ -63,7 +63,7 @@
 ### 文件夹结构
 ```
 Assets/
-├── Scripts/          # 所有脚本
+├── Script/          # 所有脚本
 │   ├── Core/         # 核心系统
 │   │   ├── Enums.cs  # 枚举定义
 │   │   ├── Resource/ # 资源管理
