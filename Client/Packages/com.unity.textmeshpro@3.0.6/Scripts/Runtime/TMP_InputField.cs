@@ -11,7 +11,7 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
-using LuaInterface;
+//using LuaInterface;
 
 namespace TMPro
 {
@@ -31,7 +31,7 @@ namespace TMPro
         IScrollHandler
     {
 #if UNITY_EDITOR
-        [NoToLua]
+        //[NoToLua]
         public static Action<GameObject, string> OnTMPInputFieldEndEditRecordHandler;
 #endif
         // Setting the content type acts as a shortcut for setting a combination of InputType, CharacterValidation, LineType, and TouchScreenKeyboardType
