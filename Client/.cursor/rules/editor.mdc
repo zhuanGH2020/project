@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+**如果文件不在指定范围内，请忽略本规则的所有特殊要求。**
+**适用范围**: 仅限 `Assets/Script/Editor/` 目录下的文件
+
+每次代码写入前，在文件首行添加// Last modified_2: [YYYY-M-DD HH:W:SS]格式的注释

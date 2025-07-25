@@ -103,4 +103,4 @@ alwaysApply: true
 - **文档命名规范**：
   - 格式：`功能名称_TechnicalDocument.md` 或 `功能名称_README.md`
   - 使用PascalCase命名，如 `UIList_TechnicalDocument.md`
-  - 包含创建日期和版本信息（在文档内容中标注） 
+  - 包含创建日期和版本信息（在文档内容中标注）
