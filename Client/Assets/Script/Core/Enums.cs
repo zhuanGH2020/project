@@ -1,71 +1,85 @@
 /// <summary>
-/// Configuration enums
+/// 配置枚举
 /// </summary>
 
 /// <summary>
-/// Item type
+/// 物品类型
 /// </summary>
 public enum ItemType
 {
     None = 0,
-    Weapon = 1,    // Weapon
-    Armor = 2,     // Armor
+    Weapon = 1,    // 武器
+    Armor = 2,     // 护甲
 }
 
 /// <summary>
-/// Monster type
+/// 怪物类型
 /// </summary>
 public enum MonsterType
 {
     None = 0,
-    Normal = 1,    // Normal zombie
-    Boss = 2,      // Boss zombie
-    Poison = 3,    // Poison zombie
-    Tank = 4,      // Tank zombie
+    Normal = 1,    // 普通僵尸
+    Boss = 2,      // Boss僵尸
+    Poison = 3,    // 毒性僵尸
+    Tank = 4,      // 坦克僵尸
 }
 
 /// <summary>
-/// Partner type
+/// 伙伴类型
 /// </summary>
 public enum PartnerType
 {
     None = 0,
-    Peashooter = 1,    // Peashooter
-    IceShooter = 2,    // Ice shooter
-    FireShooter = 3,   // Fire shooter
-    LightShooter = 4,  // Light shooter
-    DarkShooter = 5,   // Dark shooter
+    Peashooter = 1,    // 豌豆射手
+    IceShooter = 2,    // 冰豌豆射手
+    FireShooter = 3,   // 火豌豆射手
+    LightShooter = 4,  // 光明射手
+    DarkShooter = 5,   // 黑暗射手
 }
 
 /// <summary>
-/// Pet type
+/// 宠物类型
 /// </summary>
 public enum PetType
 {
     None = 0,
-    Rooster = 1,   // Combat rooster
-    Hen = 2,       // Hen for breeding
+    Rooster = 1,   // 战斗公鸡
+    Hen = 2,       // 用于繁殖的母鸡
 }
 
 /// <summary>
-/// Building type
+/// 建筑类型
 /// </summary>
 public enum BuildingType
 {
     None = 0,
-    Wall = 1,          // Wall
-    Fence = 2,         // Fence
-    TechStation = 3,   // Tech station
+    Wall = 1,          // 墙
+    Fence = 2,         // 围栏
+    TechStation = 3,   // 科技站
 }
 
 /// <summary>
-/// Tool type
+/// 工具类型
 /// </summary>
 public enum ToolType
 {
     None = 0,
-    Axe = 1,      // Axe
-    Chisel = 2,   // Chisel
-    Torch = 3,    // Torch
-    Pot = 4,      // Pot
+    Axe = 1,      // 斧头
+    Chisel = 2,   // 凿子
+    Torch = 3,    // 火把
+    Pot = 4,      // 锅
+}
+
+/// <summary>
+/// 制作物品的类型
+/// </summary>
+public enum MakeType
+{
+    None = 0,
+    Tool = 1,        // 工具
+    Light = 2,       // 光源
+    Survival = 3,    // 生存
+    Tech = 4,        // 科技
+    Weapon = 5,      // 武器
+    Clothing = 6,    // 服装
 } 
