@@ -4,15 +4,26 @@ using UnityEngine;
 
 public class ActorMain : MonoBehaviour
 {
-    // Start is called before the first frame update
+    [SerializeField] private float _moveSpeed = 5f;
+    
+    private Transform _transform;
+
     void Start()
     {
-        
+        _transform = transform;
     }
 
-    // Update is called once per frame
     void Update()
     {
+        HandleMovement();
+    }
+    
+    private void HandleMovement()
+    {
+        float horizontal = Input.GetAxis("Horizontal");
+        float vertical = Input.GetAxis("Vertical");
         
+        Vector3 moveDirection = new Vector3(horizontal, 0, vertical);
+        _transform.Translate(moveDirection * _moveSpeed * Time.deltaTime);
     }
 }
