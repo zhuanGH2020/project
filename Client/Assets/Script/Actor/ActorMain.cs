@@ -4,9 +4,17 @@ using UnityEngine;
 
 public class ActorMain : MonoBehaviour
 {
+    public static ActorMain Instance;
+    
     [SerializeField] private float _moveSpeed = 5f;
+    public float MoveSpeed => _moveSpeed;
     
     private Transform _transform;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {
