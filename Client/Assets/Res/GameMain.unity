@@ -865,7 +865,7 @@ GameObject:
   - component: {fileID: 1415984368}
   m_Layer: 0
   m_Name: pb_actor_main
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -960,6 +960,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a2730292e403d142872d0b627ac983d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _moveSpeed: 5
 --- !u!1 &1664026774
 GameObject:
   m_ObjectHideFlags: 0
