@@ -8,9 +8,12 @@
 public enum ItemType
 {
     None = 0,
-    Weapon = 1,    // 武器
-    Armor = 2,     // 护甲
-}
+    Tool = 1,        // 工具
+    Light = 2,       // 光源
+    Survival = 3,    // 生存
+    Tech = 4,        // 科技
+    Equip = 5,       // 装备
+} 
 
 /// <summary>
 /// 怪物类型
@@ -36,61 +39,3 @@ public enum PartnerType
     LightShooter = 4,  // 光明射手
     DarkShooter = 5,   // 黑暗射手
 }
-
-/// <summary>
-/// 宠物类型
-/// </summary>
-public enum PetType
-{
-    None = 0,
-    Rooster = 1,   // 战斗公鸡
-    Hen = 2,       // 用于繁殖的母鸡
-}
-
-/// <summary>
-/// 工具类型
-/// </summary>
-public enum ToolType
-{
-    None = 0,
-    Axe = 1,      // 斧头
-    Chisel = 2,   // 凿子
-    Torch = 3,    // 火把
-    Pot = 4,      // 锅
-}
-
-/// <summary>
-/// 可交互物体类型
-/// </summary>
-public enum SourceType
-{
-    None = 0,
-    Tree = 1,      // 树
-    Rock = 2,      // 岩石
-    Ore = 3,       // 矿石
-}
-
-/// <summary>
-/// 建筑类型
-/// </summary>
-public enum BuildingType
-{
-    None = 0,
-    Wall = 1,          // 墙
-    Fence = 2,         // 围栏
-    TechStation = 3,   // 科技站
-}
-
-/// <summary>
-/// 制作物品的类型
-/// </summary>
-public enum MakeType
-{
-    None = 0,
-    Tool = 1,        // 工具
-    Light = 2,       // 光源
-    Survival = 3,    // 生存
-    Tech = 4,        // 科技
-    Weapon = 5,      // 武器
-    Clothing = 6,    // 服装
-} 
