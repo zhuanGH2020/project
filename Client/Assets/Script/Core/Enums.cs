@@ -71,6 +71,28 @@ public enum ToolType
 }
 
 /// <summary>
+/// 可交互物体类型
+/// </summary>
+public enum SourceType
+{
+    None = 0,
+    Tree = 1,      // 树
+    Rock = 2,      // 岩石
+    Ore = 3,       // 矿石
+}
+
+/// <summary>
+/// 建筑类型
+/// </summary>
+public enum BuildingType
+{
+    None = 0,
+    Wall = 1,          // 墙
+    Fence = 2,         // 围栏
+    TechStation = 3,   // 科技站
+}
+
+/// <summary>
 /// 制作物品的类型
 /// </summary>
 public enum MakeType
