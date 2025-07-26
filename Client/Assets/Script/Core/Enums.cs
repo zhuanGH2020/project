@@ -14,3 +14,14 @@ public enum ItemType
     Tech = 4,        // 科技
     Equip = 5,       // 装备
 }
+
+/// <summary>
+/// 装备部位
+/// </summary>
+public enum EquipPart
+{
+    None = 0,
+    Head = 1,        // 头
+    Body = 2,        // 身体
+    Hand = 3,        // 手
+}
