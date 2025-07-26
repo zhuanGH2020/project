@@ -30,7 +30,7 @@ public class MakeView : MonoBehaviour
     
     private ConfigReader LoadMakeConfig()
     {
-        if (!ConfigManager.Instance.LoadConfig("Make", "Configs/make")) return null;
+        if (!ConfigManager.Instance.LoadConfig("Make", "Configs/Make")) return null;
         return ConfigManager.Instance.GetReader("Make");
     }
     

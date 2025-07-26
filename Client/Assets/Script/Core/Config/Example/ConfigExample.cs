@@ -14,7 +14,7 @@ public static class ConfigExample
         Debug.Log("=== Configuration System Example ===");
 
         // 1. Load configuration
-        if (!ConfigManager.Instance.LoadConfig("Item", "Configs/item"))
+        if (!ConfigManager.Instance.LoadConfig("Item", "Configs/Item"))
         {
             Debug.LogError("Failed to load item config");
             return;
@@ -134,7 +134,7 @@ public static class ConfigExample
         }
 
         // Load valid config and test data validation
-        if (ConfigManager.Instance.LoadConfig("Item", "Configs/item"))
+        if (ConfigManager.Instance.LoadConfig("Item", "Configs/Item"))
         {
             reader = ConfigManager.Instance.GetReader("Item");
             
