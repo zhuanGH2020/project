@@ -14,42 +14,32 @@ public class Item
 
     public bool IsTool()
     {
-        return GetMakeType() == MakeType.Tool;
+        return Type == ItemType.Tool;
     }
 
     public bool IsWeapon()
     {
-        return GetMakeType() == MakeType.Weapon;
+        return Type == ItemType.Equip;
     }
 
     public bool IsClothing()
     {
-        return GetMakeType() == MakeType.Clothing;
+        return Type == ItemType.Equip;
     }
 
     public bool IsTech()
     {
-        return GetMakeType() == MakeType.Tech;
+        return Type == ItemType.Tech;
     }
 
     public bool IsSurvival()
     {
-        return GetMakeType() == MakeType.Survival;
+        return Type == ItemType.Survival;
     }
 
     public bool IsLight()
     {
-        return GetMakeType() == MakeType.Light;
-    }
-
-    private MakeType GetMakeType()
-    {
-        switch (Type)
-        {
-            case ItemType.Weapon: return MakeType.Weapon;
-            case ItemType.Armor: return MakeType.Clothing;
-            default: return MakeType.None;
-        }
+        return Type == ItemType.Light;
     }
 }
 
@@ -62,7 +52,7 @@ public class ItemManager
     private ConfigReader _reader;
 
     /// <summary>
-    /// 获取物品 - 先查缓存，没有则查表并缓存
+    /// 查找物品 - 先查缓存，没有则查表并缓存
     /// </summary>
     public Item GetItem(int id)
     {
