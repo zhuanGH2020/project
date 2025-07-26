@@ -1,0 +1,7 @@
+ToolType,SourceTypes,ItemTypes,Range,InteractCooldown
+enum<ToolType>,enum<SourceType>[],enum<ItemType>[],float,float
+工具类型,可作用物体类型列表,可作用物体类型列表,作用距离,交互冷却
+1,1,0,2.0,0.5
+2,2|3,0,2.0,1.0
+3,4,0,1.5,0.3
+4,0,0,1.0,1.0 

@@ -1,0 +1,6 @@
+Id,Name,Type,MaxHealth,RespawnTime,PrefabPath,IconPath,DropId,DropCount,DropChance,Description
+int,string,enum<MonsterType>,float,float,string,string,int,int,float,string
+编号,名称,类型,最大生命值,重生时间,预制体路径,图标路径,掉落物ID,掉落数量,掉落概率,描述
+5001,普通僵尸,1,50,5,Prefabs/Monsters/zombie,Icons/Monsters/zombie,4004,1,0.5,基础敌人，移动速度中等
+5002,坦克僵尸,4,200,10,Prefabs/Monsters/tank_zombie,Icons/Monsters/tank_zombie,4004,2,0.8,高防御敌人，移动速度慢
+5003,毒僵尸,3,30,5,Prefabs/Monsters/poison_zombie,Icons/Monsters/poison_zombie,4004,1,0.3,带毒敌人，生命值低但危险 
