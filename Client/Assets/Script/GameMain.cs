@@ -11,6 +11,8 @@ public class GameMain : MonoBehaviour
     void Start()
     {
         ConfigExample.Example();
+        ConfigExample.AdvancedExample();
+        ConfigExample.ValidationExample();
     }
 
     // Update is called once per frame

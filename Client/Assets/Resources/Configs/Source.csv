@@ -1,7 +1,7 @@
-Id,Name,Type,InteractType,WeaponInteractable,MaxHealth,PrefabPath,IconPath,DropId,DropCount,DropChance,RequiredToolType,Description
-int,string,enum<SourceType>,enum<ToolType>,bool,float,string,string,int,int,float,enum<ToolType>,string
-编号,名称,类型,交互类型,可被武器作用,最大生命值,预制体路径,图标路径,掉落物ID,掉落数量,掉落概率,需求工具类型,描述
-3001,橡树,1,1,false,100,Prefabs/Trees/oak_tree,Icons/Items/oak_tree,4001,3,1.0,1,可砍伐的树木，掉落木材
-3002,松树,1,1,false,120,Prefabs/Trees/pine_tree,Icons/Items/pine_tree,4001,4,1.0,1,可砍伐的树木，掉落较多木材
-3003,铁矿石,3,2,false,150,Prefabs/Ores/iron_ore,Icons/Items/iron_ore,4001,2,1.0,2,可开采的矿石，掉落铁块
-3004,花岗岩,2,2,false,100,Prefabs/Rocks/granite,Icons/Items/granite,4003,2,1.0,2,可开采的岩石，掉落石块 
+Id,Name,Type,ToolType,MaxHealth,PrefabPath,IconPath,DropItemId,DropCount,DropChance,RequiredToolType,Description
+int,string,enum<SourceType>,enum<ToolType>,float,string,string,int,int,float,enum<ToolType>,string
+编号,名称,类型,交互类型,最大生命值,预制体路径,图标路径,掉落物ID,掉落数量,掉落概率,需求工具类型,描述
+3001,橡树,Tree,Axe,100,Prefabs/Trees/oak_tree,Icons/Items/oak_tree,4001,3,1,Axe,可砍伐的树木，掉落木材
+3002,松树,Tree,Axe,120,Prefabs/Trees/pine_tree,Icons/Items/pine_tree,4001,4,1,Axe,可砍伐的树木，掉落较多木材
+3003,铁矿石,Ore,Chisel,150,Prefabs/Ores/iron_ore,Icons/Items/iron_ore,4001,2,1,Chisel,可开采的矿石，掉落铁块
+3004,花岗岩,Rock,Chisel,100,Prefabs/Rocks/granite,Icons/Items/granite,4003,2,1,Chisel,可开采的岩石，掉落石块 

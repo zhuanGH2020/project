@@ -2,15 +2,16 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Configuration manager for loading and managing CSV configuration files
-/// Provides unified interface for config loading, caching and querying
+/// 配置管理器
+/// 提供CSV配置文件的加载、缓存和查询功能
+/// 配置文件必须放在Resources/Configs/目录下，文件名必须与configName完全一致
 /// </summary>
 public class ConfigManager
 {
     private static ConfigManager _instance;
     
     /// <summary>
-    /// Singleton instance of ConfigManager
+    /// 单例实例
     /// </summary>
     public static ConfigManager Instance
     {
@@ -23,54 +24,66 @@ public class ConfigManager
     }
 
     /// <summary>
-    /// Dictionary to store loaded configuration readers
+    /// 存储已加载的配置读取器
     /// </summary>
     private Dictionary<string, ConfigReader> _configs = new Dictionary<string, ConfigReader>();
 
     /// <summary>
-    /// Private constructor for singleton pattern
+    /// 私有构造函数，确保单例模式
     /// </summary>
     private ConfigManager() { }
 
     /// <summary>
-    /// Load configuration from CSV file in Resources folder
+    /// 加载配置文件
+    /// 配置文件必须包含至少4行：列名、类型定义、中文说明和数据行
     /// </summary>
-    /// <param name="configName">Unique name for the configuration</param>
-    /// <param name="path">Path to CSV file in Resources folder (without extension)</param>
-    /// <returns>True if loading successful, false otherwise</returns>
-    public bool LoadConfig(string configName, string path)
+    /// <param name="configName">配置名称，必须与Resources/Configs/下的文件名完全一致（不含扩展名）</param>
+    /// <returns>加载是否成功</returns>
+    public bool LoadConfig(string configName)
     {
+        if (string.IsNullOrEmpty(configName))
+        {
+            Debug.LogError("Config name cannot be null or empty");
+            return false;
+        }
+
         // Skip if already loaded
         if (_configs.ContainsKey(configName))
         {
-            Debug.Log($"Config '{configName}' already loaded");
             return true;
         }
 
         // Load CSV text asset
+        var path = $"Configs/{configName}";
         var textAsset = Resources.Load<TextAsset>(path);
         if (textAsset == null)
         {
-            Debug.LogError($"Failed to load config file: {path}");
+            Debug.LogError($"Failed to load config file: {path}.csv");
             return false;
         }
 
         // Split lines and validate format
         var lines = textAsset.text.Split('\n');
-        if (lines.Length < 4)
+        if (lines == null || lines.Length < 4)
         {
-            Debug.LogError($"Invalid config file format: {path} - requires at least 4 lines (headers, types, comments, data)");
+            Debug.LogError($"Invalid config file format: {path}.csv - requires at least 4 lines (headers, types, comments, data)");
             return false;
         }
 
         // Parse configuration definition
         var definition = new ConfigDefinition();
-        if (!definition.Parse(
-            ParseLine(lines[0]),  // Headers
-            ParseLine(lines[1])   // Types
-        ))
+        var headers = ParseLine(lines[0]);
+        var types = ParseLine(lines[1]);
+
+        if (headers == null || types == null || headers.Length == 0 || types.Length == 0)
         {
-            Debug.LogError($"Failed to parse config definition: {path}");
+            Debug.LogError($"Invalid headers or types in config file: {path}.csv");
+            return false;
+        }
+
+        if (!definition.Parse(headers, types))
+        {
+            Debug.LogError($"Failed to parse config definition: {path}.csv");
             return false;
         }
 
@@ -82,84 +95,104 @@ public class ConfigManager
         System.Array.Copy(lines, 3, dataLines, 0, dataLines.Length);
         if (!reader.LoadData(dataLines))
         {
-            Debug.LogError($"Failed to load config data: {path}");
+            Debug.LogError($"Failed to load config data: {path}.csv");
             return false;
         }
 
         // Store config reader
         _configs[configName] = reader;
-        Debug.Log($"Successfully loaded config '{configName}' from '{path}'");
         return true;
     }
 
     /// <summary>
-    /// Get configuration reader by name
+    /// 获取配置读取器
+    /// 如果配置未加载，会自动尝试加载
     /// </summary>
-    /// <param name="configName">Name of the configuration</param>
-    /// <returns>ConfigReader instance if found, null otherwise</returns>
+    /// <param name="configName">配置名称</param>
+    /// <returns>配置读取器实例，如果加载失败则返回null</returns>
     public ConfigReader GetReader(string configName)
     {
+        if (string.IsNullOrEmpty(configName))
+        {
+            Debug.LogError("Config name cannot be null or empty");
+            return null;
+        }
+
         if (_configs.TryGetValue(configName, out var reader))
         {
             return reader;
         }
         
-        Debug.LogWarning($"Config '{configName}' not found. Make sure to load it first.");
+        if (LoadConfig(configName))
+        {
+            return _configs[configName];
+        }
+
+        Debug.LogWarning($"Config '{configName}' not found and auto-load failed.");
         return null;
     }
 
     /// <summary>
-    /// Check if configuration is loaded
+    /// 检查配置是否已加载
     /// </summary>
-    /// <param name="configName">Name of the configuration</param>
-    /// <returns>True if configuration is loaded, false otherwise</returns>
+    /// <param name="configName">配置名称</param>
+    /// <returns>配置是否已加载</returns>
     public bool IsConfigLoaded(string configName)
     {
+        if (string.IsNullOrEmpty(configName))
+        {
+            Debug.LogError("Config name cannot be null or empty");
+            return false;
+        }
         return _configs.ContainsKey(configName);
     }
 
     /// <summary>
-    /// Clear specific configuration from memory
+    /// 清理指定配置
     /// </summary>
-    /// <param name="configName">Name of the configuration to clear</param>
+    /// <param name="configName">要清理的配置名称</param>
     public void ClearConfig(string configName)
     {
+        if (string.IsNullOrEmpty(configName))
+        {
+            Debug.LogError("Config name cannot be null or empty");
+            return;
+        }
+
         if (_configs.Remove(configName))
         {
-            Debug.Log($"Cleared config '{configName}'");
-        }
-        else
-        {
-            Debug.LogWarning($"Config '{configName}' not found for clearing");
+            Resources.UnloadUnusedAssets();
         }
     }
 
     /// <summary>
-    /// Clear all loaded configurations from memory
+    /// 清理所有已加载的配置
     /// </summary>
     public void ClearAllConfigs()
     {
-        var count = _configs.Count;
         _configs.Clear();
-        Debug.Log($"Cleared {count} loaded configurations");
+        Resources.UnloadUnusedAssets();
     }
 
     /// <summary>
-    /// Get count of loaded configurations
+    /// 获取已加载的配置数量
     /// </summary>
-    /// <returns>Number of loaded configurations</returns>
+    /// <returns>已加载的配置数量</returns>
     public int GetLoadedConfigCount()
     {
         return _configs.Count;
     }
 
     /// <summary>
-    /// Parse CSV line into string array
+    /// 解析CSV行为字符串数组
     /// </summary>
-    /// <param name="line">CSV line to parse</param>
-    /// <returns>Array of string values</returns>
+    /// <param name="line">要解析的CSV行</param>
+    /// <returns>解析后的字符串数组</returns>
     private string[] ParseLine(string line)
     {
+        if (string.IsNullOrEmpty(line))
+            return null;
+            
         return line.Trim().TrimEnd('\r').Split(',');
     }
 } 

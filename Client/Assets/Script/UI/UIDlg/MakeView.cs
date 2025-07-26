@@ -27,16 +27,15 @@ public class MakeView : MonoBehaviour
         Transform listTransform = transform.Find("list_make") ?? FindChildWithUIList();
         return listTransform?.GetComponent<UIList>() ?? listTransform?.GetComponentInChildren<UIList>();
     }
-    
+
     private ConfigReader LoadMakeConfig()
     {
-        if (!ConfigManager.Instance.LoadConfig("Make", "Configs/make")) return null;
         return ConfigManager.Instance.GetReader("Make");
     }
     
     private void CreateMakeItems(UIList uiList, ConfigReader reader)
     {
-        foreach (var id in reader.GetAllIds())
+        foreach (var id in reader.GetAllKeysOfType<int>())
         {
             GameObject item = uiList.AddListItem();
             if (item == null) continue;

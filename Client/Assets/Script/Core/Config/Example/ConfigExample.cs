@@ -1,155 +1,130 @@
 using UnityEngine;
+using System.Linq;
 
 /// <summary>
-/// Configuration system usage examples
-/// Demonstrates how to load, query and manage CSV configuration data
+/// 配置系统使用示例
 /// </summary>
 public static class ConfigExample
 {
     /// <summary>
-    /// Example demonstrating basic configuration usage
+    /// 基础配置使用示例
     /// </summary>
     public static void Example()
     {
-        Debug.Log("=== Configuration System Example ===");
+        Debug.Log("=== 配置系统示例 ===");
 
-        // 1. Load configuration
-        if (!ConfigManager.Instance.LoadConfig("Item", "Configs/item"))
-        {
-            Debug.LogError("Failed to load item config");
-            return;
-        }
-
-        // 2. Get configuration reader
-        var reader = ConfigManager.Instance.GetReader("Item");
+        // 1. 获取配置读取器（会自动加载配置）
+        var reader = ConfigManager.Instance.GetReader("ToolTarget");
         if (reader == null)
         {
-            Debug.LogError("Failed to get item config reader");
+            Debug.LogError("Failed to get tool target config reader");
             return;
         }
 
-        Debug.Log($"Loaded {reader.GetEntryCount()} item configurations");
+        Debug.Log($"加载了 {reader.GetEntryCount()} 个配置项");
 
-        // 3. Query single configuration entry
-        var id = 1;
-        var name = reader.GetValue<string>(id, "Name");
-        var type = reader.GetValue<ItemType>(id, "Type");
-        var attack = reader.GetValue<int>(id, "Attack");
-        var defense = reader.GetValue<int>(id, "Defense");
-
-        Debug.Log($"Item ID: {id}");
-        Debug.Log($"Name: {name}");
-        Debug.Log($"Type: {type}");
-        Debug.Log($"Attack: {attack}");
-        Debug.Log($"Defense: {defense}");
-
-        // 4. Query complex data types
-        var parameters = reader.GetValue<int[]>(id, "Params");
-        var position = reader.GetValue<Vector3>(id, "Position");
-        var color = reader.GetValue<Color>(id, "Color");
-
-        Debug.Log($"Parameters: {string.Join(", ", parameters)}");
-        Debug.Log($"Position: {position}");
-        Debug.Log($"Color: {color}");
-
-        // 5. Iterate through all configurations
-        Debug.Log("All items:");
-        foreach (var itemId in reader.GetAllIds())
+        // 2. 查询单个配置项（使用枚举作为key）
+        var key = ToolType.Axe;
+        var targetTypes = reader.GetValue<SourceType[]>(key, "SourceTypes");
+        if (targetTypes != null)
         {
-            var itemName = reader.GetValue<string>(itemId, "Name");
-            var itemType = reader.GetValue<ItemType>(itemId, "Type");
-            Debug.Log($"- [{itemType}] {itemName} (ID: {itemId})");
+            Debug.Log($"工具 {key} 可作用目标: {string.Join(", ", targetTypes)}");
         }
 
-        // 6. Demonstrate error handling with default values
-        var nonExistentId = 999;
-        var defaultName = reader.GetValue<string>(nonExistentId, "Name", "Unknown Item");
-        var defaultAttack = reader.GetValue<int>(nonExistentId, "Attack", 0);
-        
-        Debug.Log($"Non-existent item (ID: {nonExistentId}): {defaultName}, Attack: {defaultAttack}");
+        // 3. 遍历所有配置
+        Debug.Log("所有配置:");
+        // 获取指定类型的key
+        foreach (var toolType in reader.GetAllKeysOfType<ToolType>())
+        {
+            var types = reader.GetValue<SourceType[]>(toolType, "SourceTypes");
+            Debug.Log($"- [{toolType}] 可作用目标: {string.Join(", ", types ?? new SourceType[0])}");
+        }
 
-        // 7. Check configuration status
-        Debug.Log($"Is Item config loaded: {ConfigManager.Instance.IsConfigLoaded("Item")}");
-        Debug.Log($"Loaded config count: {ConfigManager.Instance.GetLoadedConfigCount()}");
+        // 4. 演示错误处理和默认值
+        var nonExistentKey = ToolType.None;
+        var defaultTypes = reader.GetValue<SourceType[]>(nonExistentKey, "SourceTypes", new SourceType[0]);
+        Debug.Log($"不存在的配置 (Key: {nonExistentKey}): {string.Join(", ", defaultTypes)}");
 
-        // 8. Clean up configuration
-        ConfigManager.Instance.ClearConfig("Item");
-        Debug.Log("Configuration cleared");
-
-        Debug.Log("=== Example completed ===");
+        Debug.Log("=== 示例完成 ===");
     }
 
     /// <summary>
-    /// Example demonstrating advanced configuration features
+    /// 高级配置功能示例
     /// </summary>
     public static void AdvancedExample()
     {
-        Debug.Log("=== Advanced Configuration Example ===");
+        Debug.Log("=== 高级配置示例 ===");
 
-        // Load multiple configurations
-        var configs = new[] { "Item", "Monster", "Building" };
-        
-        foreach (var configName in configs)
+        // 1. 使用数字作为key
+        var toolReader = ConfigManager.Instance.GetReader("Tool");
+        if (toolReader != null)
         {
-            var path = $"Configs/{configName.ToLower()}";
-            if (ConfigManager.Instance.LoadConfig(configName, path))
+            var toolId = 1001;
+            var toolName = toolReader.GetValue<string>(toolId, "Name");
+            Debug.Log($"工具 {toolId}: {toolName}");
+
+            // 遍历所有数字key
+            foreach (var id in toolReader.GetAllKeysOfType<int>())
             {
-                var reader = ConfigManager.Instance.GetReader(configName);
-                Debug.Log($"Successfully loaded {configName} config with {reader.GetEntryCount()} entries");
-            }
-            else
-            {
-                Debug.LogWarning($"Failed to load {configName} config (file may not exist)");
+                var name = toolReader.GetValue<string>(id, "Name");
+                Debug.Log($"ID {id}: {name}");
             }
         }
 
-        // Demonstrate configuration management
-        Debug.Log($"Total loaded configurations: {ConfigManager.Instance.GetLoadedConfigCount()}");
+        // 2. 使用字符串作为key
+        var itemReader = ConfigManager.Instance.GetReader("Item");
+        if (itemReader != null)
+        {
+            var itemKey = "WOOD";
+            var itemName = itemReader.GetValue<string>(itemKey, "Name");
+            Debug.Log($"物品 {itemKey}: {itemName}");
 
-        // Clear all configurations
-        ConfigManager.Instance.ClearAllConfigs();
-        Debug.Log("All configurations cleared");
+            // 遍历所有字符串key
+            foreach (var key in itemReader.GetAllKeysOfType<string>())
+            {
+                var name = itemReader.GetValue<string>(key, "Name");
+                Debug.Log($"Key {key}: {name}");
+            }
+        }
 
-        Debug.Log("=== Advanced example completed ===");
+        Debug.Log("=== 高级示例完成 ===");
     }
 
     /// <summary>
-    /// Example demonstrating data validation and error handling
+    /// 数据验证和错误处理示例
     /// </summary>
     public static void ValidationExample()
     {
-        Debug.Log("=== Validation Example ===");
+        Debug.Log("=== 验证示例 ===");
 
-        // Try to load non-existent configuration
-        if (!ConfigManager.Instance.LoadConfig("NonExistent", "Configs/nonexistent"))
-        {
-            Debug.Log("Expected: Failed to load non-existent config");
-        }
-
-        // Try to get reader for non-loaded config
+        // 尝试加载不存在的配置
         var reader = ConfigManager.Instance.GetReader("NonExistent");
         if (reader == null)
         {
-            Debug.Log("Expected: Reader is null for non-loaded config");
+            Debug.Log("预期结果：未加载配置的读取器为null");
         }
 
-        // Load valid config and test data validation
-        if (ConfigManager.Instance.LoadConfig("Item", "Configs/item"))
+        // 加载有效配置并测试数据验证
+        reader = ConfigManager.Instance.GetReader("Tool");
+        if (reader != null)
         {
-            reader = ConfigManager.Instance.GetReader("Item");
-            
-            // Test with invalid ID
-            var invalidId = 999;
-            var name = reader.GetValue<string>(invalidId, "Name", "Default Name");
-            Debug.Log($"Invalid ID result: {name}");
+            // 测试无效key
+            var invalidKey = 999;
+            var name = reader.GetValue<string>(invalidKey, "Name", "默认名称");
+            Debug.Log($"无效key结果: {name}");
 
-            // Test with invalid column
-            var invalidColumn = reader.GetValue<string>(1, "InvalidColumn", "Default Value");
-            Debug.Log($"Invalid column result: {invalidColumn}");
+            // 测试无效列
+            var validKey = reader.GetAllKeys().First();
+            var invalidColumn = reader.GetValue<string>(validKey, "InvalidColumn", "默认值");
+            Debug.Log($"无效列结果: {invalidColumn}");
 
-            ConfigManager.Instance.ClearConfig("Item");
+            // 测试枚举解析
+            var invalidType = reader.GetValue<ToolType>(validKey, "InvalidType", ToolType.None);
+            Debug.Log($"无效枚举结果: {invalidType}");
+
+            ConfigManager.Instance.ClearConfig("Tool");
         }
 
-        Debug.Log("=== Validation example completed ===");
+        Debug.Log("=== 验证示例完成 ===");
     }
 } 

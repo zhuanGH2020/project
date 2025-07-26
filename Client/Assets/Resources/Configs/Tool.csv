@@ -1,6 +1,6 @@
 Id,Name,Type,BaseDamage,BaseDurability,DurabilityLossPerUse,IconPath,PrefabPath,Description
 int,string,enum<ToolType>,float,float,float,string,string,string
 编号,名称,类型,基础伤害,基础耐久度,每次使用损失耐久,图标路径,预制体路径,描述
-1001,木斧,1,10,100,1,Icons/Tools/wood_axe,Prefabs/Tools/wood_axe,基础伐木工具，可以砍树
-1002,铁斧,1,20,200,1,Icons/Tools/iron_axe,Prefabs/Tools/iron_axe,高级伐木工具，效率更高
-1003,石凿,2,15,150,2,Icons/Tools/stone_chisel,Prefabs/Tools/stone_chisel,基础采矿工具，可以开采石头 
+1001,木斧,Axe,10,100,1,Icons/Tools/wood_axe,Prefabs/Tools/wood_axe,基础伐木工具，可以砍树
+1002,铁斧,Axe,20,200,1,Icons/Tools/iron_axe,Prefabs/Tools/iron_axe,高级伐木工具，效率更高
+1003,石凿,Chisel,15,150,2,Icons/Tools/stone_chisel,Prefabs/Tools/stone_chisel,基础采矿工具，可以开采石头

@@ -1,7 +1,7 @@
-Id,Name,Type,InteractType,WeaponInteractable,MaxHealth,PrefabPath,IconPath,DropId,DropCount,DropChance,RequiredToolType,Description
-int,string,enum<SourceType>,enum<ToolType>,bool,float,string,string,int,int,float,enum<ToolType>,string
-ç¼–å·,åç§°,ç±»å‹,äº¤äº’ç±»å‹,å¯è¢«æ­¦å™¨ä½œç”¨,æœ€å¤§ç”Ÿå‘½å€¼,é¢„åˆ¶ä½“è·¯å¾„,å›¾æ ‡è·¯å¾„,æ‰è½ç‰©ID,æ‰è½æ•°é‡,æ‰è½æ¦‚ç‡,éœ€æ±‚å·¥å…·ç±»å‹,æè¿°
-3001,æ©¡æ ‘,1,1,false,100,Prefabs/Trees/oak_tree,Icons/Items/oak_tree,4001,3,1.0,1,å¯ç ä¼çš„æ ‘æœ¨ï¼Œæ‰è½æœ¨æ
-3002,æ¾æ ‘,1,1,false,120,Prefabs/Trees/pine_tree,Icons/Items/pine_tree,4001,4,1.0,1,å¯ç ä¼çš„æ ‘æœ¨ï¼Œæ‰è½è¾ƒå¤šæœ¨æ
-3003,é“çŸ¿çŸ³,3,2,false,150,Prefabs/Ores/iron_ore,Icons/Items/iron_ore,4001,2,1.0,2,å¯å¼€é‡‡çš„çŸ¿çŸ³ï¼Œæ‰è½é“å—
-3004,èŠ±å²—å²©,2,2,false,100,Prefabs/Rocks/granite,Icons/Items/granite,4003,2,1.0,2,å¯å¼€é‡‡çš„å²©çŸ³ï¼Œæ‰è½çŸ³å— 
+Id,Name,Type,ToolType,MaxHealth,PrefabPath,IconPath,DropItemId,DropCount,DropChance,RequiredToolType,Description
+int,string,enum<SourceType>,enum<ToolType>,float,string,string,int,int,float,enum<ToolType>,string
+±àºÅ,Ãû³Æ,ÀàĞÍ,½»»¥ÀàĞÍ,×î´óÉúÃüÖµ,Ô¤ÖÆÌåÂ·¾¶,Í¼±êÂ·¾¶,µôÂäÎïID,µôÂäÊıÁ¿,µôÂä¸ÅÂÊ,ĞèÇó¹¤¾ßÀàĞÍ,ÃèÊö
+3001,ÏğÊ÷,Tree,Axe,100,Prefabs/Trees/oak_tree,Icons/Items/oak_tree,4001,3,1,Axe,¿É¿³·¥µÄÊ÷Ä¾£¬µôÂäÄ¾²Ä
+3002,ËÉÊ÷,Tree,Axe,120,Prefabs/Trees/pine_tree,Icons/Items/pine_tree,4001,4,1,Axe,¿É¿³·¥µÄÊ÷Ä¾£¬µôÂä½Ï¶àÄ¾²Ä
+3003,Ìú¿óÊ¯,Ore,Chisel,150,Prefabs/Ores/iron_ore,Icons/Items/iron_ore,4001,2,1,Chisel,¿É¿ª²ÉµÄ¿óÊ¯£¬µôÂäÌú¿é
+3004,»¨¸ÚÑÒ,Rock,Chisel,100,Prefabs/Rocks/granite,Icons/Items/granite,4003,2,1,Chisel,¿É¿ª²ÉµÄÑÒÊ¯£¬µôÂäÊ¯¿é 

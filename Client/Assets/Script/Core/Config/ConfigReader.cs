@@ -1,303 +1,340 @@
+using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 /// <summary>
-/// Configuration reader for parsing and querying CSV data
-/// Provides type-safe data access with automatic type conversion
+/// 配置读取器
 /// </summary>
 public class ConfigReader
 {
-    /// <summary>
-    /// Configuration definition containing column information
-    /// </summary>
+    private Dictionary<object, Dictionary<string, string>> _configData;
     private ConfigDefinition _definition;
-    
-    /// <summary>
-    /// Dictionary storing configuration data indexed by ID
-    /// </summary>
-    private Dictionary<int, string[]> _data = new Dictionary<int, string[]>();
+    private Dictionary<Type, Dictionary<string, object>> _enumCache = new Dictionary<Type, Dictionary<string, object>>();
 
-    /// <summary>
-    /// Constructor for ConfigReader
-    /// </summary>
-    /// <param name="definition">Configuration definition to use</param>
     public ConfigReader(ConfigDefinition definition)
     {
         _definition = definition ?? throw new ArgumentNullException(nameof(definition));
+        _configData = new Dictionary<object, Dictionary<string, string>>();
     }
 
     /// <summary>
-    /// Load configuration data from CSV lines
+    /// 加载配置数据
     /// </summary>
-    /// <param name="lines">Array of CSV data lines</param>
-    /// <returns>True if loading successful, false otherwise</returns>
     public bool LoadData(string[] lines)
     {
-        if (lines == null)
+        if (lines == null || lines.Length == 0)
         {
-            Debug.LogError("Data lines array is null");
+            Debug.LogError("Data lines array is null or empty");
             return false;
         }
 
-        _data.Clear();
-        var loadedCount = 0;
+        _configData.Clear();
+        var columnNames = _definition.GetColumnNames();
 
         foreach (var line in lines)
         {
-            // Skip empty lines
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
-            // Parse line into values
             var values = line.Trim().TrimEnd('\r').Split(',');
-            
-            // Validate column count
-            if (values.Length != _definition.GetColumnCount())
+            if (values.Length != columnNames.Length)
             {
-                Debug.LogError($"Invalid column count in line: {line} (expected {_definition.GetColumnCount()}, got {values.Length})");
-                return false;
+                Debug.LogError($"Invalid column count in line: {line}");
+                continue;
             }
 
-            // Parse ID
-            if (!int.TryParse(values[_definition.GetColumnIndex("Id")], out int id))
+            var rowData = new Dictionary<string, string>();
+            for (int i = 0; i < columnNames.Length; i++)
             {
-                Debug.LogError($"Invalid ID in line: {line}");
-                return false;
+                rowData[columnNames[i]] = values[i];
             }
 
-            // Check for duplicate IDs
-            if (_data.ContainsKey(id))
+            // 获取第一列的类型定义
+            var keyType = _definition.GetColumnType(columnNames[0]);
+            object key = ParseKeyValue(values[0], keyType);
+            if (key == null)
             {
-                Debug.LogWarning($"Duplicate ID {id} found, overwriting previous entry");
+                Debug.LogError($"Failed to parse key in line: {line}");
+                continue;
             }
 
-            // Store data
-            _data[id] = values;
-            loadedCount++;
+            if (_configData.ContainsKey(key))
+            {
+                Debug.LogWarning($"Duplicate key {key} found, overwriting previous entry");
+            }
+            _configData[key] = rowData;
         }
 
-        Debug.Log($"Successfully loaded {loadedCount} configuration entries");
-        return true;
+        return _configData.Count > 0;
     }
 
     /// <summary>
-    /// Get typed value from configuration by ID and column name
+    /// 获取配置值
     /// </summary>
-    /// <typeparam name="T">Target type for the value</typeparam>
-    /// <param name="id">Configuration entry ID</param>
-    /// <param name="columnName">Name of the column</param>
-    /// <param name="defaultValue">Default value to return if not found or invalid</param>
-    /// <returns>Typed value or default value</returns>
-    public T GetValue<T>(int id, string columnName, T defaultValue = default)
+    public T GetValue<T>(object key, string columnName, T defaultValue = default)
     {
-        // Check if ID exists
-        if (!_data.TryGetValue(id, out var values))
+        if (string.IsNullOrEmpty(columnName))
         {
-            Debug.LogWarning($"ID {id} not found in configuration");
+            Debug.LogError("Column name cannot be null or empty");
             return defaultValue;
         }
 
-        // Get column information
-        var columnIndex = _definition.GetColumnIndex(columnName);
-        if (columnIndex < 0)
+        if (!_configData.ContainsKey(key))
         {
-            Debug.LogWarning($"Column '{columnName}' not found in configuration");
+            Debug.LogWarning($"Key {key} not found");
             return defaultValue;
         }
 
-        var columnType = _definition.GetColumnType(columnName);
-        if (string.IsNullOrEmpty(columnType))
+        if (!_configData[key].ContainsKey(columnName))
         {
-            Debug.LogWarning($"Column type not found for '{columnName}'");
+            Debug.LogWarning($"Column '{columnName}' not found for key {key}");
             return defaultValue;
         }
 
-        // Get raw value
-        var rawValue = values[columnIndex].Trim();
-        if (string.IsNullOrEmpty(rawValue))
+        string value = _configData[key][columnName];
+        if (string.IsNullOrEmpty(value))
         {
             return defaultValue;
         }
 
+        return ParseValue<T>(value, columnName, defaultValue);
+    }
+
+    /// <summary>
+    /// 获取所有键
+    /// </summary>
+    public IEnumerable<object> GetAllKeys()
+    {
+        return _configData.Keys;
+    }
+
+    /// <summary>
+    /// 获取指定类型的所有键
+    /// </summary>
+    public IEnumerable<T> GetAllKeysOfType<T>()
+    {
+        return _configData.Keys.Where(k => k is T).Cast<T>();
+    }
+
+    /// <summary>
+    /// 获取条目数量
+    /// </summary>
+    public int GetEntryCount()
+    {
+        return _configData.Count;
+    }
+
+    /// <summary>
+    /// 检查键是否存在
+    /// </summary>
+    public bool HasKey(object key)
+    {
+        return _configData.ContainsKey(key);
+    }
+
+    private T ParseValue<T>(string value, string columnName, T defaultValue)
+    {
         try
         {
-            // Parse value based on type
-            var parsedValue = ParseValue(rawValue, columnType, typeof(T));
-            return (T)parsedValue;
+            Type targetType = typeof(T);
+
+            // 处理枚举类型
+            if (targetType.IsEnum)
+            {
+                return ParseEnum<T>(value, defaultValue);
+            }
+
+            // 处理枚举数组
+            if (targetType.IsArray && targetType.GetElementType().IsEnum)
+            {
+                return ParseEnumArray<T>(value, defaultValue);
+            }
+
+            // 处理Vector2
+            if (targetType == typeof(Vector2))
+            {
+                return ParseVector2<T>(value, defaultValue);
+            }
+
+            // 处理Vector3
+            if (targetType == typeof(Vector3))
+            {
+                return ParseVector3<T>(value, defaultValue);
+            }
+
+            // 处理Color
+            if (targetType == typeof(Color))
+            {
+                return ParseColor<T>(value, defaultValue);
+            }
+
+            // 处理数组类型
+            if (targetType.IsArray)
+            {
+                return ParseArray<T>(value, defaultValue);
+            }
+
+            // 处理基础类型
+            return (T)Convert.ChangeType(value, targetType);
         }
         catch (Exception e)
         {
-            Debug.LogError($"Error parsing value '{rawValue}' as {typeof(T)} for column '{columnName}': {e.Message}");
+            Debug.LogError($"Failed to parse value '{value}' as {typeof(T)} for column '{columnName}': {e.Message}");
             return defaultValue;
         }
     }
 
-    /// <summary>
-    /// Get all configuration IDs
-    /// </summary>
-    /// <returns>Enumerable of all configuration IDs</returns>
-    public IEnumerable<int> GetAllIds()
+    private T ParseEnum<T>(string value, T defaultValue)
     {
-        return _data.Keys;
-    }
-
-    /// <summary>
-    /// Get count of configuration entries
-    /// </summary>
-    /// <returns>Number of configuration entries</returns>
-    public int GetEntryCount()
-    {
-        return _data.Count;
-    }
-
-    /// <summary>
-    /// Check if configuration contains specific ID
-    /// </summary>
-    /// <param name="id">ID to check</param>
-    /// <returns>True if ID exists, false otherwise</returns>
-    public bool HasId(int id)
-    {
-        return _data.ContainsKey(id);
-    }
-
-    /// <summary>
-    /// Parse raw string value based on type definition
-    /// </summary>
-    /// <param name="value">Raw string value</param>
-    /// <param name="type">Type definition</param>
-    /// <param name="targetType">Target type for conversion</param>
-    /// <returns>Parsed object value</returns>
-    private object ParseValue(string value, string type, Type targetType)
-    {
-        // Handle array types
-        if (type.EndsWith("[]"))
-        {
-            return ParseArray(value, type.Substring(0, type.Length - 2));
-        }
-
-        // Handle enum types
-        if (type.StartsWith("enum<") && type.EndsWith(">"))
-        {
-            return ParseEnum(value, targetType);
-        }
-
-        // Handle Unity types
-        switch (type)
-        {
-            case "vector2": return ParseVector2(value);
-            case "vector3": return ParseVector3(value);
-            case "color": return ParseColor(value);
-        }
-
-        // Handle basic types
-        switch (type)
-        {
-            case "int": return int.Parse(value);
-            case "float": return float.Parse(value);
-            case "bool": return bool.Parse(value);
-            case "string": return value;
-            default: throw new ArgumentException($"Unsupported type: {type}");
-        }
-    }
-
-    /// <summary>
-    /// Parse array value from string
-    /// </summary>
-    /// <param name="value">String containing array elements</param>
-    /// <param name="elementType">Type of array elements</param>
-    /// <returns>Array object</returns>
-    private Array ParseArray(string value, string elementType)
-    {
-        var elements = value.Split('|');
+        value = value.Trim();
         
-        switch (elementType)
+        // 使用缓存
+        var enumType = typeof(T);
+        if (!_enumCache.TryGetValue(enumType, out var cache))
         {
-            case "int":
-                return elements.Select(int.Parse).ToArray();
-            case "float":
-                return elements.Select(float.Parse).ToArray();
-            case "string":
-                return elements;
-            default:
-                throw new ArgumentException($"Unsupported array element type: {elementType}");
+            cache = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            foreach (var name in Enum.GetNames(enumType))
+            {
+                cache[name] = Enum.Parse(enumType, name);
+            }
+            _enumCache[enumType] = cache;
         }
+
+        if (cache.TryGetValue(value, out var enumValue))
+        {
+            return (T)enumValue;
+        }
+
+        Debug.LogError($"Invalid enum value '{value}' for type {enumType}");
+        return defaultValue;
     }
 
-    /// <summary>
-    /// Parse enum value from string
-    /// </summary>
-    /// <param name="value">String enum value</param>
-    /// <param name="enumType">Target enum type</param>
-    /// <returns>Enum value</returns>
-    private object ParseEnum(string value, Type enumType)
+    private T ParseEnumArray<T>(string value, T defaultValue)
     {
-        if (!enumType.IsEnum)
-            throw new ArgumentException($"Type {enumType} is not an enum");
-        return Enum.Parse(enumType, value);
+        var elementType = typeof(T).GetElementType();
+        var values = value.Split('|');
+        var result = Array.CreateInstance(elementType, values.Length);
+
+        for (int i = 0; i < values.Length; i++)
+        {
+            try
+            {
+                result.SetValue(Enum.Parse(elementType, values[i].Trim(), true), i);
+            }
+            catch
+            {
+                Debug.LogError($"Failed to parse enum value: {values[i]}");
+                return defaultValue;
+            }
+        }
+
+        return (T)(object)result;
     }
 
-    /// <summary>
-    /// Parse Vector2 value from string
-    /// </summary>
-    /// <param name="value">String containing Vector2 components</param>
-    /// <returns>Vector2 value</returns>
-    private Vector2 ParseVector2(string value)
+    private T ParseVector2<T>(string value, T defaultValue)
     {
         var components = value.Split('|');
         if (components.Length != 2)
-            throw new ArgumentException("Vector2 requires exactly 2 components (x|y)");
+        {
+            Debug.LogError($"Invalid Vector2 format: {value}");
+            return defaultValue;
+        }
 
-        return new Vector2(
+        return (T)(object)new Vector2(
             float.Parse(components[0]),
             float.Parse(components[1])
         );
     }
 
-    /// <summary>
-    /// Parse Vector3 value from string
-    /// </summary>
-    /// <param name="value">String containing Vector3 components</param>
-    /// <returns>Vector3 value</returns>
-    private Vector3 ParseVector3(string value)
+    private T ParseVector3<T>(string value, T defaultValue)
     {
         var components = value.Split('|');
         if (components.Length != 3)
-            throw new ArgumentException("Vector3 requires exactly 3 components (x|y|z)");
+        {
+            Debug.LogError($"Invalid Vector3 format: {value}");
+            return defaultValue;
+        }
 
-        return new Vector3(
+        return (T)(object)new Vector3(
             float.Parse(components[0]),
             float.Parse(components[1]),
             float.Parse(components[2])
         );
     }
 
-    /// <summary>
-    /// Parse Color value from string
-    /// </summary>
-    /// <param name="value">String containing color information</param>
-    /// <returns>Color value</returns>
-    private Color ParseColor(string value)
+    private T ParseColor<T>(string value, T defaultValue)
     {
-        // Support hex color format
-        if (value.StartsWith("#"))
+        if (ColorUtility.TryParseHtmlString(value, out Color color))
         {
-            if (ColorUtility.TryParseHtmlString(value, out var color))
-                return color;
-            throw new ArgumentException($"Invalid hex color format: {value}");
+            return (T)(object)color;
         }
 
-        // Support RGBA format
-        var components = value.Split('|');
-        if (components.Length != 4)
-            throw new ArgumentException("Color requires exactly 4 components (r|g|b|a)");
+        Debug.LogError($"Invalid color format: {value}");
+        return defaultValue;
+    }
 
-        return new Color(
-            float.Parse(components[0]),
-            float.Parse(components[1]),
-            float.Parse(components[2]),
-            float.Parse(components[3])
-        );
+    private T ParseArray<T>(string value, T defaultValue)
+    {
+        var elementType = typeof(T).GetElementType();
+        var values = value.Split('|');
+        var result = Array.CreateInstance(elementType, values.Length);
+
+        for (int i = 0; i < values.Length; i++)
+        {
+            try
+            {
+                result.SetValue(Convert.ChangeType(values[i].Trim(), elementType), i);
+            }
+            catch
+            {
+                Debug.LogError($"Failed to parse array element: {values[i]}");
+                return defaultValue;
+            }
+        }
+
+        return (T)(object)result;
+    }
+
+    private object ParseKeyValue(string value, string type)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(value))
+                return null;
+
+            // 处理基础类型
+            switch (type)
+            {
+                case "int":
+                    return int.Parse(value);
+                case "string":
+                    return value;
+                default:
+                    // 处理枚举类型
+                    if (type.StartsWith("enum<") && type.EndsWith(">"))
+                    {
+                        var enumTypeName = type.Substring(5, type.Length - 6);
+                        // 先尝试直接获取类型
+                        var enumType = AppDomain.CurrentDomain.GetAssemblies()
+                            .SelectMany(a => a.GetTypes())
+                            .FirstOrDefault(t => t.Name == enumTypeName);
+
+                        if (enumType != null && enumType.IsEnum)
+                        {
+                            return Enum.Parse(enumType, value, true);
+                        }
+                    }
+                    break;
+            }
+
+            Debug.LogError($"Unsupported key type: {type}");
+            return null;
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to parse key value: {value}, error: {e.Message}");
+            return null;
+        }
     }
 } 
