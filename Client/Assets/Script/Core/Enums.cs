@@ -48,17 +48,6 @@ public enum PetType
 }
 
 /// <summary>
-/// 建筑类型
-/// </summary>
-public enum BuildingType
-{
-    None = 0,
-    Wall = 1,          // 墙
-    Fence = 2,         // 围栏
-    TechStation = 3,   // 科技站
-}
-
-/// <summary>
 /// 工具类型
 /// </summary>
 public enum ToolType
