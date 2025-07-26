@@ -46,11 +46,10 @@ public class EquipManager
 
         if (_reader == null)
         {
-            ConfigManager.Instance.LoadConfig("Equip", "Configs/Equip");
             _reader = ConfigManager.Instance.GetReader("Equip");
         }
 
-        if (_reader == null || !_reader.HasId(id))
+        if (_reader == null || !_reader.HasKey(id))
             return null;
 
         EquipPart type = (EquipPart)_reader.GetValue<int>(id, "Type", 0);

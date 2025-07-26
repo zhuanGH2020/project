@@ -23,27 +23,27 @@ public static class ConfigExample
 
         Debug.Log($"加载了 {reader.GetEntryCount()} 个配置项");
 
-        // 2. 查询单个配置项（使用枚举作为key）
-        var key = ToolType.Axe;
-        var targetTypes = reader.GetValue<SourceType[]>(key, "SourceTypes");
-        if (targetTypes != null)
-        {
-            Debug.Log($"工具 {key} 可作用目标: {string.Join(", ", targetTypes)}");
-        }
+        // // 2. 查询单个配置项（使用枚举作为key）
+        // var key = ToolType.Axe;
+        // var targetTypes = reader.GetValue<SourceType[]>(key, "SourceTypes");
+        // if (targetTypes != null)
+        // {
+        //     Debug.Log($"工具 {key} 可作用目标: {string.Join(", ", targetTypes)}");
+        // }
 
-        // 3. 遍历所有配置
-        Debug.Log("所有配置:");
-        // 获取指定类型的key
-        foreach (var toolType in reader.GetAllKeysOfType<ToolType>())
-        {
-            var types = reader.GetValue<SourceType[]>(toolType, "SourceTypes");
-            Debug.Log($"- [{toolType}] 可作用目标: {string.Join(", ", types ?? new SourceType[0])}");
-        }
+        // // 3. 遍历所有配置
+        // Debug.Log("所有配置:");
+        // // 获取指定类型的key
+        // foreach (var toolType in reader.GetAllKeysOfType<ToolType>())
+        // {
+        //     var types = reader.GetValue<SourceType[]>(toolType, "SourceTypes");
+        //     Debug.Log($"- [{toolType}] 可作用目标: {string.Join(", ", types ?? new SourceType[0])}");
+        // }
 
-        // 4. 演示错误处理和默认值
-        var nonExistentKey = ToolType.None;
-        var defaultTypes = reader.GetValue<SourceType[]>(nonExistentKey, "SourceTypes", new SourceType[0]);
-        Debug.Log($"不存在的配置 (Key: {nonExistentKey}): {string.Join(", ", defaultTypes)}");
+        // // 4. 演示错误处理和默认值
+        // var nonExistentKey = ToolType.None;
+        // var defaultTypes = reader.GetValue<SourceType[]>(nonExistentKey, "SourceTypes", new SourceType[0]);
+        // Debug.Log($"不存在的配置 (Key: {nonExistentKey}): {string.Join(", ", defaultTypes)}");
 
         Debug.Log("=== 示例完成 ===");
     }
@@ -118,9 +118,9 @@ public static class ConfigExample
             var invalidColumn = reader.GetValue<string>(validKey, "InvalidColumn", "默认值");
             Debug.Log($"无效列结果: {invalidColumn}");
 
-            // 测试枚举解析
-            var invalidType = reader.GetValue<ToolType>(validKey, "InvalidType", ToolType.None);
-            Debug.Log($"无效枚举结果: {invalidType}");
+            // // 测试枚举解析
+            // var invalidType = reader.GetValue<ToolType>(validKey, "InvalidType", ToolType.None);
+            // Debug.Log($"无效枚举结果: {invalidType}");
 
             ConfigManager.Instance.ClearConfig("Tool");
         }

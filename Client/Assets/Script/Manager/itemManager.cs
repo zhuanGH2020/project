@@ -61,11 +61,10 @@ public class ItemManager
 
         if (_reader == null)
         {
-            ConfigManager.Instance.LoadConfig("Item", "Configs/Item");
             _reader = ConfigManager.Instance.GetReader("Item");
         }
 
-        if (_reader == null || !_reader.HasId(id))
+        if (_reader == null || !_reader.HasKey(id))
             return null;
 
         ItemType type = (ItemType)_reader.GetValue<int>(id, "Type", 0);
