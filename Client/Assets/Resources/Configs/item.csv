@@ -1,6 +1,0 @@
-Id,Name,Type,Attack,Defense,Params,Position,Color
-int,string,enum<ItemType>,int,int,int[],vector3,color
-编号,名称,类型,攻击力,防御力,参数组,位置,颜色
-1,铁剑,1,10,5,1|2|3,0|0|0,#FF0000
-2,木剑,1,8,3,2|3|4,0|1|0,#00FF00
-3,布甲,2,0,10,5|6|7,1|1|0,#0000FF 
