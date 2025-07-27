@@ -29,7 +29,7 @@ if not exist "%DST_DIR%" (
 )
 
 echo 启动CSV编码转换工具...
-csv_converter\csv_converter.exe "%SRC_DIR%" "%DST_DIR%"
+..\Tools\csv_converter\csv_converter.exe "%SRC_DIR%" "%DST_DIR%"
 
 if errorlevel 1 (
     echo.

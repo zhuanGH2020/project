@@ -25,3 +25,63 @@ public enum EquipPart
     Body = 2,        // 身体
     Hand = 3,        // 手
 }
+
+/// <summary>
+/// 工具类型
+/// </summary>
+public enum ToolType
+{
+    None = 0,
+    Axe = 1,      // 斧头
+    Chisel = 2,   // 凿子
+    Torch = 3,    // 火把
+    Pot = 4,      // 锅
+}
+
+/// <summary>
+/// 怪物类型
+/// </summary>
+public enum MonsterType
+{
+    None = 0,
+    Normal = 1,    // 普通僵尸
+    Boss = 2,      // Boss僵尸
+    Poison = 3,    // 毒性僵尸
+    Tank = 4,      // 坦克僵尸
+}
+
+/// <summary>
+/// 伙伴类型
+/// </summary>
+public enum PartnerType
+{
+    None = 0,
+    Peashooter = 1,    // 豌豆射手
+    IceShooter = 2,    // 冰豌豆射手
+    FireShooter = 3,   // 火豌豆射手
+    LightShooter = 4,  // 光明射手
+    DarkShooter = 5,   // 黑暗射手
+}
+
+/// <summary>
+/// 可交互物体类型
+/// </summary>
+public enum SourceType
+{
+    None = 0,
+    Tree = 1,      // 树
+    Rock = 2,      // 岩石
+    Ore = 3,       // 矿石
+}
+
+/// <summary>
+/// 伤害类型
+/// </summary>
+public enum DamageType
+{
+    None = 0,
+    Physical = 1,
+    Fire = 2,
+    Ice = 3,
+    Poison = 4,
+}
