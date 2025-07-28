@@ -5,5 +5,5 @@ int,string,enum<EquipPart>,string,string,string,string
 10001,石头盔,Head,Icons/Items/leather,进阶头部防护装备，防御力更强,,
 20000,木胸甲,Body,Icons/Items/cloth,基础身体防护装备，提供基本防御,,
 20001,石胸甲,Body,Icons/Items/zombie_heart,进阶身体防护装备，防御力显著提升,,
-30000,机枪,Hand,Icons/Items/cloth,自动武器，高射速低精度,Assets/Prefabs/Equips/pbsc_equip_shotgun.prefab,
-30001,uzi,Hand,Icons/Items/zombie_heart,冲锋枪，射速极快适合近战,Assets/Prefabs/Equips/pbsc_equip_uzi.prefab,
+30000,机枪,Hand,Icons/Items/cloth,自动武器，高射速低精度,Prefabs/Equips/pbsc_equip_shotgun,
+30001,uzi,Hand,Icons/Items/zombie_heart,冲锋枪，射速极快适合近战,Prefabs/Equips/pbsc_equip_uzi,

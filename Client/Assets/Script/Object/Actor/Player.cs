@@ -10,7 +10,6 @@ public class Player : CombatEntity
 
     [Header("Movement")]
     [SerializeField] private float _moveSpeed = 5f;          // 移动速度
-    [SerializeField] private float _rotateSpeed = 10f;       // 旋转速度
 
     private Vector3 _moveDirection;     // 移动方向
 
@@ -23,7 +22,6 @@ public class Player : CombatEntity
             return;
         }
         _instance = this;
-        DontDestroyOnLoad(gameObject);
     }
 
     private void OnDestroy()
@@ -55,6 +53,18 @@ public class Player : CombatEntity
         {
             UseHandEquip();
         }
+
+        // 装备快捷键
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            var uzi = gameObject.AddComponent<Uzi>();
+            Equip(uzi);
+        }
+        else if (Input.GetKeyDown(KeyCode.E))
+        {
+            var axe = gameObject.AddComponent<Axe>();
+            Equip(axe);
+        }
     }
 
     /// <summary>
@@ -64,12 +74,9 @@ public class Player : CombatEntity
     {
         if (_moveDirection != Vector3.zero)
         {
-            Quaternion targetRotation = Quaternion.LookRotation(_moveDirection);
-            transform.rotation = Quaternion.Lerp(
-                transform.rotation,
-                targetRotation,
-                _rotateSpeed * Time.deltaTime
-            );
+            // 直接设置朝向
+            transform.rotation = Quaternion.LookRotation(_moveDirection);
+            // 移动
             transform.position += _moveDirection * _moveSpeed * Time.deltaTime;
         }
     }

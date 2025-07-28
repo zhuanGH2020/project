@@ -26,7 +26,7 @@ public abstract class HeadEquipBase : EquipBase
         if (string.IsNullOrEmpty(materialPath)) return;
         /*
         // 加载材质
-        var material = ResourceManager.Instance.LoadAsset<Material>(materialPath);
+        var material = ResourceManager.Instance.Load<Material>(materialPath);
         if (material == null) return;
 
         // 获取头部渲染器

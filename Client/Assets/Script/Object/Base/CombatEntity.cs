@@ -138,7 +138,7 @@ public abstract class CombatEntity : DamageableObject, IAttacker
         {
             equip.OnUnequip();
             _equips.Remove(equip);
-            Destroy(equip.gameObject);
+            Destroy(equip);
         }
     }
 
