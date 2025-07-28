@@ -44,10 +44,9 @@ public enum ToolType
 public enum MonsterType
 {
     None = 0,
-    Normal = 1,    // 普通僵尸
-    Boss = 2,      // Boss僵尸
-    Poison = 3,    // 毒性僵尸
-    Tank = 4,      // 坦克僵尸
+    Normal = 1,    // 普通怪
+    Boss = 2,      // Boss
+    Friend = 4,    // 友军
 }
 
 /// <summary>
@@ -61,17 +60,6 @@ public enum PartnerType
     FireShooter = 3,   // 火豌豆射手
     LightShooter = 4,  // 光明射手
     DarkShooter = 5,   // 黑暗射手
-}
-
-/// <summary>
-/// 可交互物体类型
-/// </summary>
-public enum SourceType
-{
-    None = 0,
-    Tree = 1,      // 树
-    Rock = 2,      // 岩石
-    Ore = 3,       // 矿石
 }
 
 /// <summary>
