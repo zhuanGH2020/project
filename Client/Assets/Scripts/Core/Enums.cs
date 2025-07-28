@@ -1,10 +1,6 @@
-/// <summary>
-/// 配置枚举
-/// </summary>
+// 配置枚举
 
-/// <summary>
-/// 物品类型
-/// </summary>
+// 物品类型
 public enum ItemType
 {
     None = 0,
@@ -15,9 +11,7 @@ public enum ItemType
     Equip = 5,       // 装备
 }
 
-/// <summary>
-/// 装备部位
-/// </summary>
+// 装备部位
 public enum EquipPart
 {
     None = 0,
@@ -26,9 +20,7 @@ public enum EquipPart
     Hand = 3,        // 手
 }
 
-/// <summary>
-/// 工具类型
-/// </summary>
+// 工具类型
 public enum ToolType
 {
     None = 0,
@@ -38,9 +30,7 @@ public enum ToolType
     Pot = 4,      // 锅
 }
 
-/// <summary>
-/// 怪物类型
-/// </summary>
+// 怪物类型
 public enum MonsterType
 {
     None = 0,
@@ -49,9 +39,7 @@ public enum MonsterType
     Friend = 4,    // 友军
 }
 
-/// <summary>
-/// 伙伴类型
-/// </summary>
+// 伙伴类型
 public enum PartnerType
 {
     None = 0,
@@ -62,9 +50,7 @@ public enum PartnerType
     DarkShooter = 5,   // 黑暗射手
 }
 
-/// <summary>
-/// 伤害类型
-/// </summary>
+// 伤害类型
 public enum DamageType
 {
     None = 0,
@@ -72,4 +58,12 @@ public enum DamageType
     Fire = 2,
     Ice = 3,
     Poison = 4,
+}
+
+// 时间段枚举
+public enum TimeOfDay
+{
+    Day = 0,        // 白天 (0.0-0.5)
+    Dusk = 1,       // 黄昏 (0.5-0.75)
+    Night = 2,      // 夜晚 (0.75-1.0)
 }

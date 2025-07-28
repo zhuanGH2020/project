@@ -30,4 +30,19 @@ public class ItemChangeEvent : IEvent
         Count = count;
         IsAdd = isAdd;
     }
+}
+
+/// <summary>
+/// 时间段切换事件
+/// </summary>
+public class TimeOfDayChangeEvent : IEvent
+{
+    public TimeOfDay PreviousTime { get; }
+    public TimeOfDay CurrentTime { get; }
+
+    public TimeOfDayChangeEvent(TimeOfDay previousTime, TimeOfDay currentTime)
+    {
+        PreviousTime = previousTime;
+        CurrentTime = currentTime;
+    }
 } 

@@ -13,6 +13,9 @@ public class CameraManager : MonoBehaviour
 
     void Update()
     {
-        Camera.main.transform.position = Player.Instance.transform.position + _offset;
+        if (Player.Instance != null)
+        {
+            Camera.main.transform.position = Player.Instance.transform.position + _offset;
+        }
     }
 }

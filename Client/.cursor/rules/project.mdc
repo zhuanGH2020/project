@@ -28,7 +28,7 @@ alwaysApply: true
 - **接口名**: 以I开头，如 `IDamageable`, `IInteractable`
 - **文件名**: 与类名一致，如 `PlayerController.cs`
 - **命名空间**: PascalCase，项目层级结构，如 `GameProject.Core.Manager`
-- **所有公共方法和类**: 必须有XML文档注释（/// <summary>）
+- **所有公共方法和类**: 必须有文档注释，如果注释内容只有一行就用（//），多行内容使用XML文档注释（/// <summary>）
 
 ### MonoBehaviour规范
 - 每个MonoBehaviour只负责一个明确的功能
