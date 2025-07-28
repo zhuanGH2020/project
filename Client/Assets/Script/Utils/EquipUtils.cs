@@ -52,7 +52,7 @@ public class EquipManager
         if (_reader == null || !_reader.HasKey(id))
             return null;
 
-        EquipPart type = (EquipPart)_reader.GetValue<int>(id, "Type", 0);
+        EquipPart type = _reader.GetValue<EquipPart>(id, "Type", EquipPart.None);
         Equip equip = new Equip(type, _reader);
         _cache[id] = equip;
 
