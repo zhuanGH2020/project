@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 
 /// <summary>
 /// 玩家角色
@@ -12,6 +13,7 @@ public class Player : CombatEntity
     [SerializeField] private float _moveSpeed = 5f;          // 移动速度
 
     private Vector3 _moveDirection;     // 移动方向
+    private NavMeshAgent _navMeshAgent; // NavMesh代理
 
     protected override void Awake()
     {
@@ -22,6 +24,7 @@ public class Player : CombatEntity
             return;
         }
         _instance = this;
+        _navMeshAgent = GetComponent<NavMeshAgent>();
     }
 
     private void OnDestroy()
@@ -48,6 +51,12 @@ public class Player : CombatEntity
         float vertical = Input.GetAxisRaw("Vertical");
         _moveDirection = new Vector3(horizontal, 0f, vertical).normalized;
 
+        // 鼠标左键点击移动
+        if (Input.GetMouseButtonDown(0))
+        {
+            HandleMouseClick();
+        }
+
         // 使用手持装备
         if (Input.GetKeyDown(KeyCode.Space))
         {
@@ -68,12 +77,33 @@ public class Player : CombatEntity
     }
 
     /// <summary>
+    /// 处理鼠标点击移动
+    /// </summary>
+    private void HandleMouseClick()
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hit))
+        {
+            if (_navMeshAgent != null)
+            {
+                _navMeshAgent.SetDestination(hit.point);
+            }
+        }
+    }
+
+    /// <summary>
     /// 处理移动
     /// </summary>
     private void HandleMovement()
     {
         if (_moveDirection != Vector3.zero)
         {
+            // 停止NavMesh移动，使用键盘移动
+            if (_navMeshAgent != null)
+            {
+                _navMeshAgent.ResetPath();
+            }
+            
             // 直接设置朝向
             transform.rotation = Quaternion.LookRotation(_moveDirection);
             // 移动
