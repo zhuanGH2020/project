@@ -1,6 +1,10 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Client/Assets/Script/Core/Resource/Example.meta
 guid: b7affdaa41f018c4683dac825ba54b4a
 folderAsset: yes
+========
+guid: 814f53fe638747d4087dcf80253538a3
+>>>>>>>> 5df2437aa63d536dec5e33820c2289170e82f850:Client/Assets/Resources/Configs/config_converter.bat.meta
 DefaultImporter:
   externalObjects: {}
   userData: 
