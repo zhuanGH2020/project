@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 476746409709183558}
   - component: {fileID: 1445093191673816584}
-  - component: {fileID: 5840295999818028956}
   m_Layer: 0
   m_Name: pbsc_player_main
   m_TagString: Player
@@ -54,29 +53,8 @@ MonoBehaviour:
   _handPoint: {fileID: 2184441852234863505}
   _headMesh: {fileID: 0}
   _bodyMesh: {fileID: 0}
-  _equips:
-  - {fileID: 5840295999818028956}
+  _equips: []
   _moveSpeed: 5
-  _rotateSpeed: 10
---- !u!114 &5840295999818028956
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 476746409709183554}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f001f94dec617e14db1777bf11e8981d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _equipPart: 2
-  _configId: 0
-  _maxDurability: 100
-  _useCooldown: 0.5
-  _damage: 15
-  _shootRange: 20
-  _muzzleFlash: {fileID: 0}
 --- !u!1 &4864285445612707250
 GameObject:
   m_ObjectHideFlags: 0
