@@ -67,7 +67,7 @@ public class ItemManager
         if (_reader == null || !_reader.HasKey(id))
             return null;
 
-        ItemType type = (ItemType)_reader.GetValue<int>(id, "Type", 0);
+        ItemType type = _reader.GetValue<ItemType>(id, "Type", ItemType.None);
         Item item = new Item(type, _reader);
         _cache[id] = item;
 

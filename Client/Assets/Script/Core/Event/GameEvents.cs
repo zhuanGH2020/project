@@ -1,19 +1,4 @@
 /// <summary>
-/// 物品选择事件
-/// </summary>
-public class ItemSelectEvent : IEvent
-{
-    public int ItemId { get; }
-    public string ItemName { get; }
-
-    public ItemSelectEvent(int itemId, string itemName)
-    {
-        ItemId = itemId;
-        ItemName = itemName;
-    }
-}
-
-/// <summary>
 /// 通用数值变化事件
 /// </summary>
 public class ValueChangeEvent : IEvent
@@ -27,5 +12,22 @@ public class ValueChangeEvent : IEvent
         Key = key;
         OldValue = oldValue;
         NewValue = newValue;
+    }
+}
+
+/// <summary>
+/// 道具变化事件
+/// </summary>
+public class ItemChangeEvent : IEvent
+{
+    public int ItemId { get; }
+    public int Count { get; }
+    public bool IsAdd { get; }
+
+    public ItemChangeEvent(int itemId, int count, bool isAdd)
+    {
+        ItemId = itemId;
+        Count = count;
+        IsAdd = isAdd;
     }
 } 
