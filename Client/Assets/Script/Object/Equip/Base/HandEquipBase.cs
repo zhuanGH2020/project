@@ -5,6 +5,7 @@ using UnityEngine;
 /// </summary>
 public abstract class HandEquipBase : EquipBase
 {
+    protected GameObject _modelPrefab;
     protected Transform _model;  // 装备模型
 
     protected override void Awake()
@@ -24,12 +25,12 @@ public abstract class HandEquipBase : EquipBase
         // 获取模型预制体路径
         string modelPath = equipConfig.Csv.GetValue<string>(_configId, "ModelPath");
         if (string.IsNullOrEmpty(modelPath)) return;
-        /*
+        
         // 加载并实例化模型
-        var modelPrefab = ResourceManager.Instance.LoadAsset<GameObject>(modelPath);
-        if (modelPrefab != null)
+        _modelPrefab = ResourceManager.Instance.Load<GameObject>(modelPath);
+        if (_modelPrefab != null)
         {
-            _model = Instantiate(modelPrefab, transform).transform;
+            _model = Instantiate(_modelPrefab, transform).transform;
             
             // 获取手部挂载点
             var combatEntity = _owner as CombatEntity;
@@ -41,20 +42,23 @@ public abstract class HandEquipBase : EquipBase
                 _model.localRotation = Quaternion.identity;
             }
         }
-        */
     }
 
     protected override void RemoveEquipEffect()
     {
         base.RemoveEquipEffect();
-        /*
+        
         // 清理模型
         if (_model != null)
         {
             Destroy(_model.gameObject);
             _model = null;
         }
-        */
+        if (_modelPrefab != null)
+        {
+            ResourceManager.Instance.Release(_modelPrefab);
+            _modelPrefab = null;
+        }
     }
 
     /// <summary>
