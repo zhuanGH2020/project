@@ -1,6 +1,7 @@
 Id,Name,Type,StackSize,IconPath,Description
 int,string,enum<ItemType>,int,string,string
 编号,名称,类型,堆叠上限,图标路径,描述
+1000,木头,None,99,Icons/Items/wood,基础材料，用于制作各种物品
 4001,铁块,None,50,Icons/Items/iron_ingot,基础材料，用于制作武器和护甲
 4002,皮革,None,99,Icons/Items/leather,常见材料，用于制作护甲
 4003,布料,None,50,Icons/Items/cloth,基础材料，用于制作轻型护甲
