@@ -1,5 +1,62 @@
-# Add directories or file patterns to ignore during indexing (e.g. foo/ or *.csv)
+# Unity generated files
+Library/
+Temp/
+Logs/
+obj/
+UserSettings/
+
+# Build outputs
+Builds/
+Build/
+*.apk
+*.ipa
+*.exe
+
+# Visual Studio / IDE files
+.vs/
+.vscode/
+*.sln.DotSettings.user
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary and backup files
+*.tmp
+*.temp
+*.log
+*.cache
+*.backup
+*.bak
+*.swp
+*.swo
+*~
+
+# Unity specific
+*.unitypackage
 *.meta
 *.png
 *.ttf
 *.prefab
+
+# TextMeshPro files
+Assets/TextMesh Pro/
+
+# Package files that are typically not edited
+Packages/
+packages-lock.json
