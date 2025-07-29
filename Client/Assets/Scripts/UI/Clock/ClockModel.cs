@@ -6,14 +6,12 @@ using UnityEngine;
 // 时钟模型 - 管理游戏时间循环和环境光照
 public class ClockModel : MonoBehaviour
 {
-    [Header("时间配置")]
-    [SerializeField] private float _dayDuration = 60f; // 一天持续时间（秒）
-    [SerializeField] private int _maxDays = 60; // 最大天数
+    private float _dayDuration = 60f; // 一天持续时间（秒）
+    private int _maxDays = 60; // 最大天数
 
-    [Header("光照配置")]
-    [SerializeField] private float _dayAmbientIntensity = 1.0f; // 白天环境光强度
-    [SerializeField] private float _duskAmbientIntensity = 0.6f; // 黄昏环境光强度  
-    [SerializeField] private float _nightAmbientIntensity = 0.3f; // 夜晚环境光强度
+    private float _dayAmbientIntensity = 1.0f; // 白天环境光强度
+    private float _duskAmbientIntensity = 0.6f; // 黄昏环境光强度  
+    private float _nightAmbientIntensity = 0.3f; // 夜晚环境光强度
 
     // 时间状态
     private float _dayProgress; // 当天进度 (0.0-1.0)
