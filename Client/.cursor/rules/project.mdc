@@ -68,7 +68,7 @@ alwaysApply: true
 ### 核心系统设计
 
 #### 资源管理系统
-- **ResourceManager**: 资源加载管理，支持同步/异步加载、引用计数和自动卸载。详细文档：参考 `ResourceFramework_TechnicalDocument.md`
+- **ResourceManager**: 基于Unity Resources系统的轻量级资源管理工具，提供资源加载、缓存和自动回收功能。详细文档：参考 `ResourceFramework_TechnicalDocument.md`
 
 #### 对象池系统
 - **ObjectPoolManager & ObjectPool**: 对象池管理，支持多类型对象复用、状态管理和超时清理。详细文档：参考 `PoolFramework_TechnicalDocument.md`
@@ -82,6 +82,9 @@ alwaysApply: true
 
 ## 3. 协作规范
 
+### 核心系统设计规范
+- 一句话介绍，然后指向对应的技术文档
+
 ### 技术文档生成规范
 - **当用户提问"生成某某的技术文档"时，必须严格基于本.cursorrules文件中已有的规则和规范**
 - 技术文档内容必须遵循项目的架构设计、代码风格、命名约定等所有既定规范
@@ -90,7 +93,6 @@ alwaysApply: true
 - 保持与项目整体技术栈和开发模式的一致性
 - **生成技术文档时要求精简，只实现核心模块，避免过度设计和复杂架构，专注于用户需求的核心功能**
 - **设计文档中必须明确标注哪些脚本需要挂载到GameObject上使用，区分MonoBehaviour组件和纯数据类/工具类的使用方式**
-- **核心系统设计规范**：在.cursorrules文件中，核心系统设计部分只做一句话总结，然后指向对应的技术文档
 - **文档结构要求**：
   - 简介：用一句话简单介绍系统功能
   - 详细接口：列出所有对外接口和方法

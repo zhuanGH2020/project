@@ -1,22 +1,21 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System.Linq;
 
 /// <summary>
 /// 战斗实体基类
 /// </summary>
 public abstract class CombatEntity : DamageableObject, IAttacker
 {
-    [Header("Combat Settings")]
+    [Header("战斗设置")]
     [SerializeField] protected float _baseAttack = 10f;
     [SerializeField] protected float _attackCooldown = 1f;
 
-    [Header("Equipment Points")]
+    [Header("装备挂载点")]
     [SerializeField] protected Transform _handPoint;           // 手部挂载点
     [SerializeField] protected SkinnedMeshRenderer _headMesh; // 头部渲染器
     [SerializeField] protected SkinnedMeshRenderer _bodyMesh; // 身体渲染器
 
-    [Header("Equipment")]
+    [Header("装备")]
     [SerializeField] protected List<EquipBase> _equips = new List<EquipBase>();  // 装备列表
 
     protected CooldownTimer _attackTimer;
@@ -69,20 +68,55 @@ public abstract class CombatEntity : DamageableObject, IAttacker
     protected virtual void OnValidate()
     {
         // 检查装备列表中是否有重复部位的装备
-        var duplicateParts = _equips
-            .GroupBy(e => e.EquipPart)
-            .Where(g => g.Count() > 1)
-            .Select(g => g.Key)
-            .ToList();
-
-        if (duplicateParts.Any())
+        Dictionary<EquipPart, int> partCounts = new Dictionary<EquipPart, int>();
+        List<EquipPart> duplicateParts = new List<EquipPart>();
+        
+        // 统计每个部位的装备数量
+        foreach (var equip in _equips)
         {
-            Debug.LogError($"CombatEntity has multiple equipment in parts: {string.Join(", ", duplicateParts)}");
+            if (partCounts.ContainsKey(equip.EquipPart))
+            {
+                partCounts[equip.EquipPart]++;
+            }
+            else
+            {
+                partCounts[equip.EquipPart] = 1;
+            }
+        }
+        
+        // 找出重复的部位
+        foreach (var kvp in partCounts)
+        {
+            if (kvp.Value > 1)
+            {
+                duplicateParts.Add(kvp.Key);
+            }
+        }
+
+        if (duplicateParts.Count > 0)
+        {
+            string duplicatePartsStr = "";
+            for (int i = 0; i < duplicateParts.Count; i++)
+            {
+                if (i > 0) duplicatePartsStr += ", ";
+                duplicatePartsStr += duplicateParts[i].ToString();
+            }
+            Debug.LogError($"CombatEntity has multiple equipment in parts: {duplicatePartsStr}");
+            
             // 移除重复部位的装备，只保留每个部位的第一个装备
-            _equips = _equips
-                .GroupBy(e => e.EquipPart)
-                .Select(g => g.First())
-                .ToList();
+            List<EquipBase> newEquips = new List<EquipBase>();
+            HashSet<EquipPart> addedParts = new HashSet<EquipPart>();
+            
+            foreach (var equip in _equips)
+            {
+                if (!addedParts.Contains(equip.EquipPart))
+                {
+                    newEquips.Add(equip);
+                    addedParts.Add(equip.EquipPart);
+                }
+            }
+            
+            _equips = newEquips;
         }
     }
 
@@ -111,9 +145,62 @@ public abstract class CombatEntity : DamageableObject, IAttacker
     }
 
     /// <summary>
-    /// 装备物品
+    /// 通过装备ID装备物品
     /// </summary>
-    public virtual void Equip(EquipBase equip)
+    public virtual void Equip(int equipId)
+    {
+        // 获取装备配置
+        var equipConfig = EquipManager.Instance.GetEquip(equipId);
+        if (equipConfig == null)
+        {
+            Debug.LogError($"[CombatEntity] Equipment config not found: {equipId}");
+            return;
+        }
+
+        // 根据配置类型创建对应的装备组件
+        EquipBase equip = null;
+        EquipType equipType = equipConfig.Csv.GetValue<EquipType>(equipId, "EquipType");
+        
+        switch (equipType)
+        {
+            case EquipType.Axe:
+                equip = gameObject.AddComponent<Axe>();
+                break;
+            case EquipType.Uzi:
+                equip = gameObject.AddComponent<Uzi>();
+                break;  
+            case EquipType.Shotgun:
+                equip = gameObject.AddComponent<Shotgun>();
+                break;
+            case EquipType.Torch:
+                equip = gameObject.AddComponent<Torch>();
+                break;
+            case EquipType.Armor:
+                equip = gameObject.AddComponent<Armor>();
+                break;
+            case EquipType.Helmet:
+                // 可以添加头盔类，暂时用Armor代替
+                equip = gameObject.AddComponent<Armor>();
+                break;
+            default:
+                Debug.LogError($"[CombatEntity] Unknown equipment type: {equipType}");
+                return;
+        }
+
+        if (equip != null)
+        {
+            // 初始化装备配置
+            equip.Init(equipId);
+            
+            // 调用原有装备方法
+            EquipInternal(equip);
+        }
+    }
+
+    /// <summary>
+    /// 内部装备处理方法
+    /// </summary>
+    protected virtual void EquipInternal(EquipBase equip)
     {
         if (equip == null) return;
 
@@ -122,12 +209,9 @@ public abstract class CombatEntity : DamageableObject, IAttacker
 
         // 添加新装备
         _equips.Add(equip);
-        equip.transform.SetParent(transform);  // 装备直接挂到实体下
-        equip.transform.localPosition = Vector3.zero;
-        equip.transform.localRotation = Quaternion.identity;
         equip.OnEquip(this);
     }
-
+    
     /// <summary>
     /// 卸下指定部位的装备
     /// </summary>
@@ -138,7 +222,6 @@ public abstract class CombatEntity : DamageableObject, IAttacker
         {
             equip.OnUnequip();
             _equips.Remove(equip);
-            Destroy(equip);
         }
     }
 
@@ -147,7 +230,14 @@ public abstract class CombatEntity : DamageableObject, IAttacker
     /// </summary>
     protected virtual EquipBase GetEquipByPart(EquipPart part)
     {
-        return _equips.FirstOrDefault(e => e.EquipPart == part);
+        foreach (var equip in _equips)
+        {
+            if (equip.EquipPart == part)
+            {
+                return equip;
+            }
+        }
+        return null;
     }
 
     /// <summary>

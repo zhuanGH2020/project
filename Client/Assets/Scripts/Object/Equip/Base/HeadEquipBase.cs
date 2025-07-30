@@ -7,12 +7,6 @@ public abstract class HeadEquipBase : EquipBase
 {
     protected Material _originalMaterial;  // 原始材质
 
-    protected override void Awake()
-    {
-        base.Awake();
-        _equipPart = EquipPart.Head;  // 设置装备部位
-    }
-
     protected override void ApplyEquipEffect()
     {
         base.ApplyEquipEffect();

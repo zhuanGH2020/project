@@ -5,14 +5,11 @@ using UnityEngine;
 /// </summary>
 public abstract class HandEquipBase : EquipBase
 {
+    [Header("轨迹设置")]
+    [SerializeField] protected Material _trailMaterial; // 轨迹材质（可选）
+    
     protected GameObject _modelPrefab;
     protected Transform _model;  // 装备模型
-
-    protected override void Awake()
-    {
-        base.Awake();
-        _equipPart = EquipPart.Hand;  // 设置装备部位
-    }
 
     protected override void ApplyEquipEffect()
     {
@@ -83,6 +80,16 @@ public abstract class HandEquipBase : EquipBase
     protected virtual void PlayAttackEffect()
     {
         // 由子类实现具体特效
+    }
+
+    /// <summary>
+    /// Show bullet trail effect
+    /// </summary>
+    /// <param name="startPoint">Trail start point</param>
+    /// <param name="endPoint">Trail end point</param>
+    protected virtual void ShowBulletTrail(Vector3 startPoint, Vector3 endPoint)
+    {
+        BulletTrail.CreateTrail(startPoint, endPoint, _trailMaterial);
     }
 
     /// <summary>

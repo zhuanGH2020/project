@@ -5,7 +5,7 @@ using UnityEngine;
 /// </summary>
 public abstract class DamageableObject : MonoBehaviour, IDamageable
 {
-    [Header("Basic Settings")]
+    [Header("基础设置")]
     [SerializeField] protected float _maxHealth = 100f;
     [SerializeField] protected float _defense = 0f;
     

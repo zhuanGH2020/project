@@ -5,11 +5,6 @@ using UnityEngine;
 /// </summary>
 public class Uzi : HandEquipBase
 {
-    [Header("Uzi Settings")]
-    [SerializeField] private float _damage = 15f;         // 基础伤害
-    [SerializeField] private float _shootRange = 20f;     // 射程
-    [SerializeField] private ParticleSystem _muzzleFlash; // 枪口特效
-
     protected override void ApplyEquipEffect()
     {
         Debug.Log($"[Uzi] ApplyEquipEffect - ConfigID: {_configId}");
@@ -39,11 +34,14 @@ public class Uzi : HandEquipBase
             shootPoint,
             shootDir,
             out RaycastHit hitInfo,
-            _shootRange
+            _range // 使用基类的射程
         );
 
-        // 播放射击特效
-        PlayAttackEffect();
+        // 计算轨迹线终点
+        Vector3 trailEndPoint = hit ? hitInfo.point : shootPoint + shootDir * _range;
+        
+        // 显示子弹轨迹线
+        ShowBulletTrail(shootPoint, trailEndPoint);
 
         if (hit)
         {
@@ -65,23 +63,5 @@ public class Uzi : HandEquipBase
         }
 
         base.Use();
-    }
-
-    public override float GetAttackBonus()
-    {
-        return _damage;
-    }
-
-    protected override void PlayAttackEffect()
-    {
-        if (_muzzleFlash != null)
-        {
-            _muzzleFlash.Play();
-            Debug.Log("[Uzi] Playing muzzle flash");
-        }
-        else
-        {
-            Debug.Log("[Uzi] No muzzle flash particle system");
-        }
     }
 } 

@@ -66,13 +66,11 @@ public class Player : CombatEntity
         // 装备快捷键
         if (Input.GetKeyDown(KeyCode.Q))
         {
-            var uzi = gameObject.AddComponent<Uzi>();
-            Equip(uzi);
+            Equip(30001);
         }
         else if (Input.GetKeyDown(KeyCode.E))
         {
-            var axe = gameObject.AddComponent<Axe>();
-            Equip(axe);
+            Equip(30002);
         }
     }
 

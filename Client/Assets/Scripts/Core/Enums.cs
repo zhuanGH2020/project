@@ -20,6 +20,18 @@ public enum EquipPart
     Hand = 3,        // 手
 }
 
+// 装备类型
+public enum EquipType
+{
+    None = 0,
+    Helmet = 1,      // 头盔
+    Armor = 2,       // 护甲
+    Axe = 3,         // 斧头
+    Torch = 4,       // 火把
+    Uzi = 5,         // UZI冲锋枪
+    Shotgun = 6,     // 散弹枪
+}
+
 // 工具类型
 public enum ToolType
 {

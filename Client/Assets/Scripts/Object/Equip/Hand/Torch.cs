@@ -5,9 +5,7 @@ using UnityEngine;
 /// </summary>
 public class Torch : HandEquipBase
 {
-    [Header("Torch Settings")]
-    [SerializeField] private float _damage = 10f;          // 基础伤害
-    [SerializeField] private float _attackRange = 2f;      // 攻击范围
+    [Header("火把设置")]
     [SerializeField] private ParticleSystem _flameEffect;  // 火焰特效
     [SerializeField] private Light _light;                 // 光源组件
 
@@ -36,7 +34,7 @@ public class Torch : HandEquipBase
             GetAttackPoint(),
             GetAttackDirection(),
             out RaycastHit hitInfo,
-            _attackRange
+            _range // 使用基类的范围
         );
 
         if (hit)
@@ -60,7 +58,7 @@ public class Torch : HandEquipBase
 
     public override float GetAttackBonus()
     {
-        return _isLit ? _damage : 0f;
+        return _isLit ? _damage : 0f; // 只有点燃时才有攻击力
     }
 
     protected override void HandleHit(IDamageable target, Vector3 hitPoint)
@@ -69,7 +67,7 @@ public class Torch : HandEquipBase
 
         var damageInfo = new DamageInfo
         {
-            Damage = GetAttackBonus(),
+            Damage = _damage, // 使用基类的伤害值
             Type = DamageType.Fire,  // 火焰伤害
             HitPoint = hitPoint,
             Direction = GetAttackDirection(),
@@ -83,7 +81,7 @@ public class Torch : HandEquipBase
     {
         base.OnDurabilityDepleted();
         SetLitState(false);
-        // 火把熄灭时的处理
-        Destroy(gameObject);
+        // 火把损坏时的处理 - 移除组件而不是销毁GameObject
+        Destroy(this);
     }
 } 

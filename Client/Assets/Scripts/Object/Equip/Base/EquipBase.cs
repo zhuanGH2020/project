@@ -5,12 +5,18 @@ using UnityEngine;
 /// </summary>
 public abstract class EquipBase : MonoBehaviour, IEquipable
 {
-    [Header("Basic Settings")]
+    [Header("基础设置")]
     [SerializeField] protected EquipPart _equipPart;    // 装备部位
     [SerializeField] protected int _configId;           // 配置ID
 
-    [Header("Durability Settings")]
+    [Header("战斗设置")]
+    [SerializeField] protected float _damage = 0f;      // 攻击力
+    [SerializeField] protected float _defense = 0f;     // 防御力
+    [SerializeField] protected float _range = 0f;       // 攻击范围
+
+    [Header("耐久设置")]
     [SerializeField] protected float _maxDurability = 100f;
+    [SerializeField] protected float _durabilityLoss = 1f;  // 每次使用的耐久损耗
     [SerializeField] protected float _useCooldown = 0.5f;
 
     protected float _currentDurability;
@@ -22,16 +28,53 @@ public abstract class EquipBase : MonoBehaviour, IEquipable
     public float CurrentDurability => _currentDurability;
     public bool IsEquipped => _owner != null;
     public bool CanUse => _useTimer.IsReady && CurrentDurability > 0;
+    public float Damage => _damage;
+    public float Defense => _defense;
+    public float Range => _range;
 
     protected virtual void Awake()
     {
-        _currentDurability = _maxDurability;
-        _useTimer = new CooldownTimer(_useCooldown);
+        // 基础初始化，具体数值在Init()中设置
     }
 
     protected virtual void Update()
     {
+        if (_useTimer != null)
+    {
         _useTimer.Update();
+        }
+    }
+
+    /// <summary>
+    /// 根据配置ID初始化装备
+    /// </summary>
+    public virtual void Init(int configId)
+    {
+        _configId = configId;
+        
+        // 从配置表读取装备属性
+        var equipConfig = EquipManager.Instance.GetEquip(configId);
+        if (equipConfig == null)
+        {
+            Debug.LogError($"[EquipBase] Equipment config not found: {configId}");
+            return;
+        }
+
+        // 初始化基础属性
+        _equipPart = equipConfig.Csv.GetValue<EquipPart>(_configId, "Type");
+
+        _damage = equipConfig.Csv.GetValue<float>(_configId, "Damage");
+        _defense = equipConfig.Csv.GetValue<float>(_configId, "Defense");
+        _maxDurability = equipConfig.Csv.GetValue<float>(_configId, "Durability");
+        _durabilityLoss = equipConfig.Csv.GetValue<float>(_configId, "DurabilityLoss");
+        _useCooldown = equipConfig.Csv.GetValue<float>(_configId, "UseCooldown");
+        _range = equipConfig.Csv.GetValue<float>(_configId, "Range");
+
+        // 用配置表的值初始化运行时数据
+        _currentDurability = _maxDurability;
+        _useTimer = new CooldownTimer(_useCooldown);
+
+        Debug.Log($"[EquipBase] Initialized equipment {configId}: Part={_equipPart}, Damage={_damage}, Defense={_defense}, Durability={_maxDurability}");
     }
 
     public virtual void OnEquip(IAttacker owner)
@@ -67,7 +110,7 @@ public abstract class EquipBase : MonoBehaviour, IEquipable
         if (!CanUse) return;
 
         // 消耗耐久度
-        _currentDurability--;
+        _currentDurability -= _durabilityLoss;
         
         // 开始冷却
         _useTimer.StartCooldown();
@@ -81,16 +124,23 @@ public abstract class EquipBase : MonoBehaviour, IEquipable
 
     public virtual float GetAttackBonus()
     {
-        return 0f;
+        return _damage;
     }
 
     public virtual float GetDefenseBonus()
     {
-        return 0f;
+        return _defense;
     }
 
     protected virtual void OnDurabilityDepleted()
     {
-        // 由子类实现具体逻辑
+        // 通知拥有者卸下装备
+        if (_owner is CombatEntity combatEntity && IsEquipped)
+        {
+            OnUnequip();
+            // 从装备列表中移除（需要CombatEntity提供RemoveEquip方法）
+        }
+        
+        // 由子类实现具体逻辑（如特效、音效等）
     }
 } 
