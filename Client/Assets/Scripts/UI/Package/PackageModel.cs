@@ -25,6 +25,7 @@ public class PackageItem
 /// </summary>
 public class PackageModel
 {
+    // 单例实现
     private static PackageModel _instance;
     public static PackageModel Instance
     {
@@ -38,10 +39,6 @@ public class PackageModel
         }
     }
 
-    private List<PackageItem> _packageItems = new List<PackageItem>();
-
-    public List<PackageItem> PackageItems => _packageItems;
-
     /// <summary>
     /// 私有构造函数，防止外部实例化
     /// </summary>
@@ -52,6 +49,13 @@ public class PackageModel
         AddItem(4001, 5);  // 添加5个铁块
     }
 
+    // 私有字段
+    private List<PackageItem> _packageItems = new List<PackageItem>();
+
+    // 公共属性
+    public List<PackageItem> PackageItems => _packageItems;
+
+    // 公共方法
     /// <summary>
     /// 添加道具到背包
     /// </summary>
