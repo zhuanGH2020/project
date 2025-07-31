@@ -45,12 +45,12 @@ public class XXXModel
 4. 公共方法
 5. 私有方法
 
-## GameManager集成
+## GameMain集成
 
-Model不继承MonoBehaviour，需要GameManager驱动：
+Model不继承MonoBehaviour，需要GameMain驱动：
 
 ```csharp
-public class GameManager : MonoBehaviour
+public class GameMain : MonoBehaviour
 {
     void Start()
     {
@@ -71,4 +71,4 @@ public class GameManager : MonoBehaviour
 **正确示例**：
 - `Assets/Scripts/UI/Clock/ClockModel.cs` (行1-123)
 
-**GameManager集成**：`Assets/Scripts/Manager/GameManager.cs` (行8-16) 
+**GameMain集成**：`Assets/Scripts/GameMain.cs`

@@ -13,11 +13,16 @@ public class GameMain : MonoBehaviour
         ConfigExample.Example();
         ConfigExample.AdvancedExample();
         ConfigExample.ValidationExample();
+
+        // 初始化各个Model
+        var clockModel = ClockModel.Instance;
+        var packageModel = PackageModel.Instance;
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        // 驱动需要更新的Model
+        ClockModel.Instance.UpdateTime();
     }
 }
