@@ -10,7 +10,7 @@ public class ClockDayView : MonoBehaviour
     private TextMeshProUGUI txt_time; // 时间段文本
     private TextMeshProUGUI txt_day;  // 天数文本
 
-    private ClockModel _clockModel; // 时钟模型引用
+
 
     void Start()
     {
@@ -28,7 +28,6 @@ public class ClockDayView : MonoBehaviour
         // 自动查找UI组件（如果未在Inspector中指定）
         txt_time = transform.Find("txt_time")?.GetComponent<TextMeshProUGUI>();
         txt_day = transform.Find("txt_day")?.GetComponent<TextMeshProUGUI>();
-        _clockModel = FindObjectOfType<ClockModel>();
 
         RefreshTimeDisplay();
         RefreshDayDisplay();
@@ -56,18 +55,18 @@ public class ClockDayView : MonoBehaviour
     // 刷新时间段显示
     private void RefreshTimeDisplay()
     {
-        if (txt_time == null || _clockModel == null) return;
+        if (txt_time == null) return;
 
-        string timeText = GetTimeOfDayText(_clockModel.CurrentTimeOfDay);
+        string timeText = GetTimeOfDayText(ClockModel.Instance.CurrentTimeOfDay);
         txt_time.text = timeText;
     }
 
     // 刷新天数显示
     private void RefreshDayDisplay()
     {
-        if (txt_day == null || _clockModel == null) return;
+        if (txt_day == null) return;
 
-        txt_day.text = _clockModel.ClockDay.ToString();
+        txt_day.text = ClockModel.Instance.ClockDay.ToString();
     }
 
     // 根据时间段枚举获取中文文本
@@ -89,9 +88,6 @@ public class ClockDayView : MonoBehaviour
     void Update()
     {
         // 每帧更新天数显示（处理天数变化但没有时间段切换的情况）
-        if (_clockModel != null)
-        {
-            RefreshDayDisplay();
-        }
+        RefreshDayDisplay();
     }
 }

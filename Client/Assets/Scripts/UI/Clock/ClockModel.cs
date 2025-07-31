@@ -1,46 +1,58 @@
-// Last modified_2: 2024-12-19 14:30:15
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-// 时钟模型 - 管理游戏时间循环和环境光照
-public class ClockModel : MonoBehaviour
+/// <summary>
+/// 时钟模型 - 管理游戏时间循环和环境光照
+/// </summary>
+public class ClockModel
 {
+    // 单例实现
+    private static ClockModel _instance;
+    public static ClockModel Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                _instance = new ClockModel();
+            }
+            return _instance;
+        }
+    }
+
+    // 私有字段
     private float _dayDuration = 60f; // 一天持续时间（秒）
     private int _maxDays = 60; // 最大天数
-
     private float _dayAmbientIntensity = 1.0f; // 白天环境光强度
     private float _duskAmbientIntensity = 0.6f; // 黄昏环境光强度  
     private float _nightAmbientIntensity = 0.3f; // 夜晚环境光强度
-
-    // 时间状态
     private float _dayProgress; // 当天进度 (0.0-1.0)
     private int _clockDay = 1; // 当前天数 (1-60)
     private TimeOfDay _currentTimeOfDay = TimeOfDay.Day;
     private float _targetAmbientIntensity;
 
-    // 当前天数
+    // 公共属性
     public int ClockDay => _clockDay;
-
-    // 当天进度 (0.0-1.0)
     public float DayProgress => _dayProgress;
-
-    // 当前时间段
     public TimeOfDay CurrentTimeOfDay => _currentTimeOfDay;
 
-    void Start()
+    // 私有构造函数
+    private ClockModel()
     {
         InitializeTime();
     }
 
-    void Update()
+    // 公共方法
+    /// <summary>
+    /// 更新时间系统 - 需要外部定期调用
+    /// </summary>
+    public void UpdateTime()
     {
         UpdateTimeProgress();
         UpdateTimeOfDay();
         UpdateAmbientLight();
     }
 
-    // 初始化时间系统
+    // 私有方法
     private void InitializeTime()
     {
         _dayProgress = 0f;
@@ -49,7 +61,6 @@ public class ClockModel : MonoBehaviour
         RenderSettings.ambientIntensity = _targetAmbientIntensity;
     }
 
-    // 更新时间进度
     private void UpdateTimeProgress()
     {
         _dayProgress += Time.deltaTime / _dayDuration;
@@ -61,7 +72,6 @@ public class ClockModel : MonoBehaviour
         }
     }
 
-    // 更新时间段状态
     private void UpdateTimeOfDay()
     {
         TimeOfDay newTimeOfDay = GetTimeOfDayFromProgress(_dayProgress);
@@ -71,7 +81,6 @@ public class ClockModel : MonoBehaviour
             TimeOfDay previousTime = _currentTimeOfDay;
             _currentTimeOfDay = newTimeOfDay;
             
-            // 更新目标光照强度
             UpdateTargetAmbientIntensity();
             
             // 发布时间段切换事件
@@ -79,7 +88,6 @@ public class ClockModel : MonoBehaviour
         }
     }
 
-    // 根据进度获取时间段
     private TimeOfDay GetTimeOfDayFromProgress(float progress)
     {
         if (progress < 0.5f) return TimeOfDay.Day;       // 白天 (0.0-0.5)
@@ -87,7 +95,6 @@ public class ClockModel : MonoBehaviour
         return TimeOfDay.Night;                          // 夜晚 (0.75-1.0)
     }
 
-    // 更新目标环境光强度
     private void UpdateTargetAmbientIntensity()
     {
         switch (_currentTimeOfDay)
@@ -104,7 +111,6 @@ public class ClockModel : MonoBehaviour
         }
     }
 
-    // 平滑更新环境光照
     private void UpdateAmbientLight()
     {
         RenderSettings.ambientIntensity = Mathf.Lerp(
