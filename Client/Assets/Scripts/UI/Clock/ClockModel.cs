@@ -68,7 +68,14 @@ public class ClockModel
         if (_dayProgress >= 1f)
         {
             _dayProgress = 0f;
+            int previousDay = _clockDay;
             _clockDay = Mathf.Min(_clockDay + 1, _maxDays);
+            
+            // 发布天数变化事件
+            if (_clockDay != previousDay)
+            {
+                EventManager.Instance.Publish(new DayChangeEvent(previousDay, _clockDay));
+            }
         }
     }
 
@@ -118,5 +125,20 @@ public class ClockModel
             _targetAmbientIntensity, 
             Time.deltaTime * 2f
         );
+    }
+    
+    // 设置游戏时间 - 用于加载存档
+    /// <param name="day">天数</param>
+    /// <param name="progress">当天进度</param>
+    /// <param name="timeOfDay">时间段</param>
+    public void SetGameTime(int day, float progress, TimeOfDay timeOfDay)
+    {
+        _clockDay = Mathf.Clamp(day, 1, _maxDays);
+        _dayProgress = Mathf.Clamp01(progress);
+        _currentTimeOfDay = timeOfDay;
+        UpdateTargetAmbientIntensity();
+        RenderSettings.ambientIntensity = _targetAmbientIntensity;
+        
+        Debug.Log($"[ClockModel] Time set to Day {_clockDay}, Progress {_dayProgress:F2}, TimeOfDay {_currentTimeOfDay}");
     }
 }

@@ -17,6 +17,7 @@ public class GameMain : MonoBehaviour
         // 初始化各个Model
         var clockModel = ClockModel.Instance;
         var packageModel = PackageModel.Instance;
+        var saveManager = SaveManager.Instance;
     }
 
     // Update is called once per frame

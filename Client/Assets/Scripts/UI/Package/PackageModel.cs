@@ -128,4 +128,11 @@ public class PackageModel
     {
         return new List<PackageItem>(_packageItems);
     }
+    
+    // 清空所有道具 - 用于加载存档
+    public void ClearAllItems()
+    {
+        _packageItems.Clear();
+        Debug.Log("[PackageModel] All items cleared");
+    }
 }

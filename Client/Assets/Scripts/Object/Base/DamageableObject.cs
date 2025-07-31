@@ -52,4 +52,15 @@ public abstract class DamageableObject : MonoBehaviour, IDamageable
         // 由子类实现具体死亡逻辑
         Debug.Log($"[{gameObject.name}] Dead!");
     }
+    
+    /// <summary>
+    /// 设置当前血量 - 用于加载存档
+    /// </summary>
+    /// <param name="health">目标血量值</param>
+    public virtual void SetHealth(float health)
+    {
+        float oldHealth = _currentHealth;
+        _currentHealth = Mathf.Clamp(health, 0, _maxHealth);
+        Debug.Log($"[{gameObject.name}] Health set from {oldHealth:F1} to {_currentHealth:F1}");
+    }
 } 

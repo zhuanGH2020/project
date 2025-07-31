@@ -1,6 +1,4 @@
-/// <summary>
-/// 通用数值变化事件
-/// </summary>
+// 通用数值变化事件
 public class ValueChangeEvent : IEvent
 {
     public string Key { get; }
@@ -15,9 +13,7 @@ public class ValueChangeEvent : IEvent
     }
 }
 
-/// <summary>
-/// 道具变化事件
-/// </summary>
+// 道具变化事件
 public class ItemChangeEvent : IEvent
 {
     public int ItemId { get; }
@@ -32,9 +28,7 @@ public class ItemChangeEvent : IEvent
     }
 }
 
-/// <summary>
-/// 时间段切换事件
-/// </summary>
+// 时间段切换事件
 public class TimeOfDayChangeEvent : IEvent
 {
     public TimeOfDay PreviousTime { get; }
@@ -45,4 +39,78 @@ public class TimeOfDayChangeEvent : IEvent
         PreviousTime = previousTime;
         CurrentTime = currentTime;
     }
+}
+
+// 天数变化事件
+public class DayChangeEvent : IEvent
+{
+    public int PreviousDay { get; }
+    public int CurrentDay { get; }
+    
+    public DayChangeEvent(int previousDay, int currentDay)
+    {
+        PreviousDay = previousDay;
+        CurrentDay = currentDay;
+    }
 } 
+
+// 制作类型选择事件
+public class MakeTypeSelectedEvent : IEvent
+{
+    public int TypeId { get; }
+    public string TypeName { get; }
+
+    public MakeTypeSelectedEvent(int typeId, string typeName)
+    {
+        TypeId = typeId;
+        TypeName = typeName;
+    }
+}
+
+// 制作菜单打开事件
+public class MakeMenuOpenEvent : IEvent
+{
+    public int TypeId { get; }
+
+    public MakeMenuOpenEvent(int typeId)
+    {
+        TypeId = typeId;
+    }
+}
+
+// 游戏保存完成事件
+public class GameSavedEvent : IEvent
+{
+    public int Slot { get; }
+    public string SaveTime { get; }
+    
+    public GameSavedEvent(int slot, string saveTime)
+    {
+        Slot = slot;
+        SaveTime = saveTime;
+    }
+}
+
+// 游戏加载完成事件
+public class GameLoadedEvent : IEvent
+{
+    public int Slot { get; }
+    public string SaveTime { get; }
+    
+    public GameLoadedEvent(int slot, string saveTime)
+    {
+        Slot = slot;
+        SaveTime = saveTime;
+    }
+}
+
+// 存档删除事件
+public class GameSaveDeletedEvent : IEvent
+{
+    public int Slot { get; }
+    
+    public GameSaveDeletedEvent(int slot)
+    {
+        Slot = slot;
+    }
+}
