@@ -25,6 +25,9 @@ public class Player : CombatEntity
         }
         _instance = this;
         _navMeshAgent = GetComponent<NavMeshAgent>();
+        
+        // 订阅输入事件
+        SubscribeToInputEvents();
     }
 
     private void OnDestroy()
@@ -32,66 +35,69 @@ public class Player : CombatEntity
         if (_instance == this)
         {
             _instance = null;
+            // 取消订阅输入事件
+            UnsubscribeFromInputEvents();
         }
     }
 
     protected override void Update()
     {
         base.Update();
-        HandleInput();
         HandleMovement();
     }
 
-    /// <summary>
-    /// 处理输入
-    /// </summary>
-    private void HandleInput()
+    // 订阅输入事件
+    private void SubscribeToInputEvents()
     {
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
-        _moveDirection = new Vector3(horizontal, 0f, vertical).normalized;
-
-        // 鼠标左键点击移动
-        if (Input.GetMouseButtonDown(0))
+        if (InputManager.Instance != null)
         {
-            HandleMouseClick();
-        }
-
-        // 使用手持装备
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            UseHandEquip();
-        }
-
-        // 装备快捷键
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            Equip(30001);
-        }
-        else if (Input.GetKeyDown(KeyCode.E))
-        {
-            Equip(30002);
+            InputManager.Instance.OnMoveInput += OnMoveInput;
+            InputManager.Instance.OnMouseClickMove += OnMouseClickMove;
+            InputManager.Instance.OnUseEquipInput += OnUseEquipInput;
+            InputManager.Instance.OnEquipShortcutInput += OnEquipShortcutInput;
         }
     }
 
-    /// <summary>
-    /// 处理鼠标点击移动
-    /// </summary>
-    private void HandleMouseClick()
+    // 取消订阅输入事件
+    private void UnsubscribeFromInputEvents()
     {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit))
+        if (InputManager.Instance != null)
         {
-            if (_navMeshAgent != null)
-            {
-                _navMeshAgent.SetDestination(hit.point);
-            }
+            InputManager.Instance.OnMoveInput -= OnMoveInput;
+            InputManager.Instance.OnMouseClickMove -= OnMouseClickMove;
+            InputManager.Instance.OnUseEquipInput -= OnUseEquipInput;
+            InputManager.Instance.OnEquipShortcutInput -= OnEquipShortcutInput;
         }
     }
 
-    /// <summary>
-    /// 处理移动
-    /// </summary>
+    // 处理移动输入
+    private void OnMoveInput(Vector3 moveDirection)
+    {
+        _moveDirection = moveDirection;
+    }
+
+    // 处理鼠标点击移动
+    private void OnMouseClickMove(Vector3 targetPosition)
+    {
+        if (_navMeshAgent != null)
+        {
+            _navMeshAgent.SetDestination(targetPosition);
+        }
+    }
+
+    // 处理使用装备输入
+    private void OnUseEquipInput()
+    {
+        UseHandEquip();
+    }
+
+    // 处理装备快捷键输入
+    private void OnEquipShortcutInput(int equipId)
+    {
+        Equip(equipId);
+    }
+
+    // 处理移动
     private void HandleMovement()
     {
         if (_moveDirection != Vector3.zero)

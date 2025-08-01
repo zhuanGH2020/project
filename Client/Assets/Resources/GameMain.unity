@@ -368,7 +368,7 @@ GameObject:
   - component: {fileID: 91630622}
   - component: {fileID: 91630621}
   m_Layer: 5
-  m_Name: Image
+  m_Name: bg
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -638,7 +638,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 0.0754717, g: 0.0754717, b: 0.0754717, a: 1}
-  m_RaycastTarget: 0
+  m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_Sprite: {fileID: 0}
@@ -722,7 +722,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 0.0754717, g: 0.0754717, b: 0.0754717, a: 1}
-  m_RaycastTarget: 0
+  m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_Sprite: {fileID: 0}
@@ -2383,7 +2383,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0.21464849, b: 1, a: 1}
-  m_RaycastTarget: 0
+  m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_Sprite: {fileID: 0}
@@ -2611,13 +2611,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1086000431}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dc1bf39bc5fd4bc4c84017afe8d7867c, type: 3}
+  m_Script: {fileID: 11500000, guid: 6e301aaa197f0c14b86f54e6be6b2f49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _btnPrint: {fileID: 0}
-  _btnRevert: {fileID: 0}
-  _btnSave: {fileID: 0}
-  _lastSavedDay: -1
 --- !u!1 &1096538129
 GameObject:
   m_ObjectHideFlags: 0
@@ -2670,7 +2666,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 0
+  m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_Sprite: {fileID: 0}
@@ -4366,7 +4362,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 0
+  m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_Sprite: {fileID: 0}
@@ -5011,7 +5007,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3528678543415377464, guid: 18a6cb095f9e1ba488354166db6c29f7, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3528678543415377468, guid: 18a6cb095f9e1ba488354166db6c29f7, type: 3}
       propertyPath: m_RootOrder

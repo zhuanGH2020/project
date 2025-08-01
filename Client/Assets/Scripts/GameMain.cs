@@ -15,6 +15,7 @@ public class GameMain : MonoBehaviour
         ConfigExample.ValidationExample();
 
         // 初始化各个Model - 按依赖顺序初始化
+        var inputManager = InputManager.Instance;
         var clockModel = ClockModel.Instance;
         var packageModel = PackageModel.Instance;
         
@@ -29,6 +30,7 @@ public class GameMain : MonoBehaviour
     void Update()
     {
         // 驱动需要更新的Model
+        InputManager.Instance.Update();
         ClockModel.Instance.UpdateTime();
         
         // 驱动存档模型（处理自动保存）
