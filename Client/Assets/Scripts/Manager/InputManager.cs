@@ -57,8 +57,11 @@ public class InputManager
         // 使用 InputUtils 检测是否点击UI
         if (InputUtils.IsPointerOverUI())
         {
-            // 打印UI路径信息
-            InputUtils.PrintClickedUIPath();
+            // 检查调试管理器的开关状态，决定是否打印UI路径信息
+            if (DebugManager.Instance.IsUIPathPrintEnabled)
+            {
+                InputUtils.PrintClickedUIPath();
+            }
             return;
         }
 

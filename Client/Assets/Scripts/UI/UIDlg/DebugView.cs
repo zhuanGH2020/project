@@ -4,16 +4,24 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 存档视图 - 提供存档相关UI交互功能
-/// 支持打印当前进度信息、删除存档和每日自动保存
+/// 调试视图 - 提供调试相关UI交互功能
+/// 支持打印当前进度信息、删除存档、每日自动保存和UI调试功能
 /// </summary>
-public class SaveView : MonoBehaviour
+public class DebugView : MonoBehaviour
 {
     private Button _btnPrint;
     private Button _btnRevert;
     private Button _btnSave;
     
+    private Toggle _toggleUIPath; // UI路径打印开关
+    
     private int _lastSavedDay = -1; // 上次保存的天数
+    
+    // UI路径打印开关状态变化事件处理
+    private void OnUIPathToggleChanged(bool isOn)
+    {
+        DebugManager.Instance.SetUIPathPrintEnabled(isOn);
+    }
     
     void Start()
     {
@@ -25,6 +33,9 @@ public class SaveView : MonoBehaviour
     void OnDestroy()
     {
         UnsubscribeEvents();
+        
+        // 取消UI组件监听器订阅
+        _toggleUIPath?.onValueChanged.RemoveListener(OnUIPathToggleChanged);
     }
     
     // 初始化按钮引用和事件监听
@@ -33,10 +44,12 @@ public class SaveView : MonoBehaviour
         _btnPrint = transform.Find("btn_print")?.GetComponent<Button>();
         _btnRevert = transform.Find("btn_revert")?.GetComponent<Button>();
         _btnSave = transform.Find("btn_save")?.GetComponent<Button>();
+        _toggleUIPath = transform.Find("toggle_ui_path")?.GetComponent<Toggle>();
         
         _btnPrint?.onClick.AddListener(OnPrintButtonClick);
         _btnRevert?.onClick.AddListener(OnRevertButtonClick);
         _btnSave?.onClick.AddListener(OnSaveButtonClick);
+        _toggleUIPath?.onValueChanged.AddListener(OnUIPathToggleChanged);
     }
     
     // 订阅事件
@@ -78,7 +91,7 @@ public class SaveView : MonoBehaviour
     /// </summary>
     private void OnDayChanged(DayChangeEvent eventData)
     {
-        Debug.Log($"[SaveView] Day changed from {eventData.PreviousDay} to {eventData.CurrentDay}");
+        Debug.Log($"[DebugView] Day changed from {eventData.PreviousDay} to {eventData.CurrentDay}");
         
         // 每天自动保存一次
         if (eventData.CurrentDay != _lastSavedDay)
@@ -96,11 +109,11 @@ public class SaveView : MonoBehaviour
         bool saveSuccess = SaveModel.Instance.SaveGame(0);
         if (saveSuccess)
         {
-            Debug.Log($"[SaveView] Daily auto save completed on day {currentDay}");
+            Debug.Log($"[DebugView] Daily auto save completed on day {currentDay}");
         }
         else
         {
-            Debug.LogError($"[SaveView] Daily auto save failed on day {currentDay}");
+            Debug.LogError($"[DebugView] Daily auto save failed on day {currentDay}");
         }
     }
     
@@ -115,11 +128,11 @@ public class SaveView : MonoBehaviour
         {
             // 更新最后保存天数，避免当天重复自动保存
             _lastSavedDay = ClockModel.Instance.ClockDay;
-            Debug.Log($"[SaveView] Manual save completed on day {_lastSavedDay}");
+            Debug.Log($"[DebugView] Manual save completed on day {_lastSavedDay}");
         }
         else
         {
-            Debug.LogError("[SaveView] Manual save failed");
+            Debug.LogError("[DebugView] Manual save failed");
         }
     }
     
@@ -208,30 +221,30 @@ public class SaveView : MonoBehaviour
         bool hasData = SaveModel.Instance.HasSaveData(0);
         if (!hasData)
         {
-            Debug.Log("[SaveView] No save data to delete");
+            Debug.Log("[DebugView] No save data to delete");
             return;
         }
         
         bool deleteSuccess = SaveModel.Instance.DeleteSaveData(0);
         if (deleteSuccess)
         {
-            Debug.Log("[SaveView] Current save deleted successfully");
+            Debug.Log("[DebugView] Current save deleted successfully");
         }
         else
         {
-            Debug.LogError("[SaveView] Failed to delete current save");
+            Debug.LogError("[DebugView] Failed to delete current save");
         }
     }
     
     // 游戏保存完成事件处理
     private void OnGameSaved(GameSavedEvent eventData)
     {
-        //Debug.Log($"[SaveView] Game saved notification: Slot {eventData.Slot} at {eventData.SaveTime}");
+        //Debug.Log($"[DebugView] Game saved notification: Slot {eventData.Slot} at {eventData.SaveTime}");
     }
     
     // 存档删除事件处理
     private void OnGameSaveDeleted(GameSaveDeletedEvent eventData)
     {
-        Debug.Log($"[SaveView] Save deleted notification: Slot {eventData.Slot}");
+        Debug.Log($"[DebugView] Save deleted notification: Slot {eventData.Slot}");
     }
 }
