@@ -102,19 +102,19 @@ public static class InputUtils
         if (uiResults.Count == 0)
             return;
 
-        System.Text.StringBuilder pathInfo = new System.Text.StringBuilder();
-        pathInfo.Append($"=== UI路径检测 - 共检测到 {uiResults.Count} 个UI对象 ===");
+        // 只获取最上面的那个UI对象（第一个）
+        RaycastResult topResult = uiResults[0];
+        GameObject topUIObject = topResult.gameObject;
         
-        for (int i = 0; i < uiResults.Count; i++)
+        // 如果点击的是TMP相关组件，使用其父级对象
+        if (topUIObject.name.Contains("TMP") && topUIObject.transform.parent != null)
         {
-            RaycastResult result = uiResults[i];
-            GameObject uiObject = result.gameObject;
-            string objectPath = GetGameObjectPath(uiObject);
-            
-            pathInfo.Append($" | [UI-{i}] Path: {objectPath}");
+            topUIObject = topUIObject.transform.parent.gameObject;
         }
         
-        Debug.Log(pathInfo.ToString());
+        string objectPath = GetGameObjectPath(topUIObject);
+        
+        Debug.Log($"UI路径检测 Path: {objectPath}");
     }
 
     // 获取GameObject的完整层级路径

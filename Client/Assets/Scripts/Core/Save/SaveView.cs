@@ -226,7 +226,7 @@ public class SaveView : MonoBehaviour
     // 游戏保存完成事件处理
     private void OnGameSaved(GameSavedEvent eventData)
     {
-        Debug.Log($"[SaveView] Game saved notification: Slot {eventData.Slot} at {eventData.SaveTime}");
+        //Debug.Log($"[SaveView] Game saved notification: Slot {eventData.Slot} at {eventData.SaveTime}");
     }
     
     // 存档删除事件处理
