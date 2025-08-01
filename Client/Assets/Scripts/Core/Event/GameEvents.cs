@@ -146,3 +146,14 @@ public class MouseHoverExitEvent : IEvent
     {
     }
 }
+
+// 通知显示事件
+public class NoticeEvent : IEvent
+{
+    public string Message { get; }
+    
+    public NoticeEvent(string message)
+    {
+        Message = message;
+    }
+}

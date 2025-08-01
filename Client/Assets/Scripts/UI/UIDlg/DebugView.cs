@@ -155,12 +155,13 @@ public class DebugView : MonoBehaviour
         // 材料字典：key=道具ID，value=数量
         var materials = new Dictionary<int, int>
         {
-            { 1000, 5 }, // 木头 x5
-            { 1001, 5 }  // 石头 x5
+            { 1000, 1 },
+            { 1001, 2 }
         };
         
         int successCount = 0;
         int totalCount = materials.Count;
+        var obtainedItems = new List<string>(); // 存储获得的物品信息
         
         foreach (var material in materials)
         {
@@ -174,16 +175,21 @@ public class DebugView : MonoBehaviour
                 var itemConfig = ItemManager.Instance.GetItem(itemId);
                 string itemName = itemConfig?.Csv.GetValue<string>(itemId, "Name", $"Item_{itemId}") ?? $"Item_{itemId}";
                 
-                Debug.Log($"[DebugView] Successfully added {count} {itemName} to inventory");
+                obtainedItems.Add($"{itemName} x{count}");
                 successCount++;
-            }
-            else
-            {
-                Debug.LogError($"[DebugView] Failed to add item {itemId} to inventory");
             }
         }
         
-        Debug.Log($"[DebugView] Material distribution completed: {successCount}/{totalCount} successful");
+        // 发布NoticeEvent显示获得的材料
+        if (obtainedItems.Count > 0)
+        {
+            string noticeMessage = $"获得材料：{string.Join("、", obtainedItems)}";
+            EventManager.Instance.Publish(new NoticeEvent(noticeMessage));
+        }
+        else
+        {
+            EventManager.Instance.Publish(new NoticeEvent("材料获取失败"));
+        }
     }
     
     /// <summary>
