@@ -62,11 +62,21 @@ public class InputManager
             return;
         }
 
-        // 使用 InputUtils 获取世界点击位置
+        // 点击了非UI区域，发布事件通知其他组件
+        Vector3 mouseWorldPos = Vector3.zero;
         if (InputUtils.GetMouseWorldHit(out RaycastHit hit))
         {
+            mouseWorldPos = hit.point;
             OnMouseClickMove?.Invoke(hit.point);
         }
+        else
+        {
+            // 即使没有碰撞到物体，也要发布点击外部UI事件
+            mouseWorldPos = Camera.main ? Camera.main.ScreenToWorldPoint(Input.mousePosition) : Vector3.zero;
+        }
+
+        // 发布点击非UI区域事件
+        EventManager.Instance.Publish(new ClickOutsideUIEvent(mouseWorldPos));
     }
 
     // 处理键盘按键输入

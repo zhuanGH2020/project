@@ -10,9 +10,8 @@ using TMPro;
 /// </summary>
 public class MakeMenuView : MonoBehaviour
 {
-    [Header("UI组件")]
-    [SerializeField] private TextMeshProUGUI txt_title; // 菜单标题文本组件
-    [SerializeField] private GameObject content_panel;   // 动态内容容器面板
+    private TextMeshProUGUI txt_title; // 菜单标题文本组件
+    private GameObject content_panel;   // 动态内容容器面板
     
     private int _currentTypeId = -1; // 当前选中的制作类型ID
     private const string TITLE_PREFIX = "制作 - "; // 标题前缀常量，避免字符串重复分配
@@ -47,6 +46,7 @@ public class MakeMenuView : MonoBehaviour
     {
         EventManager.Instance.Subscribe<MakeMenuOpenEvent>(OnMakeMenuOpen);
         EventManager.Instance.Subscribe<MakeTypeSelectedEvent>(OnMakeTypeSelected);
+        EventManager.Instance.Subscribe<ClickOutsideUIEvent>(OnClickOutsideUI);
     }
 
     // 取消订阅事件，防止内存泄漏
@@ -54,6 +54,7 @@ public class MakeMenuView : MonoBehaviour
     {
         EventManager.Instance.Unsubscribe<MakeMenuOpenEvent>(OnMakeMenuOpen);
         EventManager.Instance.Unsubscribe<MakeTypeSelectedEvent>(OnMakeTypeSelected);
+        EventManager.Instance.Unsubscribe<ClickOutsideUIEvent>(OnClickOutsideUI);
     }
 
     // 处理制作菜单打开事件
@@ -75,6 +76,15 @@ public class MakeMenuView : MonoBehaviour
         if (eventData != null && !string.IsNullOrEmpty(eventData.TypeName))
         {
             UpdateMenuTitle(eventData.TypeName);
+        }
+    }
+
+    // 处理点击非UI区域事件
+    private void OnClickOutsideUI(ClickOutsideUIEvent eventData)
+    {
+        if (gameObject.activeInHierarchy)
+        {
+            CloseMakeMenu();
         }
     }
 

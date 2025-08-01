@@ -14,6 +14,7 @@ GameMain
 │   ├── 处理WASD移动输入
 │   ├── 处理鼠标点击移动
 │   ├── 处理装备快捷键
+│   ├── 发布ClickOutsideUIEvent事件
 │   └── 使用 InputUtils 进行UI检测
 └── InputUtils (静态工具类)
     ├── UI点击检测
@@ -31,6 +32,7 @@ GameMain
 - 可动态启用/禁用输入
 - 由 GameMain 统一管理的纯 C# 单例类
 - 集成了项目现有的 `InputUtils` 工具类
+- **事件驱动**: 点击非UI区域时自动发布 `ClickOutsideUIEvent` 事件
 
 ## 支持的输入类型
 
@@ -46,11 +48,17 @@ GameMain
 - **注意**: 自动过滤UI点击，使用 `InputUtils.IsPointerOverUI()` 检测
 - **UI点击**: 点击UI时会自动打印UI路径信息
 
-### 3. 装备使用
+### 3. 点击非UI区域事件 ⭐ **新功能**
+- **事件**: `ClickOutsideUIEvent` (通过EventManager发布)
+- **触发**: 鼠标左键点击非UI区域时
+- **参数**: 点击位置的世界坐标
+- **用途**: 用于实现"点击外部关闭弹窗"等UI交互功能
+
+### 4. 装备使用
 - **事件**: `OnUseEquipInput()`
 - **触发**: 按下空格键时
 
-### 4. 装备快捷键
+### 5. 装备快捷键
 - **事件**: `OnEquipShortcutInput(int equipId)`
 - **触发**: 按下Q键或E键时
 - **参数**: 
@@ -78,6 +86,9 @@ private void Start()
         InputManager.Instance.OnUseEquipInput += HandleUseEquip;
         InputManager.Instance.OnEquipShortcutInput += HandleEquipShortcut;
     }
+    
+    // 订阅点击外部UI事件
+    EventManager.Instance.Subscribe<ClickOutsideUIEvent>(OnClickOutsideUI);
 }
 
 private void OnDestroy()
@@ -88,6 +99,19 @@ private void OnDestroy()
         InputManager.Instance.OnMouseClickMove -= HandleMouseMove;
         InputManager.Instance.OnUseEquipInput -= HandleUseEquip;
         InputManager.Instance.OnEquipShortcutInput -= HandleEquipShortcut;
+    }
+    
+    // 取消订阅点击外部UI事件
+    EventManager.Instance.Unsubscribe<ClickOutsideUIEvent>(OnClickOutsideUI);
+}
+
+// 处理点击外部UI事件
+private void OnClickOutsideUI(ClickOutsideUIEvent eventData)
+{
+    // 实现点击外部关闭弹窗等逻辑
+    if (isMenuVisible)
+    {
+        CloseMenu();
     }
 }
 ```
@@ -163,9 +187,10 @@ public static void PrintClickedUIObjects()
 ```csharp
 public static void PrintClickedUIPath()
 ```
-- **功能**: 打印点击的UI对象路径信息
-- **输出**: 单行日志包含所有UI对象的完整路径
-- **格式**: `=== UI路径检测 - 共检测到 N 个UI对象 === | [UI-0] Path: Canvas/Panel/Button`
+- **功能**: 打印点击的UI对象路径信息（只显示最上层UI对象）
+- **输出**: 单行日志包含最上层UI对象的完整路径
+- **格式**: `UI路径检测 Path: Canvas/Panel/Button`
+- **智能过滤**: 遇到TMP相关组件时自动显示其父级路径
 
 #### `PrintClickedWorldObject(RaycastHit hit)`
 ```csharp
@@ -214,6 +239,36 @@ public static void ClearCachedReferences()
 
 ---
 
+# 事件系统集成
+
+## ClickOutsideUIEvent 事件
+
+### 事件定义
+```csharp
+public class ClickOutsideUIEvent : IEvent
+{
+    public Vector3 ClickPosition { get; }
+    
+    public ClickOutsideUIEvent(Vector3 clickPosition)
+    {
+        ClickPosition = clickPosition;
+    }
+}
+```
+
+### 发布时机
+- 当用户点击鼠标左键且点击位置不在UI上时
+- 由 `InputManager.HandleMouseClickMove()` 自动发布
+- 包含点击位置的世界坐标信息
+
+### 使用场景
+- **弹窗自动关闭**: 点击弹窗外部区域时自动关闭
+- **菜单隐藏**: 点击菜单外部时隐藏菜单
+- **取消选择**: 点击空白区域取消当前选择状态
+- **UI状态重置**: 重置各种UI交互状态
+
+---
+
 # 系统集成和最佳实践
 
 ## InputManager 与 InputUtils 的配合
@@ -231,15 +286,46 @@ private void HandleMouseClickMove()
         return;
     }
 
-    // 使用 InputUtils 获取世界点击位置
+    // 点击了非UI区域，发布事件通知其他组件
+    Vector3 mouseWorldPos = Vector3.zero;
     if (InputUtils.GetMouseWorldHit(out RaycastHit hit))
     {
+        mouseWorldPos = hit.point;
         OnMouseClickMove?.Invoke(hit.point);
+    }
+    else
+    {
+        // 即使没有碰撞到物体，也要发布点击外部UI事件
+        mouseWorldPos = Camera.main ? Camera.main.ScreenToWorldPoint(Input.mousePosition) : Vector3.zero;
+    }
+
+    // 发布点击非UI区域事件
+    EventManager.Instance.Publish(new ClickOutsideUIEvent(mouseWorldPos));
+}
+```
+
+### 2. UI组件的事件驱动实现
+```csharp
+// MakeMenuView.cs 示例
+private void SubscribeEvents()
+{
+    EventManager.Instance.Subscribe<MakeMenuOpenEvent>(OnMakeMenuOpen);
+    EventManager.Instance.Subscribe<MakeTypeSelectedEvent>(OnMakeTypeSelected);
+    EventManager.Instance.Subscribe<ClickOutsideUIEvent>(OnClickOutsideUI); // 订阅点击外部事件
+}
+
+// 处理点击非UI区域事件
+private void OnClickOutsideUI(ClickOutsideUIEvent eventData)
+{
+    // 只有当菜单可见时才关闭
+    if (gameObject.activeInHierarchy)
+    {
+        CloseMakeMenu();
     }
 }
 ```
 
-### 2. Player.cs 的改动
+### 3. Player.cs 的改动
 原来的 `Player.cs` 中的输入处理逻辑已被移除，改为订阅 `InputManager` 的事件：
 
 - `HandleInput()` 方法已删除
@@ -261,7 +347,31 @@ if (InputUtils.IsPointerOverUI())
 }
 ```
 
-### 2. 安全的世界点击处理
+### 2. 实现弹窗自动关闭功能
+```csharp
+public class PopupWindow : MonoBehaviour
+{
+    void Start()
+    {
+        EventManager.Instance.Subscribe<ClickOutsideUIEvent>(OnClickOutside);
+    }
+
+    void OnDestroy()
+    {
+        EventManager.Instance.Unsubscribe<ClickOutsideUIEvent>(OnClickOutside);
+    }
+
+    private void OnClickOutside(ClickOutsideUIEvent eventData)
+    {
+        if (gameObject.activeInHierarchy)
+        {
+            ClosePopup();
+        }
+    }
+}
+```
+
+### 3. 安全的世界点击处理
 ```csharp
 // 在Update中使用安全点击检测
 private void Update()
@@ -273,7 +383,7 @@ private void Update()
 }
 ```
 
-### 3. 完整的点击分析
+### 4. 完整的点击分析
 ```csharp
 // 获取详细点击信息用于调试
 private void Update()
@@ -291,7 +401,7 @@ private void Update()
 }
 ```
 
-### 4. 场景切换管理
+### 5. 场景切换管理
 ```csharp
 // 在场景切换时清理缓存
 private void OnLevelWasLoaded(int level)
@@ -313,25 +423,29 @@ private void OnLevelWasLoaded(int level)
 - **列表复用**: UI检测使用静态列表避免GC分配
 - **StringBuilder优化**: 日志输出使用StringBuilder减少字符串分配
 - **统一更新**: InputManager由GameMain统一驱动，避免多个Update循环
+- **事件驱动**: 避免多个UI组件重复检测输入，统一由InputManager处理
 
 ### 调试功能
 - **详细日志**: 提供丰富的点击信息用于调试
 - **UI路径打印**: 自动显示UI对象的完整层级路径
+- **智能过滤**: TMP组件自动显示父级路径，提供更有意义的信息
 - **单行输出**: 所有日志信息合并为单行，保持控制台整洁
 - **组件信息**: 自动显示点击对象的所有组件信息
 
 ## 参考的项目代码
 - **EventManager.cs** (Assets/Scripts/Core/Event/EventManager.cs) - 单例模式设计
+- **GameEvents.cs** (Assets/Scripts/Core/Event/GameEvents.cs) - 事件定义
 - **ClockModel.cs, SaveModel.cs** - Model类设计模式
 - **GameMain.cs** (Assets/Scripts/GameMain.cs) - 统一系统管理
 
 ## 系统优势
 1. **统一架构**: InputManager与其他Model类保持一致的设计模式
-2. **解耦设计**: 输入逻辑与具体业务逻辑分离
-3. **事件驱动**: 基于事件的松耦合通信机制
-4. **复用性强**: 其他类可以订阅相同的输入事件
+2. **事件驱动**: 基于事件的松耦合通信机制，避免直接依赖
+3. **解耦设计**: 输入逻辑与具体业务逻辑完全分离
+4. **复用性强**: 多个UI组件可以订阅相同的ClickOutsideUIEvent事件
 5. **易于维护**: 输入逻辑集中管理，易于修改和扩展
 6. **调试友好**: 提供丰富的调试信息和UI路径打印功能
 7. **性能优化**: 缓存机制和对象复用减少GC压力
+8. **职责清晰**: UI组件专注于显示逻辑，输入统一由InputManager处理
 
-*版本: 2.0 - 整合版* 
+*版本: 2.1 - 事件驱动版* 

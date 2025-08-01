@@ -114,3 +114,14 @@ public class GameSaveDeletedEvent : IEvent
         Slot = slot;
     }
 }
+
+// 点击非UI区域事件
+public class ClickOutsideUIEvent : IEvent
+{
+    public UnityEngine.Vector3 ClickPosition { get; }
+    
+    public ClickOutsideUIEvent(UnityEngine.Vector3 clickPosition)
+    {
+        ClickPosition = clickPosition;
+    }
+}
