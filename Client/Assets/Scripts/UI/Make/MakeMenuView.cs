@@ -10,7 +10,7 @@ using UnityEngine.UI;
 /// </summary>
 public class MakeMenuView : MonoBehaviour
 {
-    private TextMeshProUGUI txt_title; // 菜单标题文本组件
+    private TextMeshProUGUI txt_title;
     
     private int _currentTypeId = -1; // 当前选中的制作类型ID
     private const string TITLE_PREFIX = "制作 - "; // 标题前缀常量，避免字符串重复分配
@@ -123,7 +123,6 @@ public class MakeMenuView : MonoBehaviour
             return;
         }
         
-        // 清理现有内容
         uiList.RemoveAll();
         
         // 根据typeId创建制作菜单项
@@ -161,7 +160,6 @@ public class MakeMenuView : MonoBehaviour
         var reader = ConfigManager.Instance.GetReader("MakeMenu");
         if (reader == null)
         {
-            Debug.LogError("无法获取MakeMenu配置读取器");
             return;
         }
         
