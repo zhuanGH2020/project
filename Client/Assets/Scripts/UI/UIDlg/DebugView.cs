@@ -13,6 +13,7 @@ public class DebugView : MonoBehaviour
     private Button _btnPrint;
     private Button _btnRevert;
     private Button _btnSave;
+    private Button _btnGetMat; // 获取材料按钮
     
     private Toggle _toggleUIPath; // UI路径打印开关
     
@@ -45,11 +46,13 @@ public class DebugView : MonoBehaviour
         _btnPrint = transform.Find("btn_print")?.GetComponent<Button>();
         _btnRevert = transform.Find("btn_revert")?.GetComponent<Button>();
         _btnSave = transform.Find("btn_save")?.GetComponent<Button>();
+        _btnGetMat = transform.Find("btn_get_mat")?.GetComponent<Button>();
         _toggleUIPath = transform.Find("toggle_ui_path")?.GetComponent<Toggle>();
         
         _btnPrint?.onClick.AddListener(OnPrintButtonClick);
         _btnRevert?.onClick.AddListener(OnRevertButtonClick);
         _btnSave?.onClick.AddListener(OnSaveButtonClick);
+        _btnGetMat?.onClick.AddListener(OnGetMatButtonClick);
         _toggleUIPath?.onValueChanged.AddListener(OnUIPathToggleChanged);
     }
     
@@ -85,6 +88,12 @@ public class DebugView : MonoBehaviour
     private void OnSaveButtonClick()
     {
         ManualSave();
+    }
+    
+    // 获取材料按钮点击事件
+    private void OnGetMatButtonClick()
+    {
+        GetMaterials();
     }
     
     /// <summary>
@@ -135,6 +144,46 @@ public class DebugView : MonoBehaviour
         {
             Debug.LogError("[DebugView] Manual save failed");
         }
+    }
+    
+    /// <summary>
+    /// 获取材料 - 向背包添加多种材料
+    /// 通过PackageModel的AddItem方法实现，内部会自动发送ItemChangeEvent事件
+    /// </summary>
+    private void GetMaterials()
+    {
+        // 材料字典：key=道具ID，value=数量
+        var materials = new Dictionary<int, int>
+        {
+            { 1000, 5 }, // 木头 x5
+            { 1001, 5 }  // 石头 x5
+        };
+        
+        int successCount = 0;
+        int totalCount = materials.Count;
+        
+        foreach (var material in materials)
+        {
+            int itemId = material.Key;
+            int count = material.Value;
+            
+            bool addSuccess = PackageModel.Instance.AddItem(itemId, count);
+            if (addSuccess)
+            {
+                // 获取道具名称用于日志显示
+                var itemConfig = ItemManager.Instance.GetItem(itemId);
+                string itemName = itemConfig?.Csv.GetValue<string>(itemId, "Name", $"Item_{itemId}") ?? $"Item_{itemId}";
+                
+                Debug.Log($"[DebugView] Successfully added {count} {itemName} to inventory");
+                successCount++;
+            }
+            else
+            {
+                Debug.LogError($"[DebugView] Failed to add item {itemId} to inventory");
+            }
+        }
+        
+        Debug.Log($"[DebugView] Material distribution completed: {successCount}/{totalCount} successful");
     }
     
     /// <summary>

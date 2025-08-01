@@ -49,6 +49,9 @@ public class InputManager
         {
             HandleMouseClickMove();
         }
+        
+        // 处理鼠标悬停
+        HandleMouseHover();
     }
 
     // 处理鼠标点击移动
@@ -111,4 +114,27 @@ public class InputManager
 
     // 获取当前输入状态
     public bool IsInputEnabled => _enableInput;
+    
+    // 处理鼠标悬停检测
+    private void HandleMouseHover()
+    {
+        // 如果鼠标在UI上，发布离开悬停事件
+        // if (InputUtils.IsPointerOverUI())
+        // {
+        //     EventManager.Instance.Publish(new MouseHoverExitEvent());
+        //     return;
+        // }
+        
+        // 射线检测鼠标悬停的对象
+        if (InputUtils.GetMouseWorldHit(out RaycastHit hit))
+        {
+            // 发布悬停事件
+            EventManager.Instance.Publish(new MouseHoverEvent(hit.collider.gameObject, hit.point));
+        }
+        else
+        {
+            // 没有检测到对象，发布离开悬停事件
+            EventManager.Instance.Publish(new MouseHoverExitEvent());
+        }
+    }
 } 

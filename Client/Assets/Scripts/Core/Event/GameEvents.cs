@@ -125,3 +125,24 @@ public class ClickOutsideUIEvent : IEvent
         ClickPosition = clickPosition;
     }
 }
+
+// 鼠标悬停事件
+public class MouseHoverEvent : IEvent
+{
+    public UnityEngine.GameObject HoveredObject { get; }
+    public UnityEngine.Vector3 HoverPosition { get; }
+    
+    public MouseHoverEvent(UnityEngine.GameObject hoveredObject, UnityEngine.Vector3 hoverPosition)
+    {
+        HoveredObject = hoveredObject;
+        HoverPosition = hoverPosition;
+    }
+}
+
+// 鼠标离开悬停事件
+public class MouseHoverExitEvent : IEvent
+{
+    public MouseHoverExitEvent()
+    {
+    }
+}

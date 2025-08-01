@@ -44,9 +44,7 @@ public class PackageModel
     /// </summary>
     private PackageModel()
     {
-        // 初始化测试数据
-        AddItem(1000, 10); // 添加10个木头
-        AddItem(4001, 5);  // 添加5个铁块
+
     }
 
     // 私有字段
