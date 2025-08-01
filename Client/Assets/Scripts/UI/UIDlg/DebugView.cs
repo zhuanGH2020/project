@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Reflection;
 
 /// <summary>
 /// 调试视图 - 提供调试相关UI交互功能
@@ -214,7 +215,7 @@ public class DebugView : MonoBehaviour
     
     /// <summary>
     /// 删除当前存档
-    /// 删除槽位0的存档数据
+    /// 删除槽位0的存档数据，并重置游戏状态到初始状态
     /// </summary>
     private void DeleteCurrentSave()
     {
@@ -229,10 +230,99 @@ public class DebugView : MonoBehaviour
         if (deleteSuccess)
         {
             Debug.Log("[DebugView] Current save deleted successfully");
+            
+            // 重置游戏状态到初始状态
+            ResetGameState();
         }
         else
         {
             Debug.LogError("[DebugView] Failed to delete current save");
+        }
+    }
+    
+    /// <summary>
+    /// 重置游戏状态到初始状态
+    /// 重置时间、背包、玩家血量、装备和位置
+    /// </summary>
+    private void ResetGameState()
+    {
+        Debug.Log("[DebugView] Resetting game state to initial values...");
+        
+        // 1. 重置时间系统：第1天，0%进度，白天
+        ClockModel.Instance.SetGameTime(1, 0f, TimeOfDay.Day);
+        
+        // 2. 清空背包所有道具
+        PackageModel.Instance.ClearAllItems();
+        
+        // 3. 重置玩家状态
+        var player = Player.Instance;
+        if (player != null)
+        {
+            // 重置血量到满血
+            player.SetHealth(player.MaxHealth);
+            
+            // 清理所有装备
+            ClearPlayerEquips(player);
+            
+            // 重置位置到初始位置（使用出生点或默认位置）
+            ResetPlayerPosition(player);
+        }
+        
+        // 4. 更新最后保存天数
+        _lastSavedDay = 1;
+        
+        Debug.Log("[DebugView] Game state reset complete - Day 1, Full Health, No Items, No Equips");
+    }
+    
+    /// <summary>
+    /// 清理玩家所有装备
+    /// </summary>
+    private void ClearPlayerEquips(Player player)
+    {
+        // 获取当前装备的ID列表
+        var equippedIds = player.GetEquippedItemIds();
+        
+        // 通过反射访问装备列表并清理
+        var equipField = typeof(CombatEntity).GetField("_equips", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        
+        if (equipField != null)
+        {
+            var equipsList = equipField.GetValue(player) as System.Collections.Generic.List<EquipBase>;
+            if (equipsList != null)
+            {
+                // 先调用所有装备的OnUnequip方法
+                foreach (var equip in equipsList)
+                {
+                    equip?.OnUnequip();
+                }
+                
+                // 清空装备列表
+                equipsList.Clear();
+                
+                Debug.Log($"[DebugView] Cleared {equippedIds.Count} equipped items");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 重置玩家位置到初始位置
+    /// </summary>
+    private void ResetPlayerPosition(Player player)
+    {
+        // 寻找场景中的出生点标
+        Vector3 resetPosition = Vector3.zero;
+        
+        // 重置位置和旋转
+        player.transform.position = resetPosition;
+        player.transform.rotation = Quaternion.identity;
+        
+        // 如果有NavMesh代理，也需要重置
+        var navAgent = player.GetComponent<UnityEngine.AI.NavMeshAgent>();
+        if (navAgent != null)
+        {
+            navAgent.ResetPath();
+            navAgent.Warp(resetPosition);
         }
     }
     
