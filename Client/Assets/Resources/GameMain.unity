@@ -5009,6 +5009,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: pbsc_player_main
       objectReference: {fileID: 0}
+    - target: {fileID: 3528678543415377464, guid: 18a6cb095f9e1ba488354166db6c29f7, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3528678543415377468, guid: 18a6cb095f9e1ba488354166db6c29f7, type: 3}
       propertyPath: m_RootOrder
       value: 4
@@ -5055,6 +5059,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6939197431153806257, guid: 18a6cb095f9e1ba488354166db6c29f7, type: 3}
       propertyPath: m_IgnoreFromBuild
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9217790582372719870, guid: 18a6cb095f9e1ba488354166db6c29f7, type: 3}
+      propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
