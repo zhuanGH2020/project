@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Reflection;
 
 /// <summary>
 /// 战斗实体基类
@@ -250,5 +251,41 @@ public abstract class CombatEntity : DamageableObject, IAttacker
         {
             handEquip.Use();
         }
+    }
+
+    /// <summary>
+    /// 获取已装备道具的配置ID列表 - 供存档系统使用
+    /// </summary>
+    public virtual List<int> GetEquippedItemIds()
+    {
+        List<int> equipIds = new List<int>();
+        foreach (var equip in _equips)
+        {
+            // 使用反射获取私有字段_configId，或者通过公共属性获取
+            if (equip != null)
+            {
+                // 假设EquipBase有ConfigId属性，如果没有则需要添加
+                var configId = GetEquipConfigId(equip);
+                if (configId > 0)
+                {
+                    equipIds.Add(configId);
+                }
+            }
+        }
+        return equipIds;
+    }
+    
+    /// <summary>
+    /// 获取装备的配置ID - 辅助方法
+    /// </summary>
+    private int GetEquipConfigId(EquipBase equip)
+    {
+        // 使用反射获取私有字段_configId
+        var field = typeof(EquipBase).GetField("_configId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        if (field != null)
+        {
+            return (int)field.GetValue(equip);
+        }
+        return 0;
     }
 } 

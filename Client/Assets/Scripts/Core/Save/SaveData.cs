@@ -6,7 +6,7 @@ using UnityEngine;
 /// 包含时间系统、背包系统、玩家数据等核心游戏状态
 /// </summary>
 [System.Serializable]
-public class GameSaveData
+public class SaveData
 {   
     [Header("时间系统")]
     public int clockDay = 1;                    // 当前天数

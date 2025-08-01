@@ -93,7 +93,7 @@ public class SaveView : MonoBehaviour
     /// </summary>
     private void AutoSaveDaily(int currentDay)
     {
-        bool saveSuccess = SaveManager.Instance.SaveGame(0);
+        bool saveSuccess = SaveModel.Instance.SaveGame(0);
         if (saveSuccess)
         {
             Debug.Log($"[SaveView] Daily auto save completed on day {currentDay}");
@@ -110,7 +110,7 @@ public class SaveView : MonoBehaviour
     /// </summary>
     private void ManualSave()
     {
-        bool saveSuccess = SaveManager.Instance.SaveGame(0);
+        bool saveSuccess = SaveModel.Instance.SaveGame(0);
         if (saveSuccess)
         {
             // 更新最后保存天数，避免当天重复自动保存
@@ -169,7 +169,7 @@ public class SaveView : MonoBehaviour
         }
         
         // 存档信息
-        var saveInfo = SaveManager.Instance.GetSaveInfo(0);
+        var saveInfo = SaveModel.Instance.GetSaveInfo(0);
         if (saveInfo != null && !saveInfo.IsEmpty)
         {
             logBuilder.AppendLine("存档信息:");
@@ -205,14 +205,14 @@ public class SaveView : MonoBehaviour
     /// </summary>
     private void DeleteCurrentSave()
     {
-        bool hasData = SaveManager.Instance.HasSaveData(0);
+        bool hasData = SaveModel.Instance.HasSaveData(0);
         if (!hasData)
         {
             Debug.Log("[SaveView] No save data to delete");
             return;
         }
         
-        bool deleteSuccess = SaveManager.Instance.DeleteSaveData(0);
+        bool deleteSuccess = SaveModel.Instance.DeleteSaveData(0);
         if (deleteSuccess)
         {
             Debug.Log("[SaveView] Current save deleted successfully");

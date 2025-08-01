@@ -97,15 +97,15 @@ public static class ConfigExample
     {
         Debug.Log("=== 验证示例 ===");
 
-        // 尝试加载不存在的配置
-        var reader = ConfigManager.Instance.GetReader("NonExistent");
-        if (reader == null)
-        {
-            Debug.Log("预期结果：未加载配置的读取器为null");
-        }
+        // // 尝试加载不存在的配置（已注释，避免错误日志）
+        // var reader = ConfigManager.Instance.GetReader("NonExistent");
+        // if (reader == null)
+        // {
+        //     Debug.Log("预期结果：未加载配置的读取器为null");
+        // }
 
         // 加载有效配置并测试数据验证
-        reader = ConfigManager.Instance.GetReader("Tool");
+        var reader = ConfigManager.Instance.GetReader("Tool");
         if (reader != null)
         {
             // 测试无效key

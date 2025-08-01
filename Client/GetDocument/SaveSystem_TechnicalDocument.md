@@ -1,15 +1,21 @@
 # 存档系统技术文档
 
 ## 简介
-基于PlayerPrefs的本地游戏存档系统，支持多槽位存档、自动保存和事件通知，用于持久化时间系统、背包系统和玩家数据等游戏进度信息。
+基于PlayerPrefs的本地游戏存档系统，支持多槽位存档、自动保存和事件通知，用于持久化时间系统、背包系统和玩家数据等游戏进度信息。统一集成在SaveModel中，遵循项目Model层设计规范。
 
 ## 详细接口
 
-### SaveManager（存档管理器）
-**类型**：纯数据类/工具类，使用单例模式
-**位置**：`Assets/Scripts/Core/Save/SaveManager.cs`
+### SaveModel（存档模型）
+**类型**：Model层单例类，整合完整存档功能
+**位置**：`Assets/Scripts/Core/Save/SaveModel.cs`
 
-#### 核心方法
+#### 初始化和生命周期
+- `Initialize()` - 初始化存档模型（GameMain中自动调用）
+- `Update()` - 更新自动保存逻辑（GameMain中自动调用）
+- `Cleanup()` - 清理资源（GameMain中自动调用）
+- `OnApplicationPause(bool pauseStatus)` - 应用暂停处理
+
+#### 核心存档方法
 - `SaveGame(int slot = 0)` - 保存游戏到指定槽位
 - `LoadGame(int slot = 0)` - 从指定槽位加载游戏  
 - `HasSaveData(int slot = 0)` - 检查指定槽位是否有存档
@@ -17,27 +23,21 @@
 - `GetAllSaveInfo()` - 获取所有存档槽位信息
 - `DeleteSaveData(int slot = 0)` - 删除指定槽位存档
 - `ClearAllSaveData()` - 清空所有存档数据
-- `SetAutoSave(bool enabled, float intervalSeconds = 300f)` - 设置自动保存
-- `Update()` - 更新自动保存逻辑，需要外部调用
 
-### GameSaveController（存档控制器）
-**类型**：MonoBehaviour组件，需要挂载到GameObject上使用
-**位置**：`Assets/Scripts/Manager/GameSaveController.cs`
-
-#### 配置选项
-- `Auto Load On Start` - 游戏启动时自动加载
-- `Auto Save On Quit` - 应用暂停/失焦时自动保存
-- `Auto Save Interval` - 自动保存间隔（60-600秒）
-- `Quick Save Key` - 快速保存按键（默认F5）
-- `Quick Load Key` - 快速加载按键（默认F9）
-- `Show Save Info Key` - 显示存档信息按键（默认F1）
-
-#### 公共方法
+#### 便捷方法
 - `QuickSave()` - 快速保存到槽位0
 - `QuickLoad()` - 快速从槽位0加载
 - `SaveToSlot(int slot)` - 保存到指定槽位
 - `LoadFromSlot(int slot)` - 从指定槽位加载
-- `DeleteSlot(int slot)` - 删除指定槽位存档
+- `DeleteSlot(int slot)` - 删除指定槽位
+
+#### 配置方法
+- `SetAutoSave(bool enabled, float intervalSeconds = 300f)` - 设置自动保存
+- `SetSaveConfig(bool autoLoadOnStart, bool autoSaveOnQuit, float autoSaveInterval)` - 设置存档配置
+
+
+public void DeleteSlot(int slot)              // 删除指定槽位
+```
 
 ### SaveView（存档UI视图）
 **类型**：MonoBehaviour组件，需要挂载到GameObject上使用
@@ -64,7 +64,7 @@ SaveView GameObject
 
 ### 数据结构类
 
-#### GameSaveData
+#### SaveData
 存档数据主体，包含：
 - `clockDay` - 当前天数
 - `dayProgress` - 当天进度(0.0-1.0)
@@ -97,29 +97,47 @@ SaveView GameObject
 ### 基础使用
 ```csharp
 // 保存游戏
-SaveManager.Instance.SaveGame(0);
+SaveModel.Instance.SaveGame(0);
 
-// 加载游戏
-SaveManager.Instance.LoadGame(0);
+// 加载游戏  
+SaveModel.Instance.LoadGame(0);
 
 // 检查是否有存档
-if (SaveManager.Instance.HasSaveData(0))
+if (SaveModel.Instance.HasSaveData(0))
 {
     // 执行加载逻辑
 }
+
+// 便捷方法
+SaveModel.Instance.QuickSave();    // 快速保存到槽位0
+SaveModel.Instance.QuickLoad();    // 快速从槽位0加载
 ```
 
-### 使用MonoBehaviour组件
+### 系统初始化
 ```csharp
-// 在场景中创建空GameObject，挂载GameSaveController组件
-// 配置Inspector中的参数：
-// - 启用自动加载和自动保存
-// - 设置合适的自动保存间隔
-// - 配置快捷键
+// 在GameMain中统一初始化（已自动处理）
+void Start()
+{
+    // 其他系统初始化...
+    var clockModel = ClockModel.Instance;
+    var packageModel = PackageModel.Instance;
+    
+    // 初始化存档模型
+    var saveModel = SaveModel.Instance;
+    saveModel.Initialize();
+}
+
+// 可选：自定义配置
+void Start()
+{
+    var saveModel = SaveModel.Instance;
+    saveModel.SetSaveConfig(autoLoadOnStart: true, autoSaveOnQuit: true, autoSaveInterval: 180f); // 3分钟
+    saveModel.Initialize();
+}
 
 // 通过代码调用存档功能
-GetComponent<GameSaveController>().SaveToSlot(1);
-GetComponent<GameSaveController>().LoadFromSlot(1);
+GameSaveController.Instance.SaveToSlot(1);
+GameSaveController.Instance.LoadFromSlot(1);
 ```
 
 ### 获取存档信息
