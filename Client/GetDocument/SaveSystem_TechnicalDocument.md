@@ -35,13 +35,9 @@
 - `SetAutoSave(bool enabled, float intervalSeconds = 300f)` - 设置自动保存
 - `SetSaveConfig(bool autoLoadOnStart, bool autoSaveOnQuit, float autoSaveInterval)` - 设置存档配置
 
-
-public void DeleteSlot(int slot)              // 删除指定槽位
-```
-
 ### SaveView（存档UI视图）
 **类型**：MonoBehaviour组件，需要挂载到GameObject上使用
-**位置**：`Assets/Scripts/UI/UIDlg/SaveView.cs`
+**位置**：`Assets/Scripts/Core/Save/SaveView.cs`
 
 #### UI结构要求
 ```
@@ -80,6 +76,7 @@ SaveView GameObject
 存档信息类，用于UI显示：
 - `slot` - 存档槽位
 - `saveTime` - 存档时间
+- `saveVersion` - 存档版本
 - `clockDay` - 游戏天数
 - `playerHealth` - 玩家血量
 - `itemCount` - 道具数量
@@ -134,23 +131,19 @@ void Start()
     saveModel.SetSaveConfig(autoLoadOnStart: true, autoSaveOnQuit: true, autoSaveInterval: 180f); // 3分钟
     saveModel.Initialize();
 }
-
-// 通过代码调用存档功能
-GameSaveController.Instance.SaveToSlot(1);
-GameSaveController.Instance.LoadFromSlot(1);
 ```
 
 ### 获取存档信息
 ```csharp
 // 获取单个存档信息
-SaveInfo info = SaveManager.Instance.GetSaveInfo(0);
+SaveInfo info = SaveModel.Instance.GetSaveInfo(0);
 if (info != null && !info.IsEmpty)
 {
     Debug.Log($"存档：{info.GetDisplayText()}");
 }
 
 // 获取所有存档信息
-var allSaves = SaveManager.Instance.GetAllSaveInfo();
+var allSaves = SaveModel.Instance.GetAllSaveInfo();
 foreach (var save in allSaves)
 {
     if (save != null && !save.IsEmpty)
@@ -186,13 +179,13 @@ private void OnGameLoaded(GameLoadedEvent eventData)
 void Start()
 {
     // 设置每2分钟自动保存一次
-    SaveManager.Instance.SetAutoSave(true, 120f);
+    SaveModel.Instance.SetAutoSave(true, 120f);
 }
 
 void Update()
 {
     // 必须调用Update来驱动自动保存
-    SaveManager.Instance.Update();
+    SaveModel.Instance.Update();
 }
 ```
 
@@ -226,10 +219,8 @@ private void OnDayChanged(DayChangeEvent eventData)
 ## 注意事项
 
 ### 组件挂载要求
-- `GameSaveController` 需要挂载到GameObject上使用
 - `SaveView` 需要挂载到UI GameObject上使用
-- `SaveManager` 是纯工具类，无需挂载
-- 确保在场景中只有一个`GameSaveController`实例
+- `SaveModel` 是单例类，无需挂载
 - `SaveView`可以有多个实例，但通常一个即可满足需求
 
 ### 数据持久化范围
