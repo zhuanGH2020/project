@@ -34,6 +34,7 @@ alwaysApply: true
 #### 注释格式
 - **单行注释**: 使用 `//` 进行简短说明
 - **多行注释**: 使用 XML文档注释 `/// <summary>` 进行详细描述
+- **简单summary注释**: 对于只有一行内容的`/// <summary>`注释，改为使用单行`//`注释
 
 #### 注释原则
 - **关键内容必须注释**：复杂逻辑、约束条件、副作用、使用限制
@@ -49,11 +50,6 @@ alwaysApply: true
 1. **简单方法**：如 `GetPlayer()`, `SetHealth(int value)`
 2. **属性访问器**：如 `public int Health { get; set; }`
 3. **工具方法**：如 `IsNull()`, `ToString()`
-
-#### 注释质量
-- **说明"为什么"而非"是什么"**
-- **重点说明约束和注意事项**
-- **避免重复代码已表达的信息**
 
 ### MonoBehaviour规范
 - 每个MonoBehaviour只负责一个明确的功能

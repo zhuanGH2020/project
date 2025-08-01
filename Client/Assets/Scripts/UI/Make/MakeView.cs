@@ -70,14 +70,12 @@ public class MakeView : MonoBehaviour
     {
         if (isOn)
         {
-            Debug.Log($"选择制作类型: {typeName} (ID: {typeId})");
             MakeModel.Instance.SelectMakeType(typeId);
         }
     }
     
     private void OnItemClick(int typeId)
     {
-        Debug.Log($"点击制作类型 ID: {typeId}");
         MakeModel.Instance.SelectMakeType(typeId);
     }
 
