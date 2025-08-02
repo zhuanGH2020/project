@@ -310,17 +310,11 @@ public class MakeDetailView : MonoBehaviour
             txtName.text = materialName;
         }
         
-        // 设置数量显示 (当前数量/需求数量)
-        var txtQuantity = item.transform.Find("txt_quantity")?.GetComponent<TextMeshProUGUI>();
-        if (txtQuantity != null)
+        // 设置需要材料数量显示
+        var txtCount = item.transform.Find("txt_count")?.GetComponent<TextMeshProUGUI>();
+        if (txtCount != null)
         {
-            txtQuantity.text = $"{currentQuantity}/{material.RequiredQuantity}";
-            
-            // 如果材料不足，设置红色显示
-            if (currentQuantity < material.RequiredQuantity)
-            {
-                txtQuantity.color = Color.red;
-            }
+            txtCount.text = material.RequiredQuantity.ToString();
         }
     }
 

@@ -156,7 +156,9 @@ public class DebugView : MonoBehaviour
         var materials = new Dictionary<int, int>
         {
             { 1000, 1 },
-            { 1001, 2 }
+            { 1001, 1 },
+            { 4001, 1 },
+            { 4003, 1 },
         };
         
         int successCount = 0;
