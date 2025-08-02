@@ -6,9 +6,17 @@ using TMPro;
 
 public class MakeView : MonoBehaviour
 {
+    private Toggle _currentSelectedToggle;
+
     void Start()
     {
         InitializeMakeList();
+        SubscribeEvents();
+    }
+
+    void OnDestroy()
+    {
+        UnsubscribeEvents();
     }
     
     private void InitializeMakeList()
@@ -54,29 +62,53 @@ public class MakeView : MonoBehaviour
         {
             int typeId = makeType.typeId;
             string typeName = makeType.typeName;
-            toggle.onValueChanged.AddListener((isOn) => OnItemToggle(typeId, typeName, isOn));
-        }
-        
-        // 设置Button交互（如果有的话）
-        var button = item.GetComponent<Button>();
-        if (button != null)
-        {
-            int typeId = makeType.typeId;
-            button.onClick.AddListener(() => OnItemClick(typeId));
+            
+            toggle.onValueChanged.AddListener((isOn) => OnItemToggle(typeId, typeName, isOn, toggle));
         }
     }
     
-    private void OnItemToggle(int typeId, string typeName, bool isOn)
+    private void OnItemToggle(int typeId, string typeName, bool isOn, Toggle toggle)
     {
         if (isOn)
         {
+            // 记录当前选中的Toggle
+            _currentSelectedToggle = toggle;
+            // Toggle变为选中状态，选择新的制作类型
             MakeModel.Instance.SelectMakeType(typeId);
         }
+        else
+        {
+            // Toggle变为未选中状态，检查是否是当前选中的类型
+            if (MakeModel.Instance.SelectedTypeId == typeId)
+            {
+                // 点击已选中的item取消选中，关闭菜单
+                _currentSelectedToggle = null;
+                MakeModel.Instance.CloseMakeMenu();
+            }
+        }
     }
-    
-    private void OnItemClick(int typeId)
+
+    // 订阅事件
+    private void SubscribeEvents()
     {
-        MakeModel.Instance.SelectMakeType(typeId);
+        EventManager.Instance.Subscribe<MakeMenuCloseEvent>(OnMakeMenuClose);
+    }
+
+    // 取消订阅事件
+    private void UnsubscribeEvents()
+    {
+        EventManager.Instance.Unsubscribe<MakeMenuCloseEvent>(OnMakeMenuClose);
+    }
+
+    // 处理制作菜单关闭事件
+    private void OnMakeMenuClose(MakeMenuCloseEvent eventData)
+    {
+        // 取消当前选中Toggle的选中状态
+        if (_currentSelectedToggle != null)
+        {
+            _currentSelectedToggle.SetIsOnWithoutNotify(false);
+            _currentSelectedToggle = null;
+        }
     }
 
     private Transform FindChildWithUIList()

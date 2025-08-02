@@ -92,6 +92,15 @@ public class MakeModel
     }
 
     /// <summary>
+    /// 关闭制作菜单
+    /// </summary>
+    public void CloseMakeMenu()
+    {
+        _selectedTypeId = -1;
+        EventManager.Instance.Publish(new MakeMenuCloseEvent());
+    }
+
+    /// <summary>
     /// 获取制作类型数据
     /// </summary>
     public MakeTypeData GetMakeTypeData(int typeId)

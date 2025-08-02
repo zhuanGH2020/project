@@ -192,7 +192,6 @@ public static class InputUtils
         }
         else
         {
-            Debug.Log("=== 点击检测 === 点击了空白区域");
             onClickEmpty?.Invoke();
         }
     }
@@ -202,8 +201,6 @@ public static class InputUtils
     {
         if (!Input.GetMouseButtonDown(0))
             return false;
-
-        Debug.Log($"=== 完整点击分析 === 鼠标位置: {Input.mousePosition}");
         
         // 检查UI点击
         if (IsPointerOverUI())
@@ -218,8 +215,6 @@ public static class InputUtils
             PrintClickedWorldObject(hit);
             return false;
         }
-
-        Debug.Log("=== 完整点击分析 === 点击了空白区域");
         return false;
     }
 
@@ -227,5 +222,48 @@ public static class InputUtils
     public static void ClearCachedReferences()
     {
         _mainCamera = null;
+    }
+
+    /// <summary>
+    /// 角色移动专用的右键点击检测方法
+    /// 只有在不点击UI时才执行移动回调，使用鼠标右键
+    /// </summary>
+    public static void HandlePlayerMoveClick(System.Action onClickMove)
+    {
+        if (!Input.GetMouseButtonDown(1))
+            return;
+
+        if (IsPointerOverUI())
+        {
+            // 右键点击UI时不打印信息，静默处理
+            return;
+        }
+        
+        onClickMove?.Invoke();
+    }
+
+    /// <summary>
+    /// 角色移动专用的世界点击处理方法
+    /// 使用鼠标右键进行移动控制，自动过滤UI点击
+    /// </summary>
+    public static void HandlePlayerMoveWorldClick(System.Action<RaycastHit> onHitMove, System.Action onClickEmptyMove = null, int layerMask = -1)
+    {
+        if (!Input.GetMouseButtonDown(1))
+            return;
+
+        if (IsPointerOverUI())
+        {
+            // 右键点击UI时静默处理，不执行移动
+            return;
+        }
+
+        if (GetMouseWorldHit(out RaycastHit hit, Mathf.Infinity, layerMask))
+        {
+            onHitMove?.Invoke(hit);
+        }
+        else
+        {
+            onClickEmptyMove?.Invoke();
+        }
     }
 } 

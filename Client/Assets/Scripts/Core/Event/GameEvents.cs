@@ -78,6 +78,14 @@ public class MakeMenuOpenEvent : IEvent
     }
 }
 
+// 制作菜单关闭事件
+public class MakeMenuCloseEvent : IEvent
+{
+    public MakeMenuCloseEvent()
+    {
+    }
+}
+
 // 游戏保存完成事件
 public class GameSavedEvent : IEvent
 {
@@ -155,5 +163,26 @@ public class NoticeEvent : IEvent
     public NoticeEvent(string message)
     {
         Message = message;
+    }
+}
+
+// 制作详情视图打开事件
+public class MakeDetailOpenEvent : IEvent
+{
+    public int ItemId { get; }
+    public UnityEngine.Vector2 UIPosition { get; }
+    
+    public MakeDetailOpenEvent(int itemId, UnityEngine.Vector2 uiPosition)
+    {
+        ItemId = itemId;
+        UIPosition = uiPosition;
+    }
+}
+
+// 制作详情视图关闭事件
+public class MakeDetailCloseEvent : IEvent
+{
+    public MakeDetailCloseEvent()
+    {
     }
 }

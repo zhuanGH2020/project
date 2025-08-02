@@ -41,6 +41,7 @@ public class MakeMenuView : MonoBehaviour
     private void SubscribeEvents()
     {
         EventManager.Instance.Subscribe<MakeMenuOpenEvent>(OnMakeMenuOpen);
+        EventManager.Instance.Subscribe<MakeMenuCloseEvent>(OnMakeMenuClose);
         EventManager.Instance.Subscribe<MakeTypeSelectedEvent>(OnMakeTypeSelected);
         EventManager.Instance.Subscribe<ClickOutsideUIEvent>(OnClickOutsideUI);
     }
@@ -49,6 +50,7 @@ public class MakeMenuView : MonoBehaviour
     private void UnsubscribeEvents()
     {
         EventManager.Instance.Unsubscribe<MakeMenuOpenEvent>(OnMakeMenuOpen);
+        EventManager.Instance.Unsubscribe<MakeMenuCloseEvent>(OnMakeMenuClose);
         EventManager.Instance.Unsubscribe<MakeTypeSelectedEvent>(OnMakeTypeSelected);
         EventManager.Instance.Unsubscribe<ClickOutsideUIEvent>(OnClickOutsideUI);
     }
@@ -63,6 +65,12 @@ public class MakeMenuView : MonoBehaviour
         
         _currentTypeId = eventData.TypeId;
         ShowMakeMenu(eventData.TypeId);
+    }
+
+    // 处理制作菜单关闭事件
+    private void OnMakeMenuClose(MakeMenuCloseEvent eventData)
+    {
+        CloseMakeMenu();
     }
 
     // 处理制作类型选择事件，更新菜单标题
@@ -219,6 +227,9 @@ public class MakeMenuView : MonoBehaviour
             int itemId = reader.GetValue<int>(key, "Id", 0);
             button.onClick.AddListener(() => OnMakeItemClick(itemId, itemName));
         }
+        
+        // 设置悬停事件处理
+        SetupHoverEvents(item, reader, key);
     }
     
     // 设置材料需求显示
@@ -272,6 +283,65 @@ public class MakeMenuView : MonoBehaviour
         }
     }
     
+    /// <summary>
+    /// 设置物品悬停事件处理
+    /// 添加鼠标悬停监听，悬停时打开制作详情视图，离开时关闭详情视图
+    /// </summary>
+    private void SetupHoverEvents(GameObject item, ConfigReader reader, object key)
+    {
+        int itemId = reader.GetValue<int>(key, "Id", 0);
+        
+        // 添加EventTrigger组件处理悬停事件
+        var eventTrigger = item.GetComponent<UnityEngine.EventSystems.EventTrigger>();
+        if (eventTrigger == null)
+        {
+            eventTrigger = item.AddComponent<UnityEngine.EventSystems.EventTrigger>();
+        }
+        
+        // 添加鼠标进入事件
+        var pointerEnter = new UnityEngine.EventSystems.EventTrigger.Entry();
+        pointerEnter.eventID = UnityEngine.EventSystems.EventTriggerType.PointerEnter;
+        pointerEnter.callback.AddListener((eventData) => {
+            // 获取item的UI位置
+            Vector2 itemPosition = GetItemUIPosition(item);
+            OnItemHover(itemId, itemPosition);
+        });
+        eventTrigger.triggers.Add(pointerEnter);
+        
+        // 添加鼠标离开事件
+        var pointerExit = new UnityEngine.EventSystems.EventTrigger.Entry();
+        pointerExit.eventID = UnityEngine.EventSystems.EventTriggerType.PointerExit;
+        pointerExit.callback.AddListener((eventData) => {
+            OnItemHoverExit();
+        });
+        eventTrigger.triggers.Add(pointerExit);
+    }
+    
+    /// <summary>
+    /// 获取item的UI位置
+    /// 直接返回item的anchored position
+    /// </summary>
+    private Vector2 GetItemUIPosition(GameObject item)
+    {
+        RectTransform rectTransform = item.transform as RectTransform;
+        if (rectTransform == null) return Vector2.zero;
+        
+        // 直接返回UI坐标，无需转换
+        return rectTransform.anchoredPosition;
+    }
+
+    // 处理物品悬停事件
+    private void OnItemHover(int itemId, Vector2 itemPosition)
+    {
+        EventManager.Instance.Publish(new MakeDetailOpenEvent(itemId, itemPosition));
+    }
+
+    // 处理物品悬停离开事件
+    private void OnItemHoverExit()
+    {
+        EventManager.Instance.Publish(new MakeDetailCloseEvent());
+    }
+
     // 处理制作物品点击事件
     private void OnMakeItemClick(int itemId, string itemName)
     {
@@ -296,7 +366,5 @@ public class MakeMenuView : MonoBehaviour
         _currentTypeId = -1;
         SetMenuVisible(false);
         MakeModel.Instance.ClearSelection();
-        
-        Debug.Log("关闭制作菜单");
     }
 }
