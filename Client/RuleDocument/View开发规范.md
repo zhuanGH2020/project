@@ -1,16 +1,17 @@
 # View开发规范
 
 ## 简介
-View是Unity UI系统中的视图层组件，负责UI界面的显示、交互处理和用户输入响应。本规范基于项目现有的MakeMenuView、MakeView、PackageView等实现总结而来。
+View是Unity UI系统中的视图层组件，负责UI界面的显示、交互处理和用户输入响应。本规范基于项目现有的MakeMenuView、MakeView、PackageView等实现总结而来，并采用BaseView统一资源管理架构。
 
 ## 基础结构规范
 
 ### 类声明和继承
+**所有View必须继承BaseView，获得统一的资源管理能力：**
 ```csharp
 /// <summary>
 /// 视图功能描述 - 详细说明视图职责和交互逻辑
 /// </summary>
-public class ExampleView : MonoBehaviour
+public class ExampleView : BaseView  // ✅ 继承BaseView，不是MonoBehaviour
 {
     // 类实现
 }
@@ -25,9 +26,44 @@ void Start()
     SubscribeEvents();
 }
 
-void OnDestroy()
+// ✅ 使用OnViewDestroy替代OnDestroy
+protected override void OnViewDestroy()
 {
     UnsubscribeEvents();
+    // 注意：资源会自动释放，无需手动处理
+}
+```
+
+## 资源管理规范
+
+### BaseView资源管理API
+继承BaseView后，可直接使用以下资源管理方法：
+
+```csharp
+// 图片资源加载
+protected bool LoadAndSetSprite(Image image, string spritePath)
+protected bool LoadAndSetSprite(string imagePath, string spritePath)
+
+// 物品图标加载
+protected bool LoadAndSetItemIcon(string imagePath, int itemId)
+
+// 通用资源加载
+protected T LoadResource<T>(string path) where T : Object
+```
+
+### 资源使用示例
+```csharp
+private void InitializeView()
+{
+    // ✅ 一行代码设置物品图标，自动管理资源生命周期
+    LoadAndSetItemIcon("img_icon", 1000);
+    
+    // ✅ 一行代码设置背景图片
+    LoadAndSetSprite("img_background", "UI/background");
+    
+    // ✅ 加载其他类型资源
+    var audioClip = LoadResource<AudioClip>("Audio/UI/click");
+    var effectPrefab = LoadResource<GameObject>("Prefabs/Effects/ui_glow");
 }
 ```
 
@@ -189,6 +225,19 @@ private void SetupListItem(GameObject item, DataType data)
     if (txtName != null)
     {
         txtName.text = data.Name;
+    }
+    
+    // ✅ 设置列表项图标（使用ResourceUtils或手动处理）
+    var imgIcon = item.transform.Find("img_icon")?.GetComponent<Image>();
+    if (imgIcon != null && data.IconId > 0)
+    {
+        // 方式1：使用ResourceUtils（不自动管理，适用于列表项）
+        ResourceUtils.LoadAndSetItemIcon(imgIcon, data.IconId);
+        
+        // 方式2：使用BaseView的LoadResource，手动设置图标
+        // var iconPath = GetItemIconPath(data.IconId);
+        // var sprite = LoadResource<Sprite>(iconPath);
+        // if (sprite != null) imgIcon.sprite = sprite;
     }
     
     // 设置按钮交互
@@ -354,15 +403,83 @@ private void SetMenuVisible(bool visible)
 - View只负责显示和交互，不处理业务逻辑
 - 所有数据操作通过Model进行
 
-### 5. 资源管理
-- 在OnDestroy中清理所有事件订阅
-- 避免内存泄漏和事件重复订阅
+### 5. 资源管理（BaseView架构）
+- **自动资源释放**：继承BaseView后，所有通过LoadResource加载的资源会在View销毁时自动释放
+- **使用BaseView API**：优先使用LoadAndSetSprite、LoadAndSetItemIcon等便捷方法
+- **避免手动资源管理**：不要在OnViewDestroy中手动释放资源，BaseView会自动处理
+- **事件订阅清理**：在OnViewDestroy中清理事件订阅和协程等非资源对象
+
+```csharp
+protected override void OnViewDestroy()
+{
+    // ✅ 只处理事件和协程清理
+    UnsubscribeEvents();
+    if (_updateCoroutine != null)
+    {
+        StopCoroutine(_updateCoroutine);
+    }
+    
+    // ❌ 不要手动释放资源，BaseView自动处理
+    // ResourceManager.Instance.Release(sprite); // 错误做法
+}
+```
+
+### 6. 架构优势
+- **统一继承**：所有View继承BaseView，架构统一
+- **资源安全**：自动资源管理，避免内存泄漏
+- **代码简洁**：一行代码完成资源加载和UI设置
+- **易于维护**：标准化的生命周期管理
 
 ## 参考代码位置
 
 本规范基于以下项目文件总结：
+- `Assets/Scripts/UI/Base/BaseView.cs` (View基类，资源管理核心)
+- `Assets/Scripts/UI/Base/BaseViewExample.cs` (BaseView使用示例)
 - `Assets/Scripts/UI/Make/MakeMenuView.cs` (完整的复杂View示例)
 - `Assets/Scripts/UI/Make/MakeView.cs` (简单的列表View示例)  
 - `Assets/Scripts/UI/Package/PackageView.cs` (数据驱动View示例)
 
-开发新的View时，建议参考这些现有实现。 
+开发新的View时，建议：
+1. 继承BaseView而不是MonoBehaviour
+2. 参考BaseViewExample.cs学习资源管理用法
+3. 参考现有View实现业务逻辑
+
+## 迁移指南
+
+### 现有View改造步骤
+1. **修改继承关系**：`MonoBehaviour` → `BaseView`
+2. **修改生命周期**：`OnDestroy()` → `OnViewDestroy()`
+3. **使用资源管理API**：将手动资源加载改为BaseView的便捷方法
+4. **移除手动资源释放代码**：BaseView自动处理
+
+### 改造示例
+```csharp
+// ❌ 改造前
+public class ItemView : MonoBehaviour
+{
+    private void OnDestroy()
+    {
+        // 手动资源管理代码
+        foreach (var sprite in loadedSprites)
+        {
+            ResourceManager.Instance.Release(sprite);
+        }
+    }
+}
+
+// ✅ 改造后
+public class ItemView : BaseView
+{
+    private void Start()
+    {
+        // 使用BaseView API，自动资源管理
+        LoadAndSetItemIcon("img_icon", 1000);
+    }
+    
+    protected override void OnViewDestroy()
+    {
+        // 只处理事件清理，资源自动释放
+        UnsubscribeEvents();
+    }
+}
+``` 

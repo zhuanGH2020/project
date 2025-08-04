@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class MakeView : MonoBehaviour
+public class MakeView : BaseView
 {
     private Toggle _currentSelectedToggle;
 

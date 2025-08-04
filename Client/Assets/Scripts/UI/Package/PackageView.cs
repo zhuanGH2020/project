@@ -6,7 +6,7 @@ using TMPro;
 
 // PackageView - 背包UI视图
 
-public class PackageView : MonoBehaviour
+public class PackageView : BaseView
 {
     private void Start()
     {
@@ -37,35 +37,55 @@ public class PackageView : MonoBehaviour
     {
         uiList.RemoveAll();
         
-        var allItems = PackageModel.Instance.GetAllItems();
-        
-        foreach (var packageItem in allItems)
+        for (int i = 0; i < PackageModel.MAX_SLOTS; i++)
         {
             GameObject item = uiList.AddListItem();
             if (item == null) continue;
 
-            SetupItemUI(item, packageItem);
+            // 根据格子索引获取对应的道具
+            PackageItem packageItem = PackageModel.Instance.GetItemByIndex(i);
+            SetupItemUI(item, packageItem, i);
         }
     }
 
-    private void SetupItemUI(GameObject item, PackageItem packageItem)
+    private void SetupItemUI(GameObject item, PackageItem packageItem, int slotIndex)
     {
-        // 获取道具配置信息
-        var itemConfig = ItemManager.Instance.GetItem(packageItem.itemId);
-        string itemName = itemConfig?.Csv.GetValue<string>(packageItem.itemId, "Name", $"Item_{packageItem.itemId}") ?? $"Item_{packageItem.itemId}";
-
-        // 设置道具名称
-        var txtName = item.transform.Find("txt_name")?.GetComponent<TextMeshProUGUI>();
-        if (txtName != null)
+        // 设置按钮点击事件
+        var button = item.GetComponent<Button>();
+        if (button != null)
         {
-            txtName.text = itemName;
+            button.onClick.RemoveAllListeners(); // 清除之前的监听器
+            button.onClick.AddListener(() => OnSlotClicked(slotIndex));
         }
 
-        // 设置道具数量
-        var txtCount = item.transform.Find("txt_count")?.GetComponent<TextMeshProUGUI>();
-        if (txtCount != null)
+        // 使用ViewUtils统一设置道具UI
+        if (packageItem != null)
         {
-            txtCount.text = packageItem.count.ToString();
+            ViewUtils.QuickSetItemUI(item, packageItem.itemId, packageItem.count);
+        }
+        else
+        {
+            ViewUtils.QuickSetItemUI(item, 0, 0); // 空槽位
+        }
+    }
+
+    private void OnSlotClicked(int slotIndex)
+    {
+        // 检查格子是否有道具
+        PackageItem slotItem = PackageModel.Instance.GetItemByIndex(slotIndex);
+        
+        if (slotItem != null)
+        {
+            // 格子有道具，选中该道具
+            bool success = PackageModel.Instance.SelectItemByIndex(slotIndex);
+        }
+        else
+        {
+            // 格子没有道具，尝试将选中的道具放到这个格子
+            if (PackageModel.Instance.HasSelectedItem())
+            {
+                bool success = PackageModel.Instance.PlaceSelectedItemToSlot(slotIndex);
+            }
         }
     }
 

@@ -8,7 +8,7 @@ using System.Reflection;
 /// 调试视图 - 提供调试相关UI交互功能
 /// 支持打印当前进度信息、删除存档、每日自动保存和UI调试功能
 /// </summary>
-public class DebugView : MonoBehaviour
+public class DebugView : BaseView
 {
     private Button _btnPrint;
     private Button _btnRevert;

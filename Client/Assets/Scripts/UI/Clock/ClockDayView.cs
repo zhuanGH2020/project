@@ -5,12 +5,10 @@ using UnityEngine;
 using TMPro;
 
 // 时钟日期视图 - 显示时间段和天数信息
-public class ClockDayView : MonoBehaviour
+public class ClockDayView : BaseView
 {
     private TextMeshProUGUI txt_time; // 时间段文本
     private TextMeshProUGUI txt_day;  // 天数文本
-
-
 
     void Start()
     {

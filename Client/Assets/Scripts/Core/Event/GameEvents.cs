@@ -28,6 +28,19 @@ public class ItemChangeEvent : IEvent
     }
 }
 
+// 背包道具选中状态变化事件
+public class PackageItemSelectedEvent : IEvent
+{
+    public PackageItem SelectedItem { get; }
+    public bool IsSelected { get; }
+
+    public PackageItemSelectedEvent(PackageItem selectedItem, bool isSelected)
+    {
+        SelectedItem = selectedItem;
+        IsSelected = isSelected;
+    }
+}
+
 // 时间段切换事件
 public class TimeOfDayChangeEvent : IEvent
 {

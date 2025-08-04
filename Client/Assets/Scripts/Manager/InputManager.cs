@@ -50,6 +50,12 @@ public class InputManager
             HandleMouseClickMove();
         }
         
+        // 鼠标右键点击处理
+        if (Input.GetMouseButtonDown(1))
+        {
+            HandleRightMouseClick();
+        }
+        
         // 处理鼠标悬停
         HandleMouseHover();
     }
@@ -83,6 +89,18 @@ public class InputManager
 
         // 发布点击非UI区域事件
         EventManager.Instance.Publish(new ClickOutsideUIEvent(mouseWorldPos));
+    }
+
+    // 处理鼠标右键点击
+    private void HandleRightMouseClick()
+    {
+        // 检查是否有选中的物品
+        if (PackageModel.Instance.HasSelectedItem())
+        {
+            // 取消选中物品
+            PackageModel.Instance.UnselectItem();
+            Debug.Log("[InputManager] 右键取消选中物品");
+        }
     }
 
     // 处理键盘按键输入

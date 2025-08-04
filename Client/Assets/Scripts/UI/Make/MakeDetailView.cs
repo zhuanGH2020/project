@@ -9,7 +9,7 @@ using UnityEngine.UI;
 /// 响应MakeDetailOpenEvent事件，显示具体物品的制作详情界面
 /// 提供材料检查和制作功能，支持材料不足时的提示
 /// </summary>
-public class MakeDetailView : MonoBehaviour
+public class MakeDetailView : BaseView
 {
     private TextMeshProUGUI txt_name;
     private TextMeshProUGUI txt_desc;

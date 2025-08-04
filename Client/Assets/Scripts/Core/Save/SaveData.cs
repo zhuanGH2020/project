@@ -14,7 +14,7 @@ public class SaveData
     public TimeOfDay currentTimeOfDay = TimeOfDay.Day; // 当前时间段
     
     [Header("背包系统")]
-    public List<SavePackageItem> packageItems = new List<SavePackageItem>(); // 背包道具列表
+    public List<PackageItem> packageItems = new List<PackageItem>(); // 背包道具列表
     
     [Header("玩家数据")]
     public float currentHealth = 100f;          // 当前血量
@@ -26,32 +26,7 @@ public class SaveData
     public int saveVersion = 1;                 // 存档版本号
 }
 
-/// <summary>
-/// 可序列化的背包道具数据
-/// 用于在存档中保存PackageItem的信息
-/// </summary>
-[System.Serializable]
-public class SavePackageItem
-{
-    public int itemId;
-    public int count;
-    public float modifyTime;
-    
-    public SavePackageItem() { }
-    
-    public SavePackageItem(PackageItem item)
-    {
-        itemId = item.itemId;
-        count = item.count;  
-        modifyTime = item.modifyTime;
-    }
-    
-    // 转换为PackageItem对象
-    public PackageItem ToPackageItem()
-    {
-        return new PackageItem(itemId, count) { modifyTime = modifyTime };
-    }
-}
+
 
 /// <summary>
 /// 存档信息 - 用于显示存档列表而不完整加载游戏数据
