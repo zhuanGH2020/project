@@ -199,3 +199,18 @@ public class MakeDetailCloseEvent : IEvent
     {
     }
 }
+
+/// <summary>
+/// 物体交互事件 - 玩家点击可交互物体时触发
+/// </summary>
+public class ObjectInteractionEvent : IEvent
+{
+    public IClickable Target { get; private set; }
+    public UnityEngine.Vector3 ClickPosition { get; private set; }
+
+    public ObjectInteractionEvent(IClickable target, UnityEngine.Vector3 clickPosition)
+    {
+        Target = target;
+        ClickPosition = clickPosition;
+    }
+}

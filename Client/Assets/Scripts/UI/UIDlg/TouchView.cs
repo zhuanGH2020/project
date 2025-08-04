@@ -102,10 +102,11 @@ public class TouchView : BaseView
         }
         else
         {
-            BerryBush berryBush = e.HoveredObject.GetComponent<BerryBush>();
-            if (berryBush != null)
+            // 检查新的采集物系统
+            HarvestableObject harvestable = e.HoveredObject.GetComponent<HarvestableObject>();
+            if (harvestable != null && harvestable.CanInteract)
             {
-                touchText = "采集";
+                touchText = harvestable.GetActionDisplayName();
             }
         }
         
