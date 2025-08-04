@@ -10,8 +10,6 @@ public class ClockDayView : BaseView
     private TextMeshProUGUI txt_time; // 时间段文本
     private TextMeshProUGUI txt_day;  // 天数文本
 
-
-
     void Start()
     {
         InitializeView();

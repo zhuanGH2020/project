@@ -1,8 +1,10 @@
 # Resource框架技术文档
 
+*最后更新：2024年 - 新增ResourceUtils工具类，支持PNG纹理和图集统一加载*
+
 ## 简介
 
-基于Unity Resources系统的轻量级资源管理工具，提供资源加载、缓存和自动回收功能。
+基于Unity Resources系统的轻量级资源管理工具，提供资源加载、缓存和自动回收功能。包含ResourceManager（核心管理器）和ResourceUtils（便捷工具类）。
 
 ## 详细接口
 
@@ -46,6 +48,44 @@ public void Retain()
 
 // 减少引用计数，返回是否可以释放
 public bool Release()
+```
+
+### ResourceUtils
+
+**核心类**：`ResourceUtils`（静态工具类）
+- **用途**：提供纯功能性的资源加载方法，无状态设计
+
+#### 基础资源加载
+
+```csharp
+// 泛型资源加载
+public static T LoadResource<T>(string path) where T : Object
+
+// 常用类型快捷方法
+public static Sprite LoadSprite(string path)
+public static Sprite LoadSpriteFromTexture(string path)
+public static GameObject LoadGameObject(string path) 
+public static AudioClip LoadAudioClip(string path)
+```
+
+#### 图片设置工具
+
+```csharp
+// 加载并设置图片（支持图集和PNG纹理）
+public static bool LoadAndSetSprite(Image image, string imagePath, bool isAtlas = true, List<Object> cache = null)
+
+// 从配置加载物品图标（默认使用PNG模式）
+public static bool LoadAndSetItemIcon(Image image, int itemId, bool isAtlas = false, List<Object> cache = null)
+```
+
+#### 配置工具
+
+```csharp
+// 获取物品图标路径（自动移除扩展名）
+public static string GetItemIconPath(int itemId)
+
+// 获取物品名称
+public static string GetItemName(int itemId)
 ```
 
 ## 最佳实践
@@ -171,11 +211,43 @@ public class InventoryManager : MonoBehaviour
 }
 ```
 
+### 4. ResourceUtils图片加载
+
+```csharp
+public class UIIconManager : MonoBehaviour
+{
+    private List<Object> _loadedResources = new List<Object>();
+    
+    private void LoadIcons()
+    {
+        // 获取UI组件
+        Image weaponIcon = transform.Find("img_weapon").GetComponent<Image>();
+        Image itemIcon = transform.Find("img_item").GetComponent<Image>();
+        Image photoIcon = transform.Find("img_photo").GetComponent<Image>();
+        
+        // 图集模式加载（Unity中设置为Sprite的资源）
+        ResourceUtils.LoadAndSetSprite(weaponIcon, "UI/Icons/weapon_sword", true, _loadedResources);
+        
+        // PNG纹理模式加载（直接的PNG文件）
+        ResourceUtils.LoadAndSetSprite(itemIcon, "UI/Icons/item_wood.png", false, _loadedResources);
+        
+        // 从配置加载物品图标（自动使用PNG模式）
+        ResourceUtils.LoadAndSetItemIcon(photoIcon, 1000, false, _loadedResources);
+    }
+    
+    private void OnDestroy()
+    {
+        // 释放所有加载的资源
+        ResourceUtils.ReleaseResources(_loadedResources);
+    }
+}
+```
+
 ## 注意事项
 
 ### 1. 资源路径规范
 - 路径相对于`Assets/Resources/`目录
-- 不包含文件扩展名
+- 不包含文件扩展名（ResourceUtils会自动移除）
 - 使用正斜杠分隔路径：`"Prefabs/Equips/pbsc_equip_axe"`
 
 ### 2. 生命周期管理
@@ -188,7 +260,13 @@ public class InventoryManager : MonoBehaviour
 - 使用`UnloadUnusedAssets()`清理长期未使用的资源
 - 避免频繁加载/释放，合理规划资源生命周期
 
-### 4. 错误处理
+### 4. 图集vs纹理模式选择（ResourceUtils）
+- **图集模式**（`isAtlas = true`）：适用于Unity中已设置为Sprite类型的资源
+- **纹理模式**（`isAtlas = false`）：适用于PNG/JPG等图片文件，运行时创建Sprite
+- **物品图标**：通常使用纹理模式，因为来自配置的PNG文件路径
+- **UI图片**：通常使用图集模式，因为UI资源制作为Sprite
+
+### 5. 错误处理
 - 加载失败时返回`null`，务必检查返回值
 - 释放`null`对象是安全的，内部已做空检查
 - 查看Console日志了解资源加载/卸载状态 

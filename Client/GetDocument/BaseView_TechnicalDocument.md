@@ -1,8 +1,10 @@
 # BaseView技术文档
 
+*最后更新：2024年 - 新增PNG纹理支持，统一图片加载API*
+
 ## 简介
 
-View资源管理解决方案，包含ResourceUtils（纯工具类）和BaseView（基类）两个核心组件，通过继承方式提供资源管理功能，实现零重复代码和自动生命周期管理。
+View资源管理解决方案，包含ResourceUtils（纯工具类）和BaseView（基类）两个核心组件，通过继承方式提供资源管理功能，实现零重复代码和自动生命周期管理。支持图集和PNG纹理两种加载模式。
 
 ## 详细接口
 
@@ -24,11 +26,14 @@ public static AudioClip LoadAudioClip(string path)
 
 #### 图片设置工具
 ```csharp
-// 加载并设置图片
-public static bool LoadAndSetSprite(Image image, string spritePath, List<Object> cache = null)
+// 加载并设置图片（支持图集和PNG纹理）
+public static bool LoadAndSetSprite(Image image, string imagePath, bool isAtlas = true, List<Object> cache = null)
 
-// 从配置加载物品图标
-public static bool LoadAndSetItemIcon(Image image, int itemId, List<Object> cache = null)
+// 从PNG纹理文件创建Sprite
+public static Sprite LoadSpriteFromTexture(string path)
+
+// 从配置加载物品图标（默认使用PNG模式）
+public static bool LoadAndSetItemIcon(Image image, int itemId, bool isAtlas = false, List<Object> cache = null)
 ```
 
 #### 资源释放工具
@@ -66,12 +71,12 @@ public class YourView : BaseView
 
 #### 核心API（protected方法）
 ```csharp
-// 图片加载
-protected bool LoadAndSetSprite(Image image, string spritePath)
-protected bool LoadAndSetSprite(string imagePath, string spritePath)
+// 图片加载（支持图集和PNG纹理）
+protected bool LoadAndSetSprite(Image image, string imagePath, bool isAtlas = true)
+protected bool LoadAndSetSprite(string imagePath, string spritePath, bool isAtlas = true)
 
-// 物品图标加载
-protected bool LoadAndSetItemIcon(string imagePath, int itemId)
+// 物品图标加载（默认使用PNG模式）
+protected bool LoadAndSetItemIcon(string imagePath, int itemId, bool isAtlas = false)
 
 // 通用资源加载
 protected T LoadResource<T>(string path) where T : Object
@@ -98,11 +103,14 @@ public class SimpleItemView : BaseView
 {
     private void Start()
     {
-        // 一行代码设置物品图标
+        // 一行代码设置物品图标（PNG纹理模式）
         LoadAndSetItemIcon("img_icon", 1000);
         
-        // 设置背景图片
+        // 设置背景图片（图集模式）
         LoadAndSetSprite("img_background", "UI/item_background");
+        
+        // 设置PNG图片（纹理模式）
+        LoadAndSetSprite("img_photo", "UI/Photos/screenshot.png", false);
     }
     
     // 不需要OnDestroy，BaseView自动释放资源
@@ -180,34 +188,47 @@ public class YourExistingView : BaseView  // 原来继承MonoBehaviour
 - **图片路径**：相对于`Assets/Resources/`，如`"Icons/Items/wood"`
 - **UI组件路径**：相对于当前Transform，如`"img_icon"`
 - **配置依赖**：自动从Item.csv读取IconPath字段
+- **扩展名处理**：方法内部自动移除`.png`等扩展名
 
-### 4. 性能优化
+### 4. 图集vs纹理模式选择
+- **图集模式**（`isAtlas = true`）：适用于Unity中已设置为Sprite类型的资源
+- **纹理模式**（`isAtlas = false`）：适用于PNG/JPG等图片文件，运行时创建Sprite
+- **物品图标**：默认使用纹理模式，因为通常来自配置的PNG文件路径
+- **UI图片**：默认使用图集模式，因为UI资源通常制作为Sprite
+
+### 5. 性能优化
 - BaseView按实例管理资源，避免全局状态
 - 资源在ResourceManager层面自动缓存
 - OnDestroy时统一释放，避免内存泄漏
 
-### 4. 设计对比
+### 6. 设计对比
 
 ```csharp
 // ❌ 原来的写法：复杂且易出错
 public class ItemView : MonoBehaviour
 {
-    private List<Sprite> _sprites = new List<Sprite>();
+    private List<Object> _resources = new List<Object>();
 
     private void Start() {
         var config = ConfigManager.Instance.GetReader("Item");
-        string path = config?.GetValue<string>(1000, "IconPath", "") ?? "";
-        var sprite = ResourceManager.Instance.Load<Sprite>(path);
-        if (sprite != null) {
+        string iconPath = config?.GetValue<string>(1000, "IconPath", "") ?? "";
+        
+        // 手动处理扩展名
+        string pathWithoutExtension = System.IO.Path.ChangeExtension(iconPath, null);
+        
+        // 手动加载纹理并创建Sprite
+        var texture = ResourceManager.Instance.Load<Texture2D>(pathWithoutExtension);
+        if (texture != null) {
+            var sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
             var img = transform.Find("img_icon").GetComponent<Image>();
             img.sprite = sprite;
-            _sprites.Add(sprite);
+            _resources.Add(texture);
         }
     }
 
     private void OnDestroy() {
-        foreach (var sprite in _sprites) {
-            ResourceManager.Instance.Release(sprite);
+        foreach (var resource in _resources) {
+            ResourceManager.Instance.Release(resource);
         }
     }
 }
@@ -216,7 +237,7 @@ public class ItemView : MonoBehaviour
 public class ItemView : BaseView
 {
     private void Start() {
-        LoadAndSetItemIcon("img_icon", 1000);
+        LoadAndSetItemIcon("img_icon", 1000); // 一行代码，自动处理PNG纹理
     }
     
     // 自动处理资源释放
@@ -228,7 +249,7 @@ public class ItemView : BaseView
 - **代码参考位置**：
   - `Assets/Scripts/Utils/ResourceUtils.cs`（工具类）
   - `Assets/Scripts/UI/Base/BaseView.cs`（基类）
-  - `Assets/Scripts/UI/Base/BaseViewExample.cs`（使用示例）
+  - `Assets/Scripts/UI/Package/PackageView.cs`（实际使用示例）
 - **遵循项目规范**：命名约定、注释规范、架构设计原则
 - **向后兼容**：不影响现有ResourceManager的使用
 - **继承设计**：符合OOP设计原则，is-a关系清晰 

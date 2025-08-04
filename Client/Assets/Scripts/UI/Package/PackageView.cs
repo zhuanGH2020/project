@@ -54,6 +54,14 @@ public class PackageView : BaseView
         var itemConfig = ItemManager.Instance.GetItem(packageItem.itemId);
         string itemName = itemConfig?.Csv.GetValue<string>(packageItem.itemId, "Name", $"Item_{packageItem.itemId}") ?? $"Item_{packageItem.itemId}";
 
+        // 设置道具图标
+        var imgIcon = item.transform.Find("img_icon")?.GetComponent<Image>();
+        if (imgIcon != null)
+        {
+            string iconPath = itemConfig?.Csv.GetValue<string>(packageItem.itemId, "IconPath", "") ?? "";
+            LoadAndSetSprite(imgIcon, iconPath, false); // false表示从PNG纹理创建Sprite
+        }
+
         // 设置道具名称
         var txtName = item.transform.Find("txt_name")?.GetComponent<TextMeshProUGUI>();
         if (txtName != null)

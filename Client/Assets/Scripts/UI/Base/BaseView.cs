@@ -15,39 +15,70 @@ public abstract class BaseView : MonoBehaviour
     /// <summary>
     /// 加载并设置图片到Image组件
     /// </summary>
-    protected bool LoadAndSetSprite(Image image, string spritePath)
+    /// <param name="image">目标Image组件</param>
+    /// <param name="imagePath">图片路径（相对于Resources目录）</param>
+    /// <param name="isAtlas">是否为图集资源，true=直接加载Sprite，false=从Texture2D创建Sprite</param>
+    /// <returns>是否成功设置</returns>
+    protected bool LoadAndSetSprite(Image image, string imagePath, bool isAtlas = true)
     {
-        if (image == null || string.IsNullOrEmpty(spritePath)) return false;
+        if (image == null || string.IsNullOrEmpty(imagePath)) return false;
         
-        var sprite = LoadResource<Sprite>(spritePath);
-        if (sprite != null)
+        // 移除扩展名，Unity Resources.Load不需要扩展名
+        string pathWithoutExtension = System.IO.Path.ChangeExtension(imagePath, null);
+        
+        if (isAtlas)
         {
-            image.sprite = sprite;
-            return true;
+            // 图集模式：直接加载Sprite
+            var sprite = LoadResource<Sprite>(pathWithoutExtension);
+            if (sprite != null)
+            {
+                image.sprite = sprite;
+                return true;
+            }
         }
+        else
+        {
+            // 纹理模式：从Texture2D创建Sprite
+            var texture = LoadResource<Texture2D>(pathWithoutExtension);
+            if (texture != null)
+            {
+                var sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+                image.sprite = sprite;
+                return true;
+            }
+        }
+        
         return false;
     }
     
     /// <summary>
     /// 通过路径查找Image组件并设置图片
     /// </summary>
-    protected bool LoadAndSetSprite(string imagePath, string spritePath)
+    /// <param name="imagePath">Image组件路径（相对于当前Transform）</param>
+    /// <param name="spritePath">图片路径（相对于Resources目录）</param>
+    /// <param name="isAtlas">是否为图集资源，true=直接加载Sprite，false=从Texture2D创建Sprite</param>
+    /// <returns>是否成功设置</returns>
+    protected bool LoadAndSetSprite(string imagePath, string spritePath, bool isAtlas = true)
     {
         var image = transform.Find(imagePath)?.GetComponent<Image>();
-        return LoadAndSetSprite(image, spritePath);
+        return LoadAndSetSprite(image, spritePath, isAtlas);
     }
     
     /// <summary>
     /// 从配置加载并设置物品图标
     /// </summary>
-    protected bool LoadAndSetItemIcon(string imagePath, int itemId)
+    /// <param name="imagePath">Image组件路径（相对于当前Transform）</param>
+    /// <param name="itemId">物品ID</param>
+    /// <param name="isAtlas">是否为图集资源，true=直接加载Sprite，false=从Texture2D创建Sprite</param>
+    /// <returns>是否成功设置</returns>
+    protected bool LoadAndSetItemIcon(string imagePath, int itemId, bool isAtlas = false)
     {
         var image = transform.Find(imagePath)?.GetComponent<Image>();
         if (image == null) return false;
         
         // 获取物品图标路径
         string iconPath = GetItemIconPath(itemId);
-        return LoadAndSetSprite(image, iconPath);
+        return LoadAndSetSprite(image, iconPath, isAtlas);
     }
     
     #endregion

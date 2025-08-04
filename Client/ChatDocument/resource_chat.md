@@ -1784,8 +1784,8 @@ public static class InputUtils
     public static bool GetMouseWorldHit(out RaycastHit hit)
 }
 
-// ItemUtils - 数据查询工具
-public class ItemManager  // 这个其实更像Manager
+// ItemManager - 数据管理器
+public class ItemManager  // 典型的Manager模式
 {
     private Dictionary<int, Item> _cache; // 有状态
     public Item GetItem(int id)           // 管理缓存生命周期
@@ -1871,8 +1871,8 @@ public static class InputUtils
     public static bool GetMouseWorldHit(out RaycastHit hit)
 }
 
-// ItemUtils - 数据查询工具
-public class ItemManager  // 这个其实更像Manager
+// ItemManager - 数据管理器
+public class ItemManager  // 典型的Manager模式
 {
     private Dictionary<int, Item> _cache; // 有状态
     public Item GetItem(int id)           // 管理缓存生命周期
