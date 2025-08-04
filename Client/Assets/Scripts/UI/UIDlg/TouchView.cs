@@ -172,8 +172,6 @@ public class TouchView : BaseView
         // 加载并设置图标
         LoadAndSetSprite(_itemImage, iconPath, false);
         _itemImage.gameObject.SetActive(true);
-        
-        Debug.Log($"[TouchView] 显示选中道具图标: {selectedItem.itemId}");
     }
     
     /// <summary>
@@ -184,7 +182,6 @@ public class TouchView : BaseView
         if (_itemImage != null)
         {
             _itemImage.gameObject.SetActive(false);
-            Debug.Log("[TouchView] 隐藏选中道具图标");
         }
     }
     

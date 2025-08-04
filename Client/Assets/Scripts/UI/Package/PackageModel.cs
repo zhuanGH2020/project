@@ -27,6 +27,9 @@ public class PackageItem
 /// </summary>
 public class PackageModel
 {
+    // 背包格子数量常量
+    public const int MAX_SLOTS = 9;
+    
     // 单例实现
     private static PackageModel _instance;
     public static PackageModel Instance
@@ -63,20 +66,19 @@ public class PackageModel
     /// </summary>
     private int FindFirstEmptySlot()
     {
-        const int maxSlots = 8;
-        bool[] occupiedSlots = new bool[maxSlots];
+        bool[] occupiedSlots = new bool[MAX_SLOTS];
         
         // 标记已占用的格子
         foreach (var item in _packageItems)
         {
-            if (item.index >= 0 && item.index < maxSlots)
+            if (item.index >= 0 && item.index < MAX_SLOTS)
             {
                 occupiedSlots[item.index] = true;
             }
         }
         
         // 查找第一个空格子
-        for (int i = 0; i < maxSlots; i++)
+        for (int i = 0; i < MAX_SLOTS; i++)
         {
             if (!occupiedSlots[i])
             {
@@ -263,7 +265,7 @@ public class PackageModel
             return false;
         }
 
-        if (targetIndex < 0 || targetIndex >= 8)
+        if (targetIndex < 0 || targetIndex >= MAX_SLOTS)
         {
             Debug.LogWarning($"[PackageModel] 无效的格子索引: {targetIndex}");
             return false;
@@ -305,5 +307,27 @@ public class PackageModel
         _packageItems.Clear();
         _selectedItem = null; // 同时清空选中的物品
         Debug.Log("[PackageModel] All items cleared");
+    }
+    
+    /// <summary>
+    /// 直接加载道具列表 - 用于存档加载，保持原有的格子位置
+    /// </summary>
+    public void LoadItemsFromSave(List<PackageItem> items)
+    {
+        _packageItems.Clear();
+        _selectedItem = null; // 清空选中的物品
+        
+        if (items != null)
+        {
+            foreach (var item in items)
+            {
+                if (item != null)
+                {
+                    _packageItems.Add(item);
+                }
+            }
+        }
+        
+        Debug.Log($"[PackageModel] Loaded {_packageItems.Count} items from save");
     }
 }

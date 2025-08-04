@@ -37,9 +37,7 @@ public class PackageView : BaseView
     {
         uiList.RemoveAll();
         
-        const int maxSlots = 8; // 固定8个格子
-        
-        for (int i = 0; i < maxSlots; i++)
+        for (int i = 0; i < PackageModel.MAX_SLOTS; i++)
         {
             GameObject item = uiList.AddListItem();
             if (item == null) continue;
@@ -112,10 +110,6 @@ public class PackageView : BaseView
         {
             // 格子有道具，选中该道具
             bool success = PackageModel.Instance.SelectItemByIndex(slotIndex);
-            if (success)
-            {
-                Debug.Log($"[PackageView] 选中格子 {slotIndex} 的道具: {slotItem.itemId}");
-            }
         }
         else
         {
@@ -123,14 +117,6 @@ public class PackageView : BaseView
             if (PackageModel.Instance.HasSelectedItem())
             {
                 bool success = PackageModel.Instance.PlaceSelectedItemToSlot(slotIndex);
-                if (success)
-                {
-                    Debug.Log($"[PackageView] 将选中道具放到格子 {slotIndex}");
-                }
-            }
-            else
-            {
-                Debug.Log($"[PackageView] 点击空格子 {slotIndex}，但没有选中的道具");
             }
         }
     }

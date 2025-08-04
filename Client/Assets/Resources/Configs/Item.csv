@@ -1,9 +1,9 @@
 Id,Name,Type,StackSize,IconPath,Description
 int,string,enum<ItemType>,int,string,string
 编号,名称,类型,堆叠上限,图标路径,描述
-1000,木头,None,99,UI/Icon/item_quest_human_woods_01,基础材料，用于制作各种物品
-1001,石头,None,99,UI/Icon/item_quest_human_woods_01,基础材料，用于制作工具和建筑
-4001,铁块,None,50,UI/Icon/item_quest_human_woods_01,基础材料，用于制作武器和护甲
+1000,木头,None,99,UI/Icon/item_quest_human_woods_01_mini,基础材料，用于制作各种物品
+1001,石头,None,99,UI/Icon/item_homestead_original_ore_mini,基础材料，用于制作工具和建筑
+4001,铁块,None,50,UI/Icon/item_homestead_iron_mini,基础材料，用于制作武器和护甲
 4002,皮革,None,99,UI/Icon/item_quest_human_woods_01,常见材料，用于制作护甲
 4003,布料,None,50,UI/Icon/item_quest_human_woods_01,基础材料，用于制作轻型护甲
 4004,僵尸心脏,None,10,UI/Icon/item_quest_human_woods_01,稀有材料，用于制作特殊物品

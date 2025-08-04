@@ -328,7 +328,7 @@ public class SaveModel
         saveData.packageItems.Clear();
         foreach (var item in packageModel.GetAllItems())
         {
-            saveData.packageItems.Add(new SavePackageItem(item));
+            saveData.packageItems.Add(item);
         }
         
         // 保存玩家数据
@@ -355,11 +355,7 @@ public class SaveModel
         
         // 应用背包数据
         var packageModel = PackageModel.Instance;
-        packageModel.ClearAllItems();
-        foreach (var saveItem in saveData.packageItems)
-        {
-            packageModel.AddItem(saveItem.itemId, saveItem.count);
-        }
+        packageModel.LoadItemsFromSave(saveData.packageItems);
         
         // 应用玩家数据
         var player = Player.Instance;
