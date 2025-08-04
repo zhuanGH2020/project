@@ -37,25 +37,53 @@ public class PackageView : BaseView
     {
         uiList.RemoveAll();
         
-        var allItems = PackageModel.Instance.GetAllItems();
+        const int maxSlots = 8; // 固定8个格子
         
-        foreach (var packageItem in allItems)
+        for (int i = 0; i < maxSlots; i++)
         {
             GameObject item = uiList.AddListItem();
             if (item == null) continue;
 
-            SetupItemUI(item, packageItem);
+            // 根据格子索引获取对应的道具
+            PackageItem packageItem = PackageModel.Instance.GetItemByIndex(i);
+            SetupItemUI(item, packageItem, i);
         }
     }
 
-    private void SetupItemUI(GameObject item, PackageItem packageItem)
+    private void SetupItemUI(GameObject item, PackageItem packageItem, int slotIndex)
     {
+        // 获取UI组件
+        var imgIcon = item.transform.Find("img_icon")?.GetComponent<Image>();
+        var txtName = item.transform.Find("txt_name")?.GetComponent<TextMeshProUGUI>();
+        var txtCount = item.transform.Find("txt_count")?.GetComponent<TextMeshProUGUI>();
+        var button = item.GetComponent<Button>();
+
+        // 设置按钮点击事件
+        if (button != null)
+        {
+            button.onClick.RemoveAllListeners(); // 清除之前的监听器
+            button.onClick.AddListener(() => OnSlotClicked(slotIndex));
+        }
+
+        // 如果道具不存在，隐藏所有UI元素
+        if (packageItem == null)
+        {
+            if (imgIcon != null) imgIcon.gameObject.SetActive(false);
+            if (txtName != null) txtName.gameObject.SetActive(false);
+            if (txtCount != null) txtCount.gameObject.SetActive(false);
+            return;
+        }
+
+        // 道具存在，显示并设置UI元素
+        if (imgIcon != null) imgIcon.gameObject.SetActive(true);
+        if (txtName != null) txtName.gameObject.SetActive(true);
+        if (txtCount != null) txtCount.gameObject.SetActive(true);
+
         // 获取道具配置信息
         var itemConfig = ItemManager.Instance.GetItem(packageItem.itemId);
         string itemName = itemConfig?.Csv.GetValue<string>(packageItem.itemId, "Name", $"Item_{packageItem.itemId}") ?? $"Item_{packageItem.itemId}";
 
         // 设置道具图标
-        var imgIcon = item.transform.Find("img_icon")?.GetComponent<Image>();
         if (imgIcon != null)
         {
             string iconPath = itemConfig?.Csv.GetValue<string>(packageItem.itemId, "IconPath", "") ?? "";
@@ -63,17 +91,47 @@ public class PackageView : BaseView
         }
 
         // 设置道具名称
-        var txtName = item.transform.Find("txt_name")?.GetComponent<TextMeshProUGUI>();
         if (txtName != null)
         {
             txtName.text = itemName;
         }
 
         // 设置道具数量
-        var txtCount = item.transform.Find("txt_count")?.GetComponent<TextMeshProUGUI>();
         if (txtCount != null)
         {
             txtCount.text = packageItem.count.ToString();
+        }
+    }
+
+    private void OnSlotClicked(int slotIndex)
+    {
+        // 检查格子是否有道具
+        PackageItem slotItem = PackageModel.Instance.GetItemByIndex(slotIndex);
+        
+        if (slotItem != null)
+        {
+            // 格子有道具，选中该道具
+            bool success = PackageModel.Instance.SelectItemByIndex(slotIndex);
+            if (success)
+            {
+                Debug.Log($"[PackageView] 选中格子 {slotIndex} 的道具: {slotItem.itemId}");
+            }
+        }
+        else
+        {
+            // 格子没有道具，尝试将选中的道具放到这个格子
+            if (PackageModel.Instance.HasSelectedItem())
+            {
+                bool success = PackageModel.Instance.PlaceSelectedItemToSlot(slotIndex);
+                if (success)
+                {
+                    Debug.Log($"[PackageView] 将选中道具放到格子 {slotIndex}");
+                }
+            }
+            else
+            {
+                Debug.Log($"[PackageView] 点击空格子 {slotIndex}，但没有选中的道具");
+            }
         }
     }
 
