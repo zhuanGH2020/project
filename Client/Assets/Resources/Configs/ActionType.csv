@@ -1,0 +1,9 @@
+ActionType,Name,ParticleEffect,SoundEffect,Duration,AnimationClip
+enum<ActionType>,string,string,string,float,string
+动作类型,名称,粒子特效,音效,持续时间,动画片段
+None,,none,none,0.0,none
+Pull,采集,pull_particles,pull_sound,1.5,pull_animation
+Chop,砍伐,chop_particles,chop_sound,2.0,chop_animation
+Pick,采集,pick_particles,pick_sound,1.0,pick_animation
+Mine,开采,mine_particles,mine_sound,2.5,mine_animation
+Collect,捡起,collect_particles,collect_sound,0.8,collect_animation 
