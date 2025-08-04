@@ -7,7 +7,7 @@ using TMPro;
 /// 通知视图 - 显示临时通知信息
 /// 接收NoticeEvent事件显示通知文本，3秒后自动隐藏
 /// </summary>
-public class NoticeView : MonoBehaviour
+public class NoticeView : BaseView
 {
     private TextMeshProUGUI txt_content;
     

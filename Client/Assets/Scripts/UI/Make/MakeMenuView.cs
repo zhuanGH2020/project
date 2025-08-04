@@ -8,7 +8,7 @@ using UnityEngine.UI;
 /// 制作菜单视图 - 显示具体制作类型的详细内容
 /// 响应制作类型选择事件，动态加载和显示对应的制作配方界面
 /// </summary>
-public class MakeMenuView : MonoBehaviour
+public class MakeMenuView : BaseView
 {
     private TextMeshProUGUI txt_title;
     

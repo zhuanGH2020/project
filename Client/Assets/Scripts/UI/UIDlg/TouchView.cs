@@ -8,7 +8,7 @@ using TMPro;
 /// 悬停提示视图 - 处理鼠标悬停事件并显示提示文本
 /// 需要挂载到UI Canvas上，显示时设置一次位置，不跟随鼠标移动
 /// </summary>
-public class TouchView : MonoBehaviour
+public class TouchView : BaseView
 {
     private TextMeshProUGUI _touchText;
     

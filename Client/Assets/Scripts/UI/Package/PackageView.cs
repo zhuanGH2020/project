@@ -6,7 +6,7 @@ using TMPro;
 
 // PackageView - 背包UI视图
 
-public class PackageView : MonoBehaviour
+public class PackageView : BaseView
 {
     private void Start()
     {
