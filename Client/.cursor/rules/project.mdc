@@ -84,11 +84,7 @@ alwaysApply: true
 
 ### 配置表规范
 - 表名和字段名命名规范: PascalCase，如`Item`，尽可能简短，但不要出现简写
-- 使用`ConfigManager``ConfigReader`查询配置表
-- 原始CSV表格采用GB2312编码，目录
-- 转码工具 `Tools\csv_converter.bat`，需在`Tools`目录运行
-	- 源目录：`CSV`，GB2312编码
-	- 目标目录：`Resources\Configs\`，UTF8编码
+- 使用`ConfigManager``ConfigReader`查询位于`Assets\Resources\Configs\`的配置表
 
 ## 2. 项目架构
 
