@@ -79,10 +79,44 @@ public class Player : CombatEntity
     // 处理鼠标点击移动
     private void OnMouseClickMove(Vector3 targetPosition)
     {
+        // Check if there's an interactable object at the click position first
+        if (CheckForInteractableAtPosition(targetPosition))
+        {
+            // Let InteractionManager handle the interaction
+            return;
+        }
+        
+        // No interactable found, just move to position
         if (_navMeshAgent != null)
         {
             _navMeshAgent.SetDestination(targetPosition);
         }
+    }
+
+    /// <summary>
+    /// Check if there's an interactable object at the clicked position and trigger interaction
+    /// </summary>
+    private bool CheckForInteractableAtPosition(Vector3 targetPosition)
+    {
+        // Use a small sphere to detect nearby interactables
+        Collider[] colliders = Physics.OverlapSphere(targetPosition, 1f);
+        
+        foreach (var collider in colliders)
+        {
+            var clickable = collider.GetComponent<IClickable>();
+            if (clickable != null)
+            {
+                Debug.Log($"[Player] Found clickable: {collider.name}, CanInteract: {clickable.CanInteract}");
+                if (clickable.CanInteract)
+                {
+                    // Found an interactable, trigger its click event
+                    clickable.OnClick(targetPosition);
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
 
     // 处理使用装备输入
@@ -112,6 +146,17 @@ public class Player : CombatEntity
             transform.rotation = Quaternion.LookRotation(_moveDirection);
             // 移动
             transform.position += _moveDirection * _moveSpeed * Time.deltaTime;
+        }
+    }
+
+    /// <summary>
+    /// 公开方法：移动到指定位置 - 供其他系统调用
+    /// </summary>
+    public void MoveToPosition(Vector3 targetPosition)
+    {
+        if (_navMeshAgent != null)
+        {
+            _navMeshAgent.SetDestination(targetPosition);
         }
     }
 

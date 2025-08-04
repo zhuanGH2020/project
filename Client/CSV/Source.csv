@@ -1,6 +1,6 @@
-Id,DropItemId,DropCount,DropRate,HarvestTime,DestroyAfterHarvest,InteractionRange,EffectType,MaxHealth,MinDropCount,MaxDropCount,RequiresTool,RequiredToolType,MaxHarvestCount,RegrowTime,Name,Description
-int,int,int,float,float,boolean,float,enum<EffectType>,float,int,int,boolean,enum<ToolType>,int,float,string,string
-编号,掉落物品编号,掉落数量,掉落几率,采集时间,是否在采集后销毁,交互半径,类型,健康值,最小掉落数量,最大掉落数量,是否需要工具,工具类型,最大收获次数,生长时间,名称,描述
+Id,DropItemId,DropCount,DropRate,HarvestTime,DestroyAfterHarvest,InteractionRange,ActionType,MaxHealth,MinDropCount,MaxDropCount,RequiresTool,RequiredToolType,MaxHarvestCount,RegrowTime,Name,Description
+int,int,int,float,float,bool,float,enum<ActionType>,float,int,int,bool,enum<ToolType>,int,float,string,string
+编号,掉落物品编号,掉落数量,掉落几率,采集时间,是否在采集后销毁,交互半径,动作类型,健康值,最小掉落数量,最大掉落数量,是否需要工具,工具类型,最大收获次数,生长时间,名称,描述
 1001,11001,1,1.0,0.0,true,2.0,Pull,0,1,1,false,None,1,0,草丛,可以直接采集的普通草丛
 1002,11002,1,1.0,0.0,true,2.0,Pull,0,1,1,false,None,1,0,野花,美丽的野花可以采集制作装饰品
 2001,12001,1,1.0,0.0,false,2.0,Pick,0,1,1,false,None,3,300.0,浆果丛,会重新生长浆果的灌木丛

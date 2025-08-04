@@ -19,6 +19,13 @@ public class GameMain : MonoBehaviour
         var clockModel = ClockModel.Instance;
         var packageModel = PackageModel.Instance;
         
+        // 初始化交互管理器 - 确保交互系统可用
+        if (InteractionManager.Instance == null)
+        {
+            var interactionManagerGO = new GameObject("InteractionManager");
+            interactionManagerGO.AddComponent<InteractionManager>();
+        }
+        
         // 初始化存档模型 - 确保在所有数据Model之后
         var saveModel = SaveModel.Instance;
         saveModel.Initialize();
