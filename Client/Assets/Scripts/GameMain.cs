@@ -27,6 +27,9 @@ public class GameMain : MonoBehaviour
             interactionManagerGO.AddComponent<InteractionManager>();
         }
         
+        // 初始化对话管理器 - 确保对话系统可用
+        var dialogManager = DialogManager.Instance;
+        
         // 初始化存档模型 - 确保在所有数据Model之后
         var saveModel = SaveModel.Instance;
         saveModel.Initialize();
@@ -43,10 +46,16 @@ public class GameMain : MonoBehaviour
         
         // 驱动存档模型（处理自动保存）
         SaveModel.Instance.Update();
+        
+        // 驱动对话管理器
+        DialogManager.Instance.Update();
     }
     
     void OnDestroy()
     {
         SaveModel.Instance.Cleanup();
+        
+        // 清理对话管理器
+        DialogManager.Instance.Cleanup();
     }
 }

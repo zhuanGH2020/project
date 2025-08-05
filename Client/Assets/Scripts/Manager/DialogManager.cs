@@ -131,8 +131,9 @@ public class Dialog
     {
         if (camera != null && TmpText != null && IsActive)
         {
-            Vector3 lookDirection = Parent.position - camera.transform.position;
-            TmpText.transform.rotation = Quaternion.LookRotation(lookDirection);
+            // Vector3 lookDirection = Parent.position - camera.transform.position;
+            // TmpText.transform.rotation = Quaternion.LookRotation(lookDirection);
+            TmpText.transform.rotation =  camera.transform.rotation;
         }
     }
 
@@ -163,11 +164,27 @@ public class DialogManager
     private Camera _targetCamera;
     private int _nextDialogId = 1;
     private bool _globalVisible = true;
+    private ConfigReader _dialogReader;
 
     private DialogManager()
     {
         // 获取主摄像机
         _targetCamera = Camera.main;
+    }
+    
+    /// <summary>
+    /// 初始化配置读取器
+    /// </summary>
+    private void EnsureConfigReader()
+    {
+        if (_dialogReader == null)
+        {
+            _dialogReader = ConfigManager.Instance.GetReader("Dialog");
+            if (_dialogReader == null)
+            {
+                Debug.LogError("[DialogManager] 无法加载Dialog配置表");
+            }
+        }
     }
 
     /// <summary>
@@ -328,6 +345,56 @@ public class DialogManager
         {
             DestroyDialog(id);
         }
+    }
+
+    /// <summary>
+    /// 根据配置表ID获取对话内容
+    /// </summary>
+    /// <param name="dialogId">对话ID</param>
+    /// <returns>对话内容，如果未找到返回null</returns>
+    public string GetDialogContent(int dialogId)
+    {
+        EnsureConfigReader();
+        
+        if (_dialogReader == null)
+        {
+            Debug.LogError("[DialogManager] DialogReader未初始化");
+            return null;
+        }
+
+        return _dialogReader.GetValue<string>(dialogId, "DialogContent", null);
+    }
+
+    /// <summary>
+    /// 创建随机对话 - 供怪物调用
+    /// </summary>
+    /// <param name="parent">父对象Transform</param>
+    /// <param name="dialogIds">可用对话ID列表</param>
+    /// <param name="offset">相对父对象的偏移位置</param>
+    /// <param name="lifeTime">生命周期（秒）</param>
+    /// <returns>创建的对话框ID，失败返回-1</returns>
+    public int CreateRandomDialog(Transform parent, int[] dialogIds, Vector3 offset = default, float lifeTime = 3f)
+    {
+        if (parent == null || dialogIds == null || dialogIds.Length == 0)
+        {
+            Debug.LogError("[DialogManager] 创建随机对话失败：参数无效");
+            return -1;
+        }
+
+        // 随机选择一个对话ID
+        int randomIndex = Random.Range(0, dialogIds.Length);
+        int selectedDialogId = dialogIds[randomIndex];
+
+        // 获取对话内容
+        string dialogContent = GetDialogContent(selectedDialogId);
+        if (string.IsNullOrEmpty(dialogContent))
+        {
+            Debug.LogWarning($"[DialogManager] 未找到对话ID {selectedDialogId} 的内容");
+            return -1;
+        }
+
+        // 创建对话框
+        return CreateDialog(parent, dialogContent, offset, lifeTime);
     }
 
     /// <summary>
