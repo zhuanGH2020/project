@@ -195,8 +195,11 @@ public class MakeDetailOpenEvent : IEvent
 // 制作详情视图关闭事件
 public class MakeDetailCloseEvent : IEvent
 {
-    public MakeDetailCloseEvent()
+    public bool WithDelay { get; }
+    
+    public MakeDetailCloseEvent(bool withDelay = true)
     {
+        WithDelay = withDelay;
     }
 }
 
