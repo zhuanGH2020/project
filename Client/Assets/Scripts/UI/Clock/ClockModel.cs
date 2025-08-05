@@ -120,11 +120,11 @@ public class ClockModel
 
     private void UpdateAmbientLight()
     {
-        RenderSettings.ambientIntensity = Mathf.Lerp(
-            RenderSettings.ambientIntensity, 
-            _targetAmbientIntensity, 
-            Time.deltaTime * 2f
-        );
+        // RenderSettings.ambientIntensity = Mathf.Lerp(
+        //     RenderSettings.ambientIntensity, 
+        //     _targetAmbientIntensity, 
+        //     Time.deltaTime * 2f
+        // );
     }
     
     // 设置游戏时间 - 用于加载存档

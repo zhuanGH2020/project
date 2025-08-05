@@ -206,11 +206,13 @@ public class MakeMenuView : BaseView
             txtName.text = itemName;
         }
         
+        // 检查建筑安装状态
+        bool isBuildingInstalled = MakeModel.Instance.IsBuildingInstalled(itemId);
+        
         // 设置img_put显示逻辑 - 根据建筑安装状态显示
         var imgPut = item.transform.Find("img_put")?.gameObject;
         if (imgPut != null)
         {
-            bool isBuildingInstalled = MakeModel.Instance.IsBuildingInstalled(itemId);
             imgPut.SetActive(isBuildingInstalled);
         }
         
@@ -221,8 +223,11 @@ public class MakeMenuView : BaseView
             button.onClick.AddListener(() => OnMakeItemClick(itemId, itemName));
         }
         
-        // 设置悬停事件处理
-        SetupHoverEvents(item, reader, key, itemId);
+        // 只有当建筑未安装时才设置悬停事件处理
+        if (!isBuildingInstalled)
+        {
+            SetupHoverEvents(item, reader, key, itemId);
+        }
     }
     
 
@@ -296,17 +301,33 @@ public class MakeMenuView : BaseView
     {
         Debug.Log($"点击制作物品: {itemName} (ID: {itemId})");
         
-        // 获取item的UI位置，用于MakeDetailView定位
-        GameObject clickedItem = UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject;
-        Vector2 itemPosition = Vector2.zero;
-        if (clickedItem != null)
+        // 检查MakeDetailView是否显示且是同一物品
+        MakeDetailView makeDetailView = FindObjectOfType<MakeDetailView>();
+        if (makeDetailView != null && makeDetailView.gameObject.activeInHierarchy && makeDetailView.CurrentItemId == itemId)
         {
-            itemPosition = GetItemUIPosition(clickedItem);
+            // 如果MakeDetailView显示相同物品，直接尝试制作/放置
+            MakeModel.Instance.MakeItem(itemId);
         }
-        
-        // 触发MakeDetailOpenEvent，让MakeDetailView处理点击逻辑
-        // 如果MakeDetailView已显示且是同一物品，将执行直接制作
-        EventManager.Instance.Publish(new MakeDetailOpenEvent(itemId, itemPosition));
+        else
+        {
+            // 如果建筑已安装，直接尝试放置；否则显示制作详情
+            if (MakeModel.Instance.IsBuildingInstalled(itemId))
+            {
+                // 建筑已安装，直接尝试放置
+                MakeModel.Instance.MakeItem(itemId);
+            }
+            else
+            {
+                // 建筑未安装，显示制作详情
+                GameObject clickedItem = UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject;
+                Vector2 itemPosition = Vector2.zero;
+                if (clickedItem != null)
+                {
+                    itemPosition = GetItemUIPosition(clickedItem);
+                }
+                EventManager.Instance.Publish(new MakeDetailOpenEvent(itemId, itemPosition));
+            }
+        }
     }
 
     // 设置菜单的可见性
