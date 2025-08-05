@@ -214,3 +214,77 @@ public class ObjectInteractionEvent : IEvent
         ClickPosition = clickPosition;
     }
 }
+
+// 地图数据添加事件
+public class MapDataAddedEvent : IEvent
+{
+    public MapData MapData { get; }
+
+    public MapDataAddedEvent(MapData mapData)
+    {
+        MapData = mapData;
+    }
+}
+
+// 地图数据删除事件
+public class MapDataRemovedEvent : IEvent
+{
+    public MapData MapData { get; }
+
+    public MapDataRemovedEvent(MapData mapData)
+    {
+        MapData = mapData;
+    }
+}
+
+// 地图数据选中状态变化事件
+public class MapDataSelectedEvent : IEvent
+{
+    public MapData MapData { get; }
+    public bool IsSelected { get; }
+
+    public MapDataSelectedEvent(MapData mapData, bool isSelected)
+    {
+        MapData = mapData;
+        IsSelected = isSelected;
+    }
+}
+
+// 建筑物待放置事件
+public class BuildingPendingPlaceEvent : IEvent
+{
+    public int BuildingId { get; }
+
+    public BuildingPendingPlaceEvent(int buildingId)
+    {
+        BuildingId = buildingId;
+    }
+}
+
+// 建筑物放置完成事件
+public class BuildingPlacedEvent : IEvent
+{
+    public int BuildingId { get; }
+    public float PosX { get; }
+    public float PosY { get; }
+
+    public BuildingPlacedEvent(int buildingId, float posX, float posY)
+    {
+        BuildingId = buildingId;
+        PosX = posX;
+        PosY = posY;
+    }
+}
+
+// 建筑放置模式状态变化事件
+public class BuildingPlacementModeEvent : IEvent
+{
+    public bool IsInPlacementMode { get; }
+    public int BuildingId { get; }
+
+    public BuildingPlacementModeEvent(bool isInPlacementMode, int buildingId = -1)
+    {
+        IsInPlacementMode = isInPlacementMode;
+        BuildingId = buildingId;
+    }
+}

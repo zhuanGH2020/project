@@ -21,6 +21,9 @@ public class SaveData
     public Vector3 playerPosition = Vector3.zero; // 玩家位置
     public List<int> equippedItems = new List<int>(); // 已装备的道具ID列表
     
+    [Header("建筑系统")]
+    public List<MapData> buildingData = new List<MapData>(); // 建筑物数据列表
+    
     [Header("存档信息")]
     public string saveTime;                     // 存档时间
     public int saveVersion = 1;                 // 存档版本号
@@ -41,6 +44,7 @@ public class SaveInfo
     public int clockDay;          // 游戏天数
     public float playerHealth;    // 玩家血量
     public int itemCount;         // 道具数量
+    public int buildingCount;     // 建筑数量
     
     // 是否为空槽位
     public bool IsEmpty => string.IsNullOrEmpty(saveTime) || saveTime == "Unknown";

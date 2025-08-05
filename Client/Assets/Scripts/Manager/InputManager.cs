@@ -12,8 +12,11 @@ public class InputManager
     // 移动输入事件
     public event Action<Vector3> OnMoveInput;
     
-    // 鼠标点击移动事件
-    public event Action<Vector3> OnMouseClickMove;
+    // 优先级鼠标事件系统 - 保证处理顺序，不依赖订阅顺序
+    public event Func<Vector3, bool> OnLeftClickHighPriority;  // 高优先级（UI、建筑放置）- 返回true消费事件
+    public event Action<Vector3> OnLeftClickLowPriority;       // 低优先级（普通交互）
+    public event Action OnRightClick;                          // 右键点击
+    public event Action<Vector3> OnMouseClickMove;             // 低优先级移动（Player使用）
     
     // 按键输入事件
     public event Action OnUseEquipInput;
@@ -44,24 +47,24 @@ public class InputManager
     // 处理鼠标输入
     private void HandleMouseInput()
     {
-        // 鼠标左键点击移动
+        // 鼠标左键点击
         if (Input.GetMouseButtonDown(0))
         {
-            HandleMouseClickMove();
+            HandleLeftClick();
         }
         
         // 鼠标右键点击处理
         if (Input.GetMouseButtonDown(1))
         {
-            HandleRightMouseClick();
+            HandleRightClick();
         }
         
         // 处理鼠标悬停
         HandleMouseHover();
     }
 
-    // 处理鼠标点击移动
-    private void HandleMouseClickMove()
+    // 处理鼠标左键点击
+    private void HandleLeftClick()
     {
         // 使用 InputUtils 检测是否点击UI
         if (InputUtils.IsPointerOverUI())
@@ -74,17 +77,38 @@ public class InputManager
             return;
         }
 
-        // 点击了非UI区域，发布事件通知其他组件
+        // 点击了非UI区域，获取世界坐标
         Vector3 mouseWorldPos = Vector3.zero;
         if (InputUtils.GetMouseWorldHit(out RaycastHit hit))
         {
             mouseWorldPos = hit.point;
-            OnMouseClickMove?.Invoke(hit.point);
         }
         else
         {
-            // 即使没有碰撞到物体，也要发布点击外部UI事件
+            // 即使没有碰撞到物体，也计算世界坐标
             mouseWorldPos = Camera.main ? Camera.main.ScreenToWorldPoint(Input.mousePosition) : Vector3.zero;
+        }
+
+        // 优先级事件处理系统 - 从源头控制时序问题
+        // 1. 先处理高优先级事件（TouchView建筑放置、UI交互等）
+        bool eventConsumed = false;
+        if (OnLeftClickHighPriority != null)
+        {
+            foreach (Func<Vector3, bool> handler in OnLeftClickHighPriority.GetInvocationList())
+            {
+                if (handler(mouseWorldPos))
+                {
+                    eventConsumed = true;
+                    break; // 高优先级事件被消费，停止所有后续处理
+                }
+            }
+        }
+        
+        // 2. 只有高优先级事件未被消费时，才处理低优先级事件（Player移动等）
+        if (!eventConsumed)
+        {
+            OnLeftClickLowPriority?.Invoke(mouseWorldPos);
+            OnMouseClickMove?.Invoke(mouseWorldPos); // Player移动事件
         }
 
         // 发布点击非UI区域事件
@@ -92,15 +116,13 @@ public class InputManager
     }
 
     // 处理鼠标右键点击
-    private void HandleRightMouseClick()
+    private void HandleRightClick()
     {
-        // 检查是否有选中的物品
-        if (PackageModel.Instance.HasSelectedItem())
-        {
-            // 取消选中物品
-            PackageModel.Instance.UnselectItem();
-            Debug.Log("[InputManager] 右键取消选中物品");
-        }
+        // 发布通用右键点击事件
+        OnRightClick?.Invoke();
+        
+        // 注意：业务逻辑已移除，符合单一职责原则
+        // 如需处理右键取消选中物品，请在相关业务组件中订阅OnRightClick事件
     }
 
     // 处理键盘按键输入

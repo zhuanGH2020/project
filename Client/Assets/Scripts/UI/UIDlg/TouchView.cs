@@ -12,11 +12,14 @@ public class TouchView : BaseView
 {
     private TextMeshProUGUI _touchText;
     private Image _itemImage; // 选中道具的图标
+    private Image _buildingImage; // 待放置建筑物的图标 (img_put)
     
     private RectTransform _rectTransform;
     private Canvas _canvas;
     private Camera _worldCamera;
     private GameObject _currentHoveredObject; // 当前悬停的对象
+    private int _currentPendingBuildingId = -1; // 当前待放置的建筑物ID
+    private bool _inBuildingPlacementMode = false; // TouchView自己管理建筑放置状态
     
     void Start()
     {
@@ -37,6 +40,12 @@ public class TouchView : BaseView
             UpdateSelectedItemPosition();
         }
         
+        // 如果有待放置的建筑物，让建筑物图标跟随鼠标移动
+        if (_buildingImage != null && _buildingImage.gameObject.activeSelf)
+        {
+            UpdateBuildingPosition();
+        }
+        
         // 如果悬停文本显示，让文本跟随鼠标移动
         if (_touchText != null && _touchText.gameObject.activeSelf)
         {
@@ -55,6 +64,7 @@ public class TouchView : BaseView
 
         _touchText = transform.Find("txt_touch")?.GetComponent<TextMeshProUGUI>();
         _itemImage = transform.Find("img_item")?.GetComponent<Image>();
+        _buildingImage = transform.Find("img_put")?.GetComponent<Image>();
         
         // 初始状态隐藏组件
         if (_touchText != null)
@@ -64,6 +74,10 @@ public class TouchView : BaseView
         if (_itemImage != null)
         {
             _itemImage.gameObject.SetActive(false);
+        }
+        if (_buildingImage != null)
+        {
+            _buildingImage.gameObject.SetActive(false);
         }
     }
     
@@ -75,6 +89,11 @@ public class TouchView : BaseView
         EventManager.Instance.Subscribe<MouseHoverEvent>(OnMouseHover);
         EventManager.Instance.Subscribe<MouseHoverExitEvent>(OnMouseHoverExit);
         EventManager.Instance.Subscribe<PackageItemSelectedEvent>(OnPackageItemSelected);
+        EventManager.Instance.Subscribe<BuildingPendingPlaceEvent>(OnBuildingPendingPlace);
+        
+        // 订阅InputManager的高优先级输入事件（建筑放置等）
+        InputManager.Instance.OnLeftClickHighPriority += OnLeftClick;
+        InputManager.Instance.OnRightClick += OnRightClick;
     }
     
     /// <summary>
@@ -85,6 +104,14 @@ public class TouchView : BaseView
         EventManager.Instance.Unsubscribe<MouseHoverEvent>(OnMouseHover);
         EventManager.Instance.Unsubscribe<MouseHoverExitEvent>(OnMouseHoverExit);
         EventManager.Instance.Unsubscribe<PackageItemSelectedEvent>(OnPackageItemSelected);
+        EventManager.Instance.Unsubscribe<BuildingPendingPlaceEvent>(OnBuildingPendingPlace);
+        
+        // 取消订阅InputManager的高优先级输入事件
+        if (InputManager.Instance != null)
+        {
+            InputManager.Instance.OnLeftClickHighPriority -= OnLeftClick;
+            InputManager.Instance.OnRightClick -= OnRightClick;
+        }
     }
     
     /// <summary>
@@ -330,5 +357,147 @@ public class TouchView : BaseView
         pos.y = Mathf.Clamp(pos.y, -canvasSize.y / 2 + size.y / 2, canvasSize.y / 2 - size.y / 2);
         
         targetRect.localPosition = pos;
+    }
+    
+
+    
+    /// <summary>
+    /// 显示待放置建筑物图标
+    /// </summary>
+    private void ShowPendingBuildingIcon(int buildingId)
+    {
+        if (_buildingImage == null) return;
+        
+        // 获取建筑物配置信息
+        var itemConfig = ItemManager.Instance.GetItem(buildingId);
+        string iconPath = itemConfig?.Csv.GetValue<string>(buildingId, "IconPath", "") ?? "";
+        
+        // 加载并设置图标
+        LoadAndSetSprite(_buildingImage, iconPath, false);
+        _buildingImage.gameObject.SetActive(true);
+        
+        Debug.Log($"显示待放置建筑物图标: {buildingId}");
+    }
+    
+    /// <summary>
+    /// 隐藏待放置建筑物图标
+    /// </summary>
+    private void HidePendingBuildingIcon()
+    {
+        if (_buildingImage != null)
+        {
+            _buildingImage.gameObject.SetActive(false);
+        }
+        _currentPendingBuildingId = -1;
+    }
+    
+    /// <summary>
+    /// 更新待放置建筑物图标位置，跟随鼠标
+    /// </summary>
+    private void UpdateBuildingPosition()
+    {
+        if (_canvas == null || _buildingImage == null) return;
+        
+        // 获取鼠标屏幕坐标
+        Vector3 mousePosition = Input.mousePosition;
+        
+        // 转换屏幕坐标到Canvas本地坐标
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            _canvas.transform as RectTransform,
+            mousePosition,
+            _canvas.worldCamera,
+            out Vector2 localPoint))
+        {
+            // 设置建筑物图标位置到鼠标位置，稍作偏移避免遮挡鼠标
+            localPoint.x += 20f; // 向右偏移20像素
+            localPoint.y += 20f; // 向上偏移20像素
+            
+            (_buildingImage.transform as RectTransform).localPosition = localPoint;
+        }
+    }
+    
+    /// <summary>
+    /// 处理建筑物待放置事件
+    /// </summary>
+    private void OnBuildingPendingPlace(BuildingPendingPlaceEvent e)
+    {
+
+        _currentPendingBuildingId = e.BuildingId;
+        _inBuildingPlacementMode = true;
+        
+        // 发布建筑放置模式状态变化事件
+        EventManager.Instance.Publish(new BuildingPlacementModeEvent(true, e.BuildingId));
+
+        
+        ShowPendingBuildingIcon(e.BuildingId);
+    }
+    
+    /// <summary>
+    /// 处理左键点击（来自InputManager）
+    /// </summary>
+    private bool OnLeftClick(Vector3 worldPosition)
+    {
+        // 如果在建筑放置模式，处理建筑放置
+        if (_inBuildingPlacementMode && _currentPendingBuildingId > 0)
+        {
+            HandleBuildingPlacement(worldPosition);
+            return true; // 消费事件，阻止后续处理（如Player移动）
+        }
+        
+        // 如果没有处理特殊逻辑，返回false让其他系统继续处理
+        return false;
+    }
+    
+    /// <summary>
+    /// 处理右键点击（来自InputManager）
+    /// </summary>
+    private void OnRightClick()
+    {
+        // 如果在建筑放置模式，取消建筑放置
+        if (_inBuildingPlacementMode && _currentPendingBuildingId > 0)
+        {
+            // 退出建筑放置模式并隐藏图标
+            ExitBuildingPlacementMode();
+        }
+        // 可以在这里添加其他右键点击处理逻辑
+    }
+    
+    /// <summary>
+    /// 处理建筑物放置
+    /// </summary>
+    private void HandleBuildingPlacement(Vector3 worldPosition)
+    {
+        // 生成新的建筑物UID
+        int newBuildingUID = ResourceUtils.GenerateUID();
+        
+        // 在地图上放置建筑物，传递buildingUID参数
+        bool placed = MapModel.Instance.AddMapData(_currentPendingBuildingId, worldPosition.x, worldPosition.z, newBuildingUID);
+        
+        if (placed)
+        {
+            // 从MakeModel中移除已放置的建筑
+            MakeModel.Instance.RemoveBuilding(_currentPendingBuildingId);
+            // 退出建筑放置模式并隐藏图标
+            ExitBuildingPlacementMode();
+            
+            Debug.Log($"建筑物放置成功: {_currentPendingBuildingId} at ({worldPosition.x}, {worldPosition.z}), UID: {newBuildingUID}");
+        }
+        else
+        {
+            Debug.LogWarning($"建筑物放置失败: {_currentPendingBuildingId}");
+        }
+    }
+    
+    /// <summary>
+    /// 退出建筑放置模式
+    /// </summary>
+    private void ExitBuildingPlacementMode()
+    {
+        _inBuildingPlacementMode = false;
+        
+        // 发布建筑放置模式状态变化事件
+        EventManager.Instance.Publish(new BuildingPlacementModeEvent(false));
+        
+        HidePendingBuildingIcon();
     }
 }

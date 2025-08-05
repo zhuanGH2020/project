@@ -14,7 +14,6 @@ public class MakeDetailView : BaseView
     private TextMeshProUGUI txt_name;
     private TextMeshProUGUI txt_desc;
     private Button btn_make;
-    private Button btn_close;
     
     private int _currentItemId = -1;
     private List<MaterialRequirement> _materialRequirements = new List<MaterialRequirement>();
@@ -38,7 +37,6 @@ public class MakeDetailView : BaseView
         txt_name = transform.Find("txt_name")?.GetComponent<TextMeshProUGUI>();
         txt_desc = transform.Find("txt_desc")?.GetComponent<TextMeshProUGUI>();
         btn_make = transform.Find("btn_make")?.GetComponent<Button>();
-        btn_close = transform.Find("btn_close")?.GetComponent<Button>();
         
         // 设置按钮交互
         if (btn_make != null)
@@ -46,10 +44,6 @@ public class MakeDetailView : BaseView
             btn_make.onClick.AddListener(OnMakeClick);
         }
         
-        if (btn_close != null)
-        {
-            btn_close.onClick.AddListener(OnCloseClick);
-        }
         
         // 设置鼠标离开事件处理
         SetupSelfHoverEvents();
@@ -80,6 +74,23 @@ public class MakeDetailView : BaseView
         if (eventData == null || eventData.ItemId <= 0)
         {
             return;
+        }
+        
+        // 检查是否是同一个物品的重复点击，且当前视图已显示
+        if (gameObject.activeInHierarchy && _currentItemId == eventData.ItemId)
+        {
+            // 检查材料是否充足，如果充足则直接制作
+            if (CheckMaterialsAvailable())
+            {
+                OnMakeClick(); // 直接执行制作
+                return;
+            }
+            else
+            {
+                // 材料不足时显示提示
+                EventManager.Instance.Publish(new NoticeEvent("材料不足"));
+                return;
+            }
         }
         
         ShowMakeDetail(eventData.ItemId, eventData.UIPosition);
@@ -179,9 +190,9 @@ public class MakeDetailView : BaseView
         
         // 获取制作配方数据
         string itemName = reader.GetValue<string>(itemId, "Name", "Unknown");
-        int productId = reader.GetValue<int>(itemId, "ProductId", 0);
+        int productId = itemId;
         
-        // 通过ProductId从Item.csv获取物品详细信息
+        // 通过产出物品ID从Item.csv获取物品详细信息
         string description = "";
         var itemReader = ConfigManager.Instance.GetReader("Item");
         if (itemReader != null && productId > 0)
@@ -369,11 +380,11 @@ public class MakeDetailView : BaseView
             return;
         }
         
-        // 获取产出物品ID
-        int productId = reader.GetValue<int>(_currentItemId, "ProductId", 0);
+        // 获取产出物品ID（ProductId列已删除，使用制作配方ID）
+        int productId = _currentItemId;
         if (productId <= 0)
         {
-            Debug.LogError($"Invalid ProductId for item: {_currentItemId}");
+            Debug.LogError($"Invalid item ID for making: {_currentItemId}");
             return;
         }
         
@@ -383,12 +394,27 @@ public class MakeDetailView : BaseView
             PackageModel.Instance.RemoveItem(material.ItemId, material.RequiredQuantity);
         }
         
-        // 获得产出物品
-        PackageModel.Instance.AddItem(productId, 1);
-        
-        // 获取物品名称用于提示
+        // 获取物品配置信息
         var itemConfig = ItemManager.Instance.GetItem(productId);
         string itemName = itemConfig?.Csv.GetValue<string>(productId, "Name", "物品") ?? "物品";
+        
+        // 根据物品类型决定处理方式
+        if (itemConfig != null && itemConfig.IsBuilding())
+        {
+            // 建筑物：添加到MakeModel的待放置建筑列表，并触发显示在TouchView上
+            MakeModel.Instance.AddBuilding(productId);
+            
+            // 发布建筑物待放置事件，让TouchView显示建筑物图标
+            EventManager.Instance.Publish(new BuildingPendingPlaceEvent(productId));
+
+            Debug.Log($"建筑物制作完成，等待放置: {itemName} (ID: {productId})");
+        }
+        else
+        {
+            // 非建筑物：正常添加到背包
+            PackageModel.Instance.AddItem(productId, 1);
+            Debug.Log($"物品添加到背包: {itemName} (ID: {productId})");
+        }
         
         // 发送制作成功通知
         EventManager.Instance.Publish(new NoticeEvent($"制作成功：{itemName}"));
@@ -396,13 +422,18 @@ public class MakeDetailView : BaseView
         // 刷新材料列表显示
         UpdateMaterialList();
         
+        // 检查是否需要关闭界面
+        bool shouldClose = reader.GetValue<bool>(_currentItemId, "isClose", true);
+        if (shouldClose)
+        {
+            // 关闭制作详情界面
+            CloseView();
+            
+            // 关闭制作菜单界面
+            EventManager.Instance.Publish(new MakeMenuCloseEvent());
+        }
+        
         Debug.Log($"Successfully made item: {itemName} (ID: {productId})");
-    }
-
-    // 处理关闭按钮点击
-    private void OnCloseClick()
-    {
-        CloseView();
     }
 
     // 设置视图可见性

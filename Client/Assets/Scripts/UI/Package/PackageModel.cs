@@ -8,18 +8,25 @@ using UnityEngine;
 [System.Serializable]
 public class PackageItem
 {
-    public int itemId;
-    public int count;
-    public int index;
-    public float modifyTime;
+    public int uid;          // 道具实例唯一标识（时间戳）
+    public int itemId;       // 道具类型ID
+    public int count;        // 道具数量
+    public int index;        // 格子索引
+    public float modifyTime; // 修改时间
 
     public PackageItem(int itemId, int count, int index = -1)
     {
+        this.uid = ResourceUtils.GenerateUID();
         this.itemId = itemId;
         this.count = count;
         this.index = index;
         this.modifyTime = Time.time;
     }
+    
+    /// <summary>
+    /// 公共属性访问UID
+    /// </summary>
+    public int UID => uid;
 }
 
 /// <summary>

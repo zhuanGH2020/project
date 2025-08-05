@@ -194,10 +194,10 @@ public class MakeMenuView : BaseView
     {
         // 获取制作配方数据
         string itemName = reader.GetValue<string>(key, "Name", "Unknown");
-        int productId = reader.GetValue<int>(key, "ProductId", 0);
+        int itemId = reader.GetValue<int>(key, "Id", 0);
         
         // 使用ViewUtils统一设置物品UI（图标、名称、数量等）
-        ViewUtils.QuickSetItemUI(item, productId, 1);
+        ViewUtils.QuickSetItemUI(item, itemId, 1);
         
         // 覆盖名称为制作配方名称
         var txtName = item.transform.Find("txt_name")?.GetComponent<TextMeshProUGUI>();
@@ -206,16 +206,23 @@ public class MakeMenuView : BaseView
             txtName.text = itemName;
         }
         
+        // 设置img_put显示逻辑 - 根据建筑安装状态显示
+        var imgPut = item.transform.Find("img_put")?.gameObject;
+        if (imgPut != null)
+        {
+            bool isBuildingInstalled = MakeModel.Instance.IsBuildingInstalled(itemId);
+            imgPut.SetActive(isBuildingInstalled);
+        }
+        
         // 设置按钮交互
         var button = item.GetComponent<Button>();
         if (button != null)
         {
-            int itemId = reader.GetValue<int>(key, "Id", 0);
             button.onClick.AddListener(() => OnMakeItemClick(itemId, itemName));
         }
         
         // 设置悬停事件处理
-        SetupHoverEvents(item, reader, key);
+        SetupHoverEvents(item, reader, key, itemId);
     }
     
 
@@ -224,10 +231,8 @@ public class MakeMenuView : BaseView
     /// 设置物品悬停事件处理
     /// 添加鼠标悬停监听，悬停时打开制作详情视图，离开时关闭详情视图
     /// </summary>
-    private void SetupHoverEvents(GameObject item, ConfigReader reader, object key)
-    {
-        int itemId = reader.GetValue<int>(key, "Id", 0);
-        
+    private void SetupHoverEvents(GameObject item, ConfigReader reader, object key, int itemId)
+    {        
         // 添加EventTrigger组件处理悬停事件
         var eventTrigger = item.GetComponent<UnityEngine.EventSystems.EventTrigger>();
         if (eventTrigger == null)
@@ -270,6 +275,13 @@ public class MakeMenuView : BaseView
     // 处理物品悬停事件
     private void OnItemHover(int itemId, Vector2 itemPosition)
     {
+        // 如果建筑已安装，不触发悬停显示MakeDetailView
+        bool isBuildingInstalled = MakeModel.Instance.IsBuildingInstalled(itemId);
+        if (isBuildingInstalled)
+        {
+            return;
+        }
+        
         EventManager.Instance.Publish(new MakeDetailOpenEvent(itemId, itemPosition));
     }
 
@@ -284,8 +296,17 @@ public class MakeMenuView : BaseView
     {
         Debug.Log($"点击制作物品: {itemName} (ID: {itemId})");
         
-        // TODO: 可以触发制作事件或显示制作确认界面
-        // EventManager.Instance.Publish(new MakeItemEvent(itemId));
+        // 获取item的UI位置，用于MakeDetailView定位
+        GameObject clickedItem = UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject;
+        Vector2 itemPosition = Vector2.zero;
+        if (clickedItem != null)
+        {
+            itemPosition = GetItemUIPosition(clickedItem);
+        }
+        
+        // 触发MakeDetailOpenEvent，让MakeDetailView处理点击逻辑
+        // 如果MakeDetailView已显示且是同一物品，将执行直接制作
+        EventManager.Instance.Publish(new MakeDetailOpenEvent(itemId, itemPosition));
     }
 
     // 设置菜单的可见性

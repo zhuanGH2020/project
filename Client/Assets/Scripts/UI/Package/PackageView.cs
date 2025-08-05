@@ -92,17 +92,42 @@ public class PackageView : BaseView
     private void SubscribeEvents()
     {
         EventManager.Instance.Subscribe<ItemChangeEvent>(OnItemChanged);
+        
+        // 订阅右键点击事件，用于取消选中物品
+        if (InputManager.Instance != null)
+        {
+            InputManager.Instance.OnRightClick += OnRightClick;
+        }
     }
 
     private void UnsubscribeEvents()
     {
         EventManager.Instance.Unsubscribe<ItemChangeEvent>(OnItemChanged);
+        
+        // 取消订阅右键点击事件
+        if (InputManager.Instance != null)
+        {
+            InputManager.Instance.OnRightClick -= OnRightClick;
+        }
     }
 
     private void OnItemChanged(ItemChangeEvent eventData)
     {
         // 背包变化时刷新UI
         InitializePackageList();
+    }
+    
+    /// <summary>
+    /// 处理右键点击事件 - 取消选中物品
+    /// </summary>
+    private void OnRightClick()
+    {
+        // 检查是否有选中的物品
+        if (PackageModel.Instance.HasSelectedItem())
+        {
+            // 取消选中物品
+            PackageModel.Instance.UnselectItem();
+        }
     }
 
     private Transform FindChildWithUIList()

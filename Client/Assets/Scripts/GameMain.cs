@@ -18,6 +18,7 @@ public class GameMain : MonoBehaviour
         var inputManager = InputManager.Instance;
         var clockModel = ClockModel.Instance;
         var packageModel = PackageModel.Instance;
+        var mapModel = MapModel.Instance;
         
         // 初始化交互管理器 - 确保交互系统可用
         if (InteractionManager.Instance == null)

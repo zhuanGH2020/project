@@ -41,10 +41,12 @@ public class MakeModel
     // 私有字段
     private List<MakeTypeData> _makeTypes = new List<MakeTypeData>();
     private int _selectedTypeId = -1;
+    private List<int> _installedBuildings = new List<int>();
 
     // 公共属性
     public int SelectedTypeId => _selectedTypeId;
     public List<MakeTypeData> MakeTypes => new List<MakeTypeData>(_makeTypes);
+    public List<int> InstalledBuildings => new List<int>(_installedBuildings);
 
     /// <summary>
     /// 私有构造函数，防止外部实例化
@@ -114,5 +116,47 @@ public class MakeModel
     public void ClearSelection()
     {
         _selectedTypeId = -1;
+    }
+    
+    // 建筑管理接口
+    
+    /// <summary>
+    /// 检查建筑是否未安装
+    /// </summary>
+    public bool IsBuildingInstalled(int itemId)
+    {
+        return _installedBuildings.Contains(itemId);
+    }
+    
+    /// <summary>
+    /// 添加未安装的建筑
+    /// </summary>
+    public bool AddBuilding(int itemId)
+    {
+        if (_installedBuildings.Contains(itemId))
+        {
+            Debug.LogWarning($"[MakeModel] 建筑 {itemId} 已经存在于已安装列表中");
+            return false;
+        }
+        
+        _installedBuildings.Add(itemId);
+        Debug.Log($"[MakeModel] 添加已安装建筑: {itemId}");
+        return true;
+    }
+    
+    /// <summary>
+    /// 移除已安装的建筑
+    /// </summary>
+    public bool RemoveBuilding(int itemId)
+    {
+        if (!_installedBuildings.Contains(itemId))
+        {
+            Debug.LogWarning($"[MakeModel] 建筑 {itemId} 不在已安装列表中");
+            return false;
+        }
+        
+        _installedBuildings.Remove(itemId);
+        Debug.Log($"[MakeModel] 移除已安装建筑: {itemId}");
+        return true;
     }
 } 

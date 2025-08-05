@@ -14,6 +14,7 @@ public class Player : CombatEntity
 
     private Vector3 _moveDirection;     // 移动方向
     private NavMeshAgent _navMeshAgent; // NavMesh代理
+    private bool _inBuildingPlacementMode = false; // 是否在建筑放置模式（阻止移动）
 
     protected override void Awake()
     {
@@ -56,6 +57,10 @@ public class Player : CombatEntity
             InputManager.Instance.OnUseEquipInput += OnUseEquipInput;
             InputManager.Instance.OnEquipShortcutInput += OnEquipShortcutInput;
         }
+        
+        // 订阅建筑放置模式状态变化事件
+        EventManager.Instance.Subscribe<BuildingPlacementModeEvent>(OnBuildingPlacementModeChanged);
+
     }
 
     // 取消订阅输入事件
@@ -68,6 +73,9 @@ public class Player : CombatEntity
             InputManager.Instance.OnUseEquipInput -= OnUseEquipInput;
             InputManager.Instance.OnEquipShortcutInput -= OnEquipShortcutInput;
         }
+        
+        // 取消订阅建筑放置模式状态变化事件
+        EventManager.Instance.Unsubscribe<BuildingPlacementModeEvent>(OnBuildingPlacementModeChanged);
     }
 
     // 处理移动输入
@@ -86,11 +94,8 @@ public class Player : CombatEntity
             return;
         }
         
-        // No interactable found, just move to position
-        if (_navMeshAgent != null)
-        {
-            _navMeshAgent.SetDestination(targetPosition);
-        }
+        // No interactable found, use unified movement method
+        MoveToPosition(targetPosition);
     }
 
     /// <summary>
@@ -130,6 +135,13 @@ public class Player : CombatEntity
     {
         Equip(equipId);
     }
+    
+    // 处理建筑放置模式状态变化
+    private void OnBuildingPlacementModeChanged(BuildingPlacementModeEvent e)
+    {
+        _inBuildingPlacementMode = e.IsInPlacementMode;
+
+    }
 
     // 处理移动
     private void HandleMovement()
@@ -154,6 +166,12 @@ public class Player : CombatEntity
     /// </summary>
     public void MoveToPosition(Vector3 targetPosition)
     {
+        // 如果在建筑放置模式，不响应移动命令
+        if (_inBuildingPlacementMode)
+        {
+            return;
+        }
+        
         if (_navMeshAgent != null)
         {
             _navMeshAgent.SetDestination(targetPosition);

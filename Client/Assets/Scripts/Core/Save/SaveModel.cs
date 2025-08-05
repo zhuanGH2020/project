@@ -239,7 +239,8 @@ public class SaveModel
                 saveVersion = saveVersion,
                 clockDay = saveData?.clockDay ?? 1,
                 playerHealth = saveData?.currentHealth ?? 100f,
-                itemCount = saveData?.packageItems?.Count ?? 0
+                itemCount = saveData?.packageItems?.Count ?? 0,
+                buildingCount = saveData?.buildingData?.Count ?? 0
             };
         }
         catch (Exception e)
@@ -262,7 +263,7 @@ public class SaveModel
     }
     
     // 删除指定槽位的存档
-    public bool DeleteSaveData(int slot = 0)
+    public bool DeleteSaveData(int slot = 0, bool clearCurrentData = false)
     {
         if (!IsValidSlot(slot)) return false;
         
@@ -272,6 +273,12 @@ public class SaveModel
             PlayerPrefs.DeleteKey(GetVersionKey(slot));
             PlayerPrefs.DeleteKey(GetTimeKey(slot));
             PlayerPrefs.Save();
+            
+            // 如果指定了清空当前数据，则清空当前游戏中的数据
+            if (clearCurrentData)
+            {
+                ClearCurrentGameData();
+            }
             
             Debug.Log($"[SaveModel] Save data deleted from slot {slot}");
             
@@ -292,7 +299,26 @@ public class SaveModel
         {
             DeleteSaveData(i);
         }
+        
+        // 清空当前游戏中的建筑数据
+        ClearCurrentGameData();
+        
         Debug.Log("[SaveModel] All save data cleared");
+    }
+    
+    /// <summary>
+    /// 清空当前游戏中的所有数据（建筑、背包等）
+    /// </summary>
+    public void ClearCurrentGameData()
+    {
+        // 清空建筑数据
+        MapModel.Instance.ClearAllBuildings();
+        
+        // 清空背包数据
+        PackageModel.Instance.ClearAllItems();
+        
+        // 可以根据需要添加其他数据的清空
+        Debug.Log("[SaveModel] Current game data cleared");
     }
     
     // 设置自动保存，enabled: 是否启用自动保存，intervalSeconds: 自动保存间隔（秒）
@@ -340,6 +366,14 @@ public class SaveModel
             saveData.equippedItems = player.GetEquippedItemIds();
         }
         
+        // 保存建筑数据
+        var mapModel = MapModel.Instance;
+        saveData.buildingData.Clear();
+        foreach (var mapData in mapModel.MapDataList)
+        {
+            saveData.buildingData.Add(mapData);
+        }
+        
         // 保存存档信息
         saveData.saveTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         saveData.saveVersion = CURRENT_SAVE_VERSION;
@@ -371,7 +405,11 @@ public class SaveModel
             }
         }
         
-        Debug.Log($"[SaveModel] Save data applied successfully - Day {saveData.clockDay}, Health {saveData.currentHealth}, Items {saveData.packageItems.Count}");
+        // 应用建筑数据
+        var mapModel = MapModel.Instance;
+        mapModel.LoadBuildingsFromSave(saveData.buildingData);
+        
+        Debug.Log($"[SaveModel] Save data applied successfully - Day {saveData.clockDay}, Health {saveData.currentHealth}, Items {saveData.packageItems.Count}, Buildings {saveData.buildingData.Count}");
     }
     
     // === 辅助方法 ===
@@ -444,7 +482,7 @@ public class SaveModel
         {
             if (info != null && !info.IsEmpty)
             {
-                Debug.Log($"{info.GetDisplayText()} - HP: {info.playerHealth:F1}, Items: {info.itemCount}");
+                Debug.Log($"{info.GetDisplayText()} - HP: {info.playerHealth:F1}, Items: {info.itemCount}, Buildings: {info.buildingCount}");
             }
             else
             {
