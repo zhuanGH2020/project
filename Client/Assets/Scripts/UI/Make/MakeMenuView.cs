@@ -186,39 +186,25 @@ public class MakeMenuView : BaseView
         }
     }
     
-    // 设置制作菜单项的UI内容和交互
+    /// <summary>
+    /// 设置制作菜单项的UI内容和交互
+    /// 使用ViewUtils统一设置物品UI，并添加按钮交互和悬停事件
+    /// </summary>
     private void SetupMakeMenuItem(GameObject item, ConfigReader reader, object key)
     {
-        // 获取配置数据
+        // 获取制作配方数据
         string itemName = reader.GetValue<string>(key, "Name", "Unknown");
-        string description = reader.GetValue<string>(key, "Description", "");
-        string imagePath = reader.GetValue<string>(key, "Image", "");
+        int productId = reader.GetValue<int>(key, "ProductId", 0);
         
-        // 设置物品名称
+        // 使用ViewUtils统一设置物品UI（图标、名称、数量等）
+        ViewUtils.QuickSetItemUI(item, productId, 1);
+        
+        // 覆盖名称为制作配方名称
         var txtName = item.transform.Find("txt_name")?.GetComponent<TextMeshProUGUI>();
         if (txtName != null)
         {
             txtName.text = itemName;
         }
-        
-        // 设置描述
-        var txtDescription = item.transform.Find("txt_description")?.GetComponent<TextMeshProUGUI>();
-        if (txtDescription != null)
-        {
-            txtDescription.text = description;
-        }
-        
-        // 设置物品图标
-        var imgIcon = item.transform.Find("img_icon")?.GetComponent<Image>();
-        if (imgIcon != null && !string.IsNullOrEmpty(imagePath))
-        {
-            // TODO: 可以通过ResourceManager加载图片资源
-            // var sprite = ResourceManager.Instance.LoadSprite(imagePath);
-            // if (sprite != null) imgIcon.sprite = sprite;
-        }
-        
-        // 设置材料需求显示
-        SetupMaterialRequirements(item, reader, key);
         
         // 设置按钮交互
         var button = item.GetComponent<Button>();
@@ -232,56 +218,7 @@ public class MakeMenuView : BaseView
         SetupHoverEvents(item, reader, key);
     }
     
-    // 设置材料需求显示
-    private void SetupMaterialRequirements(GameObject item, ConfigReader reader, object key)
-    {
-        // 获取材料需求数据
-        string material1 = reader.GetValue<string>(key, "Material1", "");
-        string material2 = reader.GetValue<string>(key, "Material2", "");
-        string material3 = reader.GetValue<string>(key, "Material3", "");
-        
-        // 设置材料1
-        SetupMaterialDisplay(item, "material1", material1);
-        // 设置材料2
-        SetupMaterialDisplay(item, "material2", material2);
-        // 设置材料3
-        SetupMaterialDisplay(item, "material3", material3);
-    }
-    
-    /// <summary>
-    /// 设置单个材料显示
-    /// 材料格式: "物品ID;数量" 例如: "1000;3"
-    /// </summary>
-    private void SetupMaterialDisplay(GameObject item, string materialSlotName, string materialData)
-    {
-        Transform materialSlot = item.transform.Find(materialSlotName);
-        if (materialSlot == null) return;
-        
-        if (string.IsNullOrEmpty(materialData))
-        {
-            materialSlot.gameObject.SetActive(false);
-            return;
-        }
-        
-        // 解析材料数据: "物品ID;数量"
-        string[] parts = materialData.Split(';');
-        if (parts.Length != 2) return;
-        
-        if (int.TryParse(parts[0], out int materialId) && int.TryParse(parts[1], out int quantity))
-        {
-            materialSlot.gameObject.SetActive(true);
-            
-            // 设置材料数量文本
-            var txtQuantity = materialSlot.Find("txt_quantity")?.GetComponent<TextMeshProUGUI>();
-            if (txtQuantity != null)
-            {
-                txtQuantity.text = quantity.ToString();
-            }
-            
-            // TODO: 可以根据materialId设置材料图标和名称
-            // 可以通过Item配置表获取材料的详细信息
-        }
-    }
+
     
     /// <summary>
     /// 设置物品悬停事件处理

@@ -4,11 +4,10 @@
 public enum ItemType
 {
     None = 0,
-    Tool = 1,        // 工具
-    Light = 2,       // 光源
-    Survival = 3,    // 生存
-    Tech = 4,        // 科技
-    Equip = 5,       // 装备
+    Item = 1,        // 物品
+    Building = 2,    // 建筑
+    Equip = 3,       // 装备
+    Food = 4,        // 食物
 }
 
 // 装备部位

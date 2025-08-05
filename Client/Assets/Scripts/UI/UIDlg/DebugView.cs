@@ -155,10 +155,10 @@ public class DebugView : BaseView
         // 材料字典：key=道具ID，value=数量
         var materials = new Dictionary<int, int>
         {
-            { 1000, 1 },
-            { 1001, 1 },
-            { 4001, 1 },
-            { 4003, 1 },
+            { 13001, 1 },
+            { 14001, 1 },
+            { 14002, 1 },
+            { 14003, 1 },
         };
         
         int successCount = 0;

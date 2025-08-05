@@ -12,9 +12,19 @@ public class Item
         Csv = csv;
     }
 
-    public bool IsTool()
+    public bool IsItem()
     {
-        return Type == ItemType.Tool;
+        return Type == ItemType.Item;
+    }
+
+    public bool IsBuilding()
+    {
+        return Type == ItemType.Building;
+    }
+
+    public bool IsEquip()
+    {
+        return Type == ItemType.Equip;
     }
 
     public bool IsWeapon()
@@ -27,19 +37,9 @@ public class Item
         return Type == ItemType.Equip;
     }
 
-    public bool IsTech()
+    public bool IsFood()
     {
-        return Type == ItemType.Tech;
-    }
-
-    public bool IsSurvival()
-    {
-        return Type == ItemType.Survival;
-    }
-
-    public bool IsLight()
-    {
-        return Type == ItemType.Light;
+        return Type == ItemType.Food;
     }
 }
 

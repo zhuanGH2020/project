@@ -164,6 +164,7 @@ public class MakeDetailView : BaseView
     /// <summary>
     /// 显示制作详情
     /// 从MakeMenu配置表加载物品制作信息并更新UI显示
+    /// 使用ViewUtils统一设置物品UI显示
     /// </summary>
     private void ShowMakeDetail(int itemId, Vector2 itemUIPosition)
     {
@@ -178,7 +179,15 @@ public class MakeDetailView : BaseView
         
         // 获取制作配方数据
         string itemName = reader.GetValue<string>(itemId, "Name", "Unknown");
-        string description = reader.GetValue<string>(itemId, "Description", "");
+        int productId = reader.GetValue<int>(itemId, "ProductId", 0);
+        
+        // 通过ProductId从Item.csv获取物品详细信息
+        string description = "";
+        var itemReader = ConfigManager.Instance.GetReader("Item");
+        if (itemReader != null && productId > 0)
+        {
+            description = itemReader.GetValue<string>(productId, "Description", "");
+        }
         
         // 更新UI显示
         UpdateItemInfo(itemName, description);
@@ -292,29 +301,23 @@ public class MakeDetailView : BaseView
 
     /// <summary>
     /// 设置材料列表项UI显示
-    /// 显示材料名称、需求数量和当前拥有数量
+    /// 使用ViewUtils统一设置材料项UI，显示材料名称、图标和需求数量
     /// </summary>
     private void SetupMaterialItem(GameObject item, MaterialRequirement material)
     {
-        // 获取材料物品信息
-        var itemConfig = ItemManager.Instance.GetItem(material.ItemId);
-        string materialName = itemConfig?.Csv.GetValue<string>(material.ItemId, "Name", $"Material_{material.ItemId}") ?? $"Material_{material.ItemId}";
+        // 使用ViewUtils统一设置材料UI（图标、名称、数量）
+        ViewUtils.QuickSetItemUI(item, material.ItemId, material.RequiredQuantity);
         
-        // 获取当前拥有数量
+        // 可以在这里添加额外的UI处理，比如材料不足时的颜色变化
         int currentQuantity = PackageModel.Instance.GetItemCount(material.ItemId);
-        
-        // 设置材料名称
-        var txtName = item.transform.Find("txt_name")?.GetComponent<TextMeshProUGUI>();
-        if (txtName != null)
+        if (currentQuantity < material.RequiredQuantity)
         {
-            txtName.text = materialName;
-        }
-        
-        // 设置需要材料数量显示
-        var txtCount = item.transform.Find("txt_count")?.GetComponent<TextMeshProUGUI>();
-        if (txtCount != null)
-        {
-            txtCount.text = material.RequiredQuantity.ToString();
+            // 材料不足时可以设置文本颜色为红色等提示
+            var txtCount = item.transform.Find("txt_count")?.GetComponent<TextMeshProUGUI>();
+            if (txtCount != null)
+            {
+                txtCount.color = Color.red;
+            }
         }
     }
 
