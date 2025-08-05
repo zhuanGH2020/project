@@ -3000,28 +3000,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 509915175}
   m_CullTransparentMesh: 1
---- !u!1 &526693235 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3528678543415377464, guid: 18a6cb095f9e1ba488354166db6c29f7, type: 3}
-  m_PrefabInstance: {fileID: 3919781104637160837}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &526693241
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 526693235}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: afce4278b1055614b8ac690b8156ba62, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  facing_camera: {fileID: 25071097}
-  text_content: "\u54C8\u54C8\u54C8"
-  textColor: {r: 1, g: 1, b: 1, a: 1}
-  fontSize: 3
-  textOffset: {x: 0, y: 2, z: 0}
 --- !u!1 &528930925
 GameObject:
   m_ObjectHideFlags: 0
@@ -9919,23 +9897,6 @@ MonoBehaviour:
   m_Area: 0
   m_IgnoreFromBuild: 1
   m_AffectedAgents: ffffffff
---- !u!114 &2091114051
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2091114043}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: afce4278b1055614b8ac690b8156ba62, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  facing_camera: {fileID: 0}
-  text_content: example text
-  textColor: {r: 0.764151, g: 0.1540113, b: 0.1477839, a: 1}
-  fontSize: 6
-  textOffset: {x: 0, y: 2, z: 0}
 --- !u!1 &2101354177
 GameObject:
   m_ObjectHideFlags: 0

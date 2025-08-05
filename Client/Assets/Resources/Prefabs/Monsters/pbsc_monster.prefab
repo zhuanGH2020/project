@@ -93,8 +93,8 @@ GameObject:
   m_Component:
   - component: {fileID: 2204267926124692669}
   - component: {fileID: 7862975367443305317}
-  - component: {fileID: 2077233593402632844}
   - component: {fileID: 985062801293870080}
+  - component: {fileID: 1083713815269344603}
   m_Layer: 0
   m_Name: pbsc_monster
   m_TagString: Untagged
@@ -132,39 +132,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0.5, z: 0}
---- !u!114 &2077233593402632844
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 487275073641150164}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: de6cfdfc503f5744297a42919066264d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _maxHealth: 100
-  _defense: 0
-  _baseAttack: 10
-  _attackCooldown: 1
-  _handPoint: {fileID: 0}
-  _headMesh: {fileID: 0}
-  _bodyMesh: {fileID: 0}
-  _equips: []
-  _detectRange: 5
-  _fieldOfView: 90
-  _lostTargetTime: 3
-  _obstacleLayer:
-    serializedVersion: 2
-    m_Bits: 1
-  _idleSpeed: 1
-  _chaseSpeed: 3.5
-  _rotationSpeed: 5
-  _attackRange: 2
-  _attackAngle: 45
-  _patrolRadius: 8
-  _patrolWaitTime: 2
 --- !u!114 &985062801293870080
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -181,6 +148,33 @@ MonoBehaviour:
   m_Area: 0
   m_IgnoreFromBuild: 1
   m_AffectedAgents: ffffffff
+--- !u!114 &1083713815269344603
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 487275073641150164}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9e0bdeea14eee743a6e2b5c3d2f28a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _maxHealth: 100
+  _defense: 0
+  _baseAttack: 10
+  _attackCooldown: 1
+  _handPoint: {fileID: 0}
+  _headMesh: {fileID: 0}
+  _bodyMesh: {fileID: 0}
+  _equips: []
+  _detectRange: 5
+  _attackRange: 2
+  _moveSpeed: 3.5
+  _rotationSpeed: 5
+  _dialogRange: 6
+  _availableDialogIds: 01000000020000000300000004000000
+  _dialogCooldown: 3
 --- !u!1 &3141293399621151191
 GameObject:
   m_ObjectHideFlags: 0
