@@ -95,10 +95,17 @@ public class TouchView : BaseView
         string touchText = null;
         
         // 检查悬停的对象类型
-        Monster monster = e.HoveredObject.GetComponent<Monster>();
-        if (monster != null)
+        CombatEntity combatEntity = e.HoveredObject.GetComponent<Monster>();
+        if (combatEntity == null)
         {
-            touchText = "攻击";
+            combatEntity = e.HoveredObject.GetComponent<MonsterAI_Enhanced>();
+        }
+        
+        if (combatEntity != null)
+        {
+            int currentHp = Mathf.RoundToInt(combatEntity.CurrentHealth);
+            int maxHp = Mathf.RoundToInt(combatEntity.MaxHealth);
+            touchText = $"攻击\n{currentHp}/{maxHp}";
         }
         else
         {
