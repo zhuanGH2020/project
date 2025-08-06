@@ -291,3 +291,66 @@ public class BuildingPlacementModeEvent : IEvent
         BuildingId = buildingId;
     }
 }
+
+/// <summary>
+/// 烹饪交互事件 - 玩家进入/离开锅的交互范围
+/// </summary>
+public class CookingInteractionEvent : IEvent
+{
+    public bool InRange { get; private set; }
+    public CookingPot Pot { get; private set; }
+    
+    public CookingInteractionEvent(bool inRange, CookingPot pot)
+    {
+        InRange = inRange;
+        Pot = pot;
+    }
+}
+
+/// <summary>
+/// 烹饪界面打开事件
+/// </summary>
+public class CookingUIOpenEvent : IEvent
+{
+    public CookingUIOpenEvent() { }
+}
+
+/// <summary>
+/// 烹饪界面关闭事件
+/// </summary>
+public class CookingUICloseEvent : IEvent
+{
+    public CookingUICloseEvent() { }
+}
+
+/// <summary>
+/// 烹饪槽位更新事件
+/// </summary>
+public class CookingSlotUpdateEvent : IEvent
+{
+    public int SlotIndex { get; private set; }
+    public int ItemId { get; private set; }
+    public int Count { get; private set; }
+    
+    public CookingSlotUpdateEvent(int slotIndex, int itemId, int count)
+    {
+        SlotIndex = slotIndex;
+        ItemId = itemId;
+        Count = count;
+    }
+}
+
+/// <summary>
+/// 烹饪成功事件
+/// </summary>
+public class CookingSuccessEvent : IEvent
+{
+    public int ResultItemId { get; private set; }
+    public int Count { get; private set; }
+    
+    public CookingSuccessEvent(int resultItemId, int count)
+    {
+        ResultItemId = resultItemId;
+        Count = count;
+    }
+}

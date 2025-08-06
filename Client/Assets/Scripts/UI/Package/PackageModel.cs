@@ -337,4 +337,18 @@ public class PackageModel
         
         Debug.Log($"[PackageModel] Loaded {_packageItems.Count} items from save");
     }
+    
+    /// <summary>
+    /// 清除选中状态（不放回背包）- 用于物品被完全消耗的情况
+    /// </summary>
+    public void ClearSelectedItem()
+    {
+        if (_selectedItem != null)
+        {
+            // 发送取消选中事件
+            EventManager.Instance.Publish(new PackageItemSelectedEvent(_selectedItem, false));
+            Debug.Log($"[PackageModel] 清除选中物品: {_selectedItem.itemId}（已完全消耗）");
+            _selectedItem = null;
+        }
+    }
 }
