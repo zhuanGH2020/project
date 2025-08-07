@@ -4,7 +4,7 @@ using UnityEngine;
 /// 烹饪锅组件 - 处理玩家与锅的交互
 /// 需要挂载到锅的GameObject上
 /// </summary>
-public class CookingPot : MonoBehaviour, IClickable
+public class CookingPot : Building, IClickable
 {
     [Header("Cooking Settings")]
     [SerializeField] private float _interactionRange = 3f;  // 交互范围
@@ -12,7 +12,13 @@ public class CookingPot : MonoBehaviour, IClickable
     private bool _playerInRange = false;
     private Player _player;
     
-    public bool CanInteract => _playerInRange;
+    // 重写CanInteract属性，结合Building的交互状态和玩家范围检测
+    public new bool CanInteract => base.CanInteract && _playerInRange;
+
+    protected override void Awake()
+    {
+        base.Awake();
+    }
 
     private void Start()
     {

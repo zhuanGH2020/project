@@ -5,7 +5,7 @@ using System;
 /// 建筑物组件 - 管理建筑物的数据和行为
 /// 挂载到建筑物预制体上，用于管理唯一标识、等级、交互状态等
 /// </summary>
-public class Building : MonoBehaviour
+public class Building : DamageableObject
 {
     [Header("建筑物基本信息")]
     [SerializeField] private int _uid = 0;                    // 唯一标识符
@@ -18,10 +18,6 @@ public class Building : MonoBehaviour
     [SerializeField] private float _constructTime;          // 建造时间
     [SerializeField] private bool _isConstructed = true;     // 是否建造完成
     
-    [Header("建筑物属性")]
-    [SerializeField] private float _health = 100f;          // 当前血量
-    [SerializeField] private float _maxHealth = 100f;       // 最大血量
-    
     // 公共属性
     public int UID => _uid;
     public int ItemId => _itemId;
@@ -30,8 +26,6 @@ public class Building : MonoBehaviour
     public bool CanInteract => _canInteract;
     public float ConstructTime => _constructTime;
     public bool IsConstructed => _isConstructed;
-    public float Health => _health;
-    public float MaxHealth => _maxHealth;
     
     // 事件
     public event Action<Building> OnDemolished;
@@ -75,7 +69,7 @@ public class Building : MonoBehaviour
         {
             // 从配置中加载建筑物属性
             _maxHealth = reader.GetValue<float>(_itemId, "MaxHealth", 100f);
-            _health = _maxHealth;
+            _currentHealth = _maxHealth;
             
             // 其他配置可以在这里加载
         }
@@ -140,18 +134,12 @@ public class Building : MonoBehaviour
     }
     
     /// <summary>
-    /// 受到伤害
+    /// 重写死亡处理
     /// </summary>
-    public void TakeDamage(float damage)
+    protected override void OnDeath()
     {
-        _health = Mathf.Max(0, _health - damage);
-        
-        if (_health <= 0)
-        {
-            OnBuildingDestroyed();
-        }
-        
-        Debug.Log($"[Building] 建筑物受到伤害: {GetBuildingName()} ({_health}/{_maxHealth})");
+        base.OnDeath();
+        OnBuildingDestroyed();
     }
     
     /// <summary>
@@ -161,14 +149,14 @@ public class Building : MonoBehaviour
     {
         if (repairAmount < 0)
         {
-            _health = _maxHealth; // 完全修复
+            _currentHealth = _maxHealth; // 完全修复
         }
         else
         {
-            _health = Mathf.Min(_maxHealth, _health + repairAmount);
+            _currentHealth = Mathf.Min(_maxHealth, _currentHealth + repairAmount);
         }
         
-        Debug.Log($"[Building] 建筑物修复: {GetBuildingName()} ({_health}/{_maxHealth})");
+        Debug.Log($"[Building] 建筑物修复: {GetBuildingName()} ({_currentHealth}/{_maxHealth})");
     }
     
     /// <summary>
@@ -197,7 +185,7 @@ public class Building : MonoBehaviour
     {
         return $"建筑物: {GetBuildingName()}\n" +
                $"等级: {_level}/{GetMaxLevel()}\n" +
-               $"血量: {_health:F0}/{_maxHealth:F0}\n" +
+               $"血量: {_currentHealth:F0}/{_maxHealth:F0}\n" +
                $"位置: ({_mapPosition.x:F1}, {_mapPosition.y:F1})\n" +
                $"可交互: {(_canInteract ? "是" : "否")}\n" +
                $"UID: {_uid}";
