@@ -8,7 +8,7 @@ using System;
 public class Building : DamageableObject
 {
     [Header("建筑物基本信息")]
-    [SerializeField] private int _uid = 0;                    // 唯一标识符
+    // 使用基类 ObjectBase 的 Uid，不再在本类重复序列化 _uid，避免重复序列化报错
     [SerializeField] private int _itemId = -1;               // 对应的道具ID
     [SerializeField] private Vector2 _mapPosition;           // 地图位置
     
@@ -19,7 +19,7 @@ public class Building : DamageableObject
     [SerializeField] private bool _isConstructed = true;     // 是否建造完成
     
     // 公共属性
-    public int UID => _uid;
+    public int UID => Uid; // 兼容旧接口
     public int ItemId => _itemId;
     public Vector2 MapPosition => _mapPosition;
     public int Level => _level;
@@ -31,6 +31,12 @@ public class Building : DamageableObject
     public event Action<Building> OnDemolished;
     public event Action<Building, int> OnLevelChanged;
     public event Action<Building, bool> OnInteractStateChanged;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        SetObjectType(ObjectType.Building);
+    }
     
     /// <summary>
     /// 初始化建筑物
@@ -42,21 +48,20 @@ public class Building : DamageableObject
     {
         _itemId = itemId;
         _mapPosition = mapPos;
-        _uid = uid > 0 ? uid : GenerateUID();
+        if (uid > 0)
+        {
+            SetUid(uid);
+        }
+        else if (Uid == 0)
+        {
+            SetUid(ResourceUtils.GenerateUID());
+        }
         _constructTime = Time.time;
         
         LoadBuildingConfig();
         UpdateGameObjectName();
         
-        Debug.Log($"[Building] 初始化建筑物: {GetBuildingName()} (UID: {_uid})");
-    }
-    
-    /// <summary>
-    /// 生成唯一标识符（使用ResourceUtils）
-    /// </summary>
-    private int GenerateUID()
-    {
-        return ResourceUtils.GenerateUID();
+        Debug.Log($"[Building] 初始化建筑物: {GetBuildingName()} (UID: {Uid})");
     }
     
     /// <summary>
@@ -80,7 +85,7 @@ public class Building : DamageableObject
     /// </summary>
     private void UpdateGameObjectName()
     {
-        gameObject.name = $"{GetBuildingName()}_{_uid}";
+        gameObject.name = $"{GetBuildingName()}_{Uid}";
     }
     
     /// <summary>
@@ -143,28 +148,11 @@ public class Building : DamageableObject
     }
     
     /// <summary>
-    /// 修复建筑物
-    /// </summary>
-    public void Repair(float repairAmount = -1)
-    {
-        if (repairAmount < 0)
-        {
-            _currentHealth = _maxHealth; // 完全修复
-        }
-        else
-        {
-            _currentHealth = Mathf.Min(_maxHealth, _currentHealth + repairAmount);
-        }
-        
-        Debug.Log($"[Building] 建筑物修复: {GetBuildingName()} ({_currentHealth}/{_maxHealth})");
-    }
-    
-    /// <summary>
     /// 建筑物被摧毁
     /// </summary>
     private void OnBuildingDestroyed()
     {
-        Debug.Log($"[Building] 建筑物被摧毁: {GetBuildingName()} (UID: {_uid})");
+        Debug.Log($"[Building] 建筑物被摧毁: {GetBuildingName()} (UID: {Uid})");
         Demolish();
     }
     
@@ -174,7 +162,7 @@ public class Building : DamageableObject
     public void Demolish()
     {
         OnDemolished?.Invoke(this);
-        MapModel.Instance.RemoveBuildingByUID(_uid);
+        MapModel.Instance.RemoveBuildingByUID(UID);
         Destroy(gameObject);
     }
     
@@ -188,6 +176,6 @@ public class Building : DamageableObject
                $"血量: {_currentHealth:F0}/{_maxHealth:F0}\n" +
                $"位置: ({_mapPosition.x:F1}, {_mapPosition.y:F1})\n" +
                $"可交互: {(_canInteract ? "是" : "否")}\n" +
-               $"UID: {_uid}";
+               $"UID: {Uid}";
     }
 } 

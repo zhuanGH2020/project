@@ -18,6 +18,8 @@ public class CookingPot : Building, IClickable
     protected override void Awake()
     {
         base.Awake();
+        // 确保对象类型正确设置为Building（继承自Building已设置，这里可选）
+        SetObjectType(ObjectType.Building);
     }
 
     private void Start()

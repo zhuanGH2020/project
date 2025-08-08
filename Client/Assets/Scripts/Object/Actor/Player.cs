@@ -4,7 +4,7 @@ using UnityEngine.AI;
 /// <summary>
 /// 玩家角色
 /// </summary>
-public class Player : CombatEntity
+public partial class Player : CombatEntity
 {
     private static Player _instance;
     public static Player Instance => _instance;
@@ -29,6 +29,7 @@ public class Player : CombatEntity
         
         // 订阅输入事件
         SubscribeToInputEvents();
+        SetObjectType(ObjectType.Player);
     }
 
     private void OnDestroy()

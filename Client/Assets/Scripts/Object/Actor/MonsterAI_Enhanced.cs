@@ -24,6 +24,16 @@ public class MonsterAI_Enhanced : CombatEntity
     [SerializeField] private float _patrolRadius = 8f;       // 巡逻半径
     [SerializeField] private float _patrolWaitTime = 2f;     // 巡逻等待时间
 
+    protected override void Awake()
+    {
+        base.Awake();
+        SetObjectType(ObjectType.Monster);
+        _player = FindObjectOfType<Player>();
+        _spawnPoint = transform.position;
+        _currentSpeed = _idleSpeed;
+        ChangeState(MonsterState.Idle);
+    }
+
     // 状态枚举
     public enum MonsterState
     {
@@ -49,15 +59,6 @@ public class MonsterAI_Enhanced : CombatEntity
 
     // 公共属性
     public MonsterState CurrentState => _currentState;
-
-    protected override void Awake()
-    {
-        base.Awake();
-        _player = FindObjectOfType<Player>();
-        _spawnPoint = transform.position;
-        _currentSpeed = _idleSpeed;
-        ChangeState(MonsterState.Idle);
-    }
 
     protected override void Update()
     {

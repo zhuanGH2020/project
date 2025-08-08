@@ -10,6 +10,16 @@ public enum ItemType
     Food = 4,        // 食物
 }
 
+// 场景对象类型（用于ObjectBase/ObjectManager分类）
+public enum ObjectType
+{
+    Other = 0,
+    Player = 1,
+    Monster = 2,
+    Building = 3,
+    Item = 4,
+}
+
 // 装备部位
 public enum EquipPart
 {

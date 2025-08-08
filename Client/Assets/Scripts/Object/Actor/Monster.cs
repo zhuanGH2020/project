@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// 怪物角色 - 直线追击AI
 /// </summary>
-public class Monster : CombatEntity
+public partial class Monster : CombatEntity
 {
     [Header("AI设置")]
     [SerializeField] private float _detectRange = 5f;    // 检测范围
@@ -27,12 +27,14 @@ public class Monster : CombatEntity
     protected override void Awake()
     {
         base.Awake();
-        _player = FindObjectOfType<Player>();
+        _player = Player.Instance; // 使用单例获取，避免FindObjectOfType报错
+        SetObjectType(ObjectType.Monster);
     }
 
     protected override void Update()
     {
         base.Update();
+        if (_player == null) { _player = Player.Instance; if (_player == null) return; }
         UpdateAI();
         UpdateDialog();
     }

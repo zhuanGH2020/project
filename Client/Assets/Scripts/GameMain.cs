@@ -14,6 +14,10 @@ public class GameMain : MonoBehaviour
         ConfigExample.AdvancedExample();
         ConfigExample.ValidationExample();
 
+        // 初始化对象管理器 - 确保在其他系统之前
+        _ = ObjectManager.Instance; // Trigger lazy initialization
+        Debug.Log("[GameMain] ObjectManager initialized");
+
         // 初始化各个Model - 按依赖顺序初始化
         var inputManager = InputManager.Instance;
         var clockModel = ClockModel.Instance;
@@ -49,6 +53,12 @@ public class GameMain : MonoBehaviour
         
         // 驱动对话管理器
         DialogManager.Instance.Update();
+        
+        // 定期清理ObjectManager中的空引用（每10秒一次）
+        if (Time.time % 10f < Time.deltaTime)
+        {
+            ObjectManager.Instance.CleanupNullReferences();
+        }
     }
     
     void OnDestroy()
@@ -57,5 +67,11 @@ public class GameMain : MonoBehaviour
         
         // 清理对话管理器
         DialogManager.Instance.Cleanup();
+        
+        // 清理对象管理器
+        if (ObjectManager.HasInstance)
+        {
+            ObjectManager.Instance.ClearAll();
+        }
     }
 }

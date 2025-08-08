@@ -58,6 +58,8 @@ public abstract class CombatEntity : DamageableObject, IAttacker
     protected override void Awake()
     {
         base.Awake();
+        // 默认把战斗实体归类为Monster，子类如Player可在Awake里覆盖
+        SetObjectType(ObjectType.Monster);
         _attackTimer = new CooldownTimer(_attackCooldown);
     }
 
@@ -72,9 +74,9 @@ public abstract class CombatEntity : DamageableObject, IAttacker
         Dictionary<EquipPart, int> partCounts = new Dictionary<EquipPart, int>();
         List<EquipPart> duplicateParts = new List<EquipPart>();
         
-        // 统计每个部位的装备数量
         foreach (var equip in _equips)
         {
+            if (equip == null) continue;
             if (partCounts.ContainsKey(equip.EquipPart))
             {
                 partCounts[equip.EquipPart]++;
@@ -85,7 +87,6 @@ public abstract class CombatEntity : DamageableObject, IAttacker
             }
         }
         
-        // 找出重复的部位
         foreach (var kvp in partCounts)
         {
             if (kvp.Value > 1)
@@ -96,20 +97,15 @@ public abstract class CombatEntity : DamageableObject, IAttacker
 
         if (duplicateParts.Count > 0)
         {
-            string duplicatePartsStr = "";
-            for (int i = 0; i < duplicateParts.Count; i++)
-            {
-                if (i > 0) duplicatePartsStr += ", ";
-                duplicatePartsStr += duplicateParts[i].ToString();
-            }
+            string duplicatePartsStr = string.Join(", ", duplicateParts);
             Debug.LogError($"CombatEntity has multiple equipment in parts: {duplicatePartsStr}");
             
-            // 移除重复部位的装备，只保留每个部位的第一个装备
             List<EquipBase> newEquips = new List<EquipBase>();
             HashSet<EquipPart> addedParts = new HashSet<EquipPart>();
             
             foreach (var equip in _equips)
             {
+                if (equip == null) continue;
                 if (!addedParts.Contains(equip.EquipPart))
                 {
                     newEquips.Add(equip);

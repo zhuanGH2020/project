@@ -183,6 +183,7 @@ public abstract class HarvestableObject : DamageableObject, IHarvestable, IClick
     protected override void Awake()
     {
         base.Awake();
+        SetObjectType(ObjectType.Item);
         
         // Subscribe to any necessary events
         SubscribeToEvents();

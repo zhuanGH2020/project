@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// 可承伤物体基类
 /// </summary>
-public abstract class DamageableObject : MonoBehaviour, IDamageable
+public abstract class DamageableObject : ObjectBase, IDamageable
 {
     [Header("基础设置")]
     [SerializeField] protected float _maxHealth = 100f;
@@ -15,8 +15,9 @@ public abstract class DamageableObject : MonoBehaviour, IDamageable
     public float CurrentHealth => _currentHealth;
     public virtual float Defense => _defense;
 
-    protected virtual void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         _currentHealth = _maxHealth;
     }
 
