@@ -83,7 +83,15 @@ public class CookingPot : Building, IClickable
     {
         if (equipId == 30002 && _playerInRange) // E键对应30002
         {
-            OpenCookingUI();
+            // 如果烹饪UI已经打开，则关闭它；否则打开
+            if (CookingModel.Instance.IsUIOpen)
+            {
+                CookingModel.Instance.CloseCookingUI();
+            }
+            else
+            {
+                OpenCookingUI();
+            }
         }
     }
 
@@ -103,7 +111,7 @@ public class CookingPot : Building, IClickable
     /// </summary>
     private void OpenCookingUI()
     {
-        CookingModel.Instance.OpenCookingUI();
+        CookingModel.Instance.OpenCookingUI(transform.position);
     }
 
     public float GetInteractionRange()

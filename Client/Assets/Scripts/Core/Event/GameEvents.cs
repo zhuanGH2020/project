@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using UnityEngine;
 // 通用数值变化事件
 public class ValueChangeEvent : IEvent
 {
@@ -312,8 +314,14 @@ public class CookingInteractionEvent : IEvent
 /// </summary>
 public class CookingUIOpenEvent : IEvent
 {
-    public CookingUIOpenEvent() { }
+    public Vector3 PotWorldPosition { get; }
+    
+    public CookingUIOpenEvent(Vector3 potWorldPosition) 
+    { 
+        PotWorldPosition = potWorldPosition;
+    }
 }
+
 
 /// <summary>
 /// 烹饪界面关闭事件
@@ -352,5 +360,20 @@ public class CookingSuccessEvent : IEvent
     {
         ResultItemId = resultItemId;
         Count = count;
+    }
+}
+
+/// <summary>
+/// 怪物生成事件
+/// </summary>
+public class MonsterSpawnedEvent : IEvent
+{
+    public UnityEngine.GameObject MonsterInstance { get; private set; }
+    public UnityEngine.Vector3 SpawnPosition { get; private set; }
+    
+    public MonsterSpawnedEvent(UnityEngine.GameObject monsterInstance, UnityEngine.Vector3 spawnPosition)
+    {
+        MonsterInstance = monsterInstance;
+        SpawnPosition = spawnPosition;
     }
 }

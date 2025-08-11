@@ -20,11 +20,11 @@ public class ClockModel
     }
 
     // 私有字段
-    private float _dayDuration = 60f; // 一天持续时间（秒）
-    private int _maxDays = 60; // 最大天数
-    private float _dayAmbientIntensity = 1.0f; // 白天环境光强度
-    private float _duskAmbientIntensity = 0.6f; // 黄昏环境光强度  
-    private float _nightAmbientIntensity = 0.3f; // 夜晚环境光强度
+    private float _dayDuration = GameSettings.ClockDayDuration; // 一天持续时间（秒）
+    private int _maxDays = GameSettings.ClockMaxDays; // 最大天数
+    private float _dayAmbientIntensity = GameSettings.ClockDayAmbientIntensity; // 白天环境光强度
+    private float _duskAmbientIntensity = GameSettings.ClockDuskAmbientIntensity; // 黄昏环境光强度  
+    private float _nightAmbientIntensity = GameSettings.ClockNightAmbientIntensity; // 夜晚环境光强度
     private float _dayProgress; // 当天进度 (0.0-1.0)
     private int _clockDay = 1; // 当前天数 (1-60)
     private TimeOfDay _currentTimeOfDay = TimeOfDay.Day;
@@ -97,8 +97,8 @@ public class ClockModel
 
     private TimeOfDay GetTimeOfDayFromProgress(float progress)
     {
-        if (progress < 0.5f) return TimeOfDay.Day;       // 白天 (0.0-0.5)
-        if (progress < 0.75f) return TimeOfDay.Dusk;     // 黄昏 (0.5-0.75)
+        if (progress < GameSettings.ClockDayTimeRatio) return TimeOfDay.Day;       // 白天 (0.0-0.5)
+        if (progress < GameSettings.ClockDuskTimeRatio) return TimeOfDay.Dusk;     // 黄昏 (0.5-0.75)
         return TimeOfDay.Night;                          // 夜晚 (0.75-1.0)
     }
 

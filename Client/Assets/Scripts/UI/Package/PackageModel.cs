@@ -34,8 +34,8 @@ public class PackageItem
 /// </summary>
 public class PackageModel
 {
-    // 背包格子数量常量
-    public const int MAX_SLOTS = 9;
+    // 背包格子数量 - 从GameSettings读取
+    public static int MAX_SLOTS => GameSettings.PackageMaxSlots;
     
     // 单例实现
     private static PackageModel _instance;
