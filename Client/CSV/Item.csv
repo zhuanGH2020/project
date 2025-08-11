@@ -33,4 +33,3 @@ int,string,enum<ItemType>,int,string,string,string
 50006,综合炖菜,Food,99,UI/Icon/item_food_stew,,多种材料制作的炖菜，效果极佳
 50007,简单汤品,Food,99,UI/Icon/item_food_simple,,简单的汤品，基础恢复效果
 50008,烤蔬菜,Food,99,UI/Icon/item_food_veggie,,烤制的蔬菜，健康美味
-70001,豌豆射手,Building,1,UI/Icon/item_homestead_iron_mini,Prefabs/Partners/pbsc_peashooter,建筑物 - 防御植物，可以发射豌豆攻击敌人 

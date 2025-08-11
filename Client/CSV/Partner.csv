@@ -1,0 +1,5 @@
+Id,Name,Type,MaxHealth,Cost,PrefabPath,IconPath,AttackRange,AttackDamage,AttackSpeed,CooldownTime,Description
+int,string,enum<PartnerType>,float,int,string,string,float,float,float,float,string
+编号,名称,类型,最大生命值,建造成本,预制体路径,图标路径,攻击范围,攻击伤害,攻击速度,冷却时间,描述
+70000,向日葵,Sunflower,100,50,Prefabs/Partners/pbsc_partner_sunflower,UI/Icon/item_homestead_iron_mini,0,0,0,10,防御植物 - 生产阳光资源的植物
+70001,豌豆射手,Shooter,80,100,Prefabs/Partners/pbsc_partner_shooter,UI/Icon/item_homestead_iron_mini,15,25,2,0,防御植物 - 可以发射豌豆攻击敌人 
