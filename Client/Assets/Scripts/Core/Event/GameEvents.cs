@@ -354,3 +354,18 @@ public class CookingSuccessEvent : IEvent
         Count = count;
     }
 }
+
+/// <summary>
+/// 怪物生成事件
+/// </summary>
+public class MonsterSpawnedEvent : IEvent
+{
+    public UnityEngine.GameObject MonsterInstance { get; private set; }
+    public UnityEngine.Vector3 SpawnPosition { get; private set; }
+    
+    public MonsterSpawnedEvent(UnityEngine.GameObject monsterInstance, UnityEngine.Vector3 spawnPosition)
+    {
+        MonsterInstance = monsterInstance;
+        SpawnPosition = spawnPosition;
+    }
+}

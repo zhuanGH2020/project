@@ -31,6 +31,9 @@ public class GameMain : MonoBehaviour
             interactionManagerGO.AddComponent<InteractionManager>();
         }
         
+        // 初始化地图管理器 - 确保地图生成系统可用
+        var mapManager = MapManager.Instance;
+        
         // 初始化对话管理器 - 确保对话系统可用
         var dialogManager = DialogManager.Instance;
         
@@ -47,6 +50,7 @@ public class GameMain : MonoBehaviour
         // 驱动需要更新的Model
         InputManager.Instance.Update();
         ClockModel.Instance.UpdateTime();
+        MapManager.Instance.UpdateSpawning();
         
         // 驱动存档模型（处理自动保存）
         SaveModel.Instance.Update();
@@ -64,6 +68,9 @@ public class GameMain : MonoBehaviour
     void OnDestroy()
     {
         SaveModel.Instance.Cleanup();
+        
+        // 清理地图管理器
+        MapManager.Instance.Cleanup();
         
         // 清理对话管理器
         DialogManager.Instance.Cleanup();
