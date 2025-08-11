@@ -144,10 +144,10 @@ public class CookingModel
     /// <summary>
     /// 打开烹饪界面
     /// </summary>
-    public void OpenCookingUI()
+    public void OpenCookingUI(Vector3 potWorldPosition)
     {
         _isUIOpen = true;
-        EventManager.Instance.Publish(new CookingUIOpenEvent());
+        EventManager.Instance.Publish(new CookingUIOpenEvent(potWorldPosition));
         Debug.Log("[CookingModel] 打开烹饪界面");
     }
 

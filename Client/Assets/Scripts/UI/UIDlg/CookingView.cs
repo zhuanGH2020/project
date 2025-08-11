@@ -86,6 +86,9 @@ public class CookingView : BaseView, IDropHandler
         gameObject.SetActive(true);
         UpdateAllSlots();
         UpdateCookButton();
+        
+        // 根据锅的位置调整UI位置到屏幕右侧
+        PositionUIRightOfPot(e.PotWorldPosition);
     }
 
     /// <summary>
@@ -213,6 +216,59 @@ public class CookingView : BaseView, IDropHandler
         {
             PackageModel.Instance.UnselectItem();  // 放置失败，取消选中
         }
+    }
+
+    /// <summary>
+    /// 将UI定位到锅的屏幕右侧
+    /// </summary>
+    private void PositionUIRightOfPot(Vector3 potWorldPosition)
+    {
+        Camera mainCamera = Camera.main;
+        if (mainCamera == null) return;
+
+        RectTransform rectTransform = GetComponent<RectTransform>();
+        if (rectTransform == null) return;
+
+        // 将锅的世界坐标转换为屏幕坐标
+        Vector3 potScreenPos = mainCamera.WorldToScreenPoint(potWorldPosition);
+        
+        // 获取Canvas信息用于坐标转换
+        Canvas canvas = GetComponentInParent<Canvas>();
+        if (canvas == null) return;
+
+        // 将屏幕坐标转换为Canvas内的局部坐标
+        Vector2 localPoint;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            canvas.transform as RectTransform,
+            potScreenPos,
+            canvas.worldCamera,
+            out localPoint);
+
+        // 获取UI面板的宽度
+        float panelWidth = rectTransform.rect.width;
+        
+        // 设置UI位置到锅的右侧（添加一些偏移）
+        float offsetX = panelWidth * 0.5f + 50f; // UI宽度的一半 + 额外间距
+        Vector2 targetPosition = new Vector2(localPoint.x + offsetX, localPoint.y);
+        
+        // 确保UI不会超出屏幕边界
+        float canvasWidth = (canvas.transform as RectTransform).rect.width;
+        float canvasHeight = (canvas.transform as RectTransform).rect.height;
+        
+        // 检查右边界
+        if (targetPosition.x + panelWidth * 0.5f > canvasWidth * 0.5f)
+        {
+            // 如果右侧放不下，放到左侧
+            targetPosition.x = localPoint.x - offsetX;
+        }
+        
+        // 检查上下边界
+        float panelHeight = rectTransform.rect.height;
+        targetPosition.y = Mathf.Clamp(targetPosition.y, 
+            -canvasHeight * 0.5f + panelHeight * 0.5f, 
+            canvasHeight * 0.5f - panelHeight * 0.5f);
+        
+        rectTransform.localPosition = targetPosition;
     }
 
     /// <summary>
