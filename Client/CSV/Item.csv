@@ -25,12 +25,12 @@ int,string,enum<ItemType>,int,string,string,string
 30002,斧头,Equip,1,UI/Icon/item_homestead_carddraw_bun,,砍伐工具，对树木有额外伤害
 30003,火把,Equip,1,UI/Icon/item_homestead_iron_mini,,点燃后可造成火焰伤害和照明
 40000,机枪,Equip,1,UI/Icon/item_homestead_iron_mini,,自动武器，高射速低精度
-50001,烤肉,Food,99,UI/Icon/item_food_meat,,美味的烤肉，恢复大量生命值
-50002,蔬菜汤,Food,99,UI/Icon/item_food_soup,,营养丰富的蔬菜汤，恢复生命值和饥饿度
-50003,水果沙拉,Food,99,UI/Icon/item_food_salad,,清爽的水果沙拉，轻微恢复效果
-50004,烤鱼,Food,99,UI/Icon/item_food_fish,,新鲜的烤鱼，营养价值很高
-50005,蘑菇汤,Food,99,UI/Icon/item_food_mushroom,,神秘的蘑菇汤，有特殊效果
-50006,综合炖菜,Food,99,UI/Icon/item_food_stew,,多种材料制作的炖菜，效果极佳
-50007,简单汤品,Food,99,UI/Icon/item_food_simple,,简单的汤品，基础恢复效果
-50008,烤蔬菜,Food,99,UI/Icon/item_food_veggie,,烤制的蔬菜，健康美味
+50001,烤肉,Food,99,UI/Icon/Food/Meat,,美味的烤肉，恢复大量生命值
+50002,蔬菜汤,Food,99,UI/Icon/Food/Bisque,,营养丰富的蔬菜汤，恢复生命值和饥饿度
+50003,水果沙拉,Food,99,UI/Icon/Food/Fresh_Fruit_Crepes,,清爽的水果沙拉，轻微恢复效果
+50004,烤鱼,Food,99,UI/Icon/Food/Fishsticks,,新鲜的烤鱼，营养价值很高
+50005,蘑菇汤,Food,99,UI/Icon/Food/Bisque,,神秘的蘑菇汤，有特殊效果
+50006,综合炖菜,Food,99,UI/Icon/Food/Turkey_Dinner,,多种材料制作的炖菜，效果极佳
+50007,简单汤品,Food,99,UI/Icon/Food/Bisque,,简单的汤品，基础恢复效果
+50008,烤蔬菜,Food,99,UI/Icon/Food/Carrot,,烤制的蔬菜，健康美味
 70001,豌豆射手,Building,1,UI/Icon/item_homestead_iron_mini,Prefabs/Partners/pbsc_peashooter,建筑物 - 防御植物，可以发射豌豆攻击敌人 

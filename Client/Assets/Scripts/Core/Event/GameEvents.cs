@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using UnityEngine;
 // 通用数值变化事件
 public class ValueChangeEvent : IEvent
 {
@@ -312,8 +314,14 @@ public class CookingInteractionEvent : IEvent
 /// </summary>
 public class CookingUIOpenEvent : IEvent
 {
-    public CookingUIOpenEvent() { }
+    public Vector3 PotWorldPosition { get; }
+    
+    public CookingUIOpenEvent(Vector3 potWorldPosition) 
+    { 
+        PotWorldPosition = potWorldPosition;
+    }
 }
+
 
 /// <summary>
 /// 烹饪界面关闭事件

@@ -103,7 +103,7 @@ public class CookingPot : Building, IClickable
     /// </summary>
     private void OpenCookingUI()
     {
-        CookingModel.Instance.OpenCookingUI();
+        CookingModel.Instance.OpenCookingUI(transform.position);
     }
 
     public float GetInteractionRange()
