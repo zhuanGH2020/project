@@ -79,7 +79,7 @@ private void UpdateEnemyDetection()
 {
     _enemiesInRange.Clear();
     
-    // 获取所有怪物类型的对象（包括Monster和MonsterAI_Enhanced）
+    // 获取所有怪物类型的对象
     var allMonsterObjects = ObjectManager.Instance.FindAllByType(ObjectType.Monster);
     
     foreach (var monsterObj in allMonsterObjects)
@@ -132,7 +132,7 @@ private void CheckCollision()
     
     foreach (var hitCollider in hitColliders)
     {
-        // 统一检测CombatEntity类型的敌人（Monster、MonsterAI_Enhanced等）
+        // 统一检测CombatEntity类型的敌人
         var combatEntity = hitCollider.GetComponent<CombatEntity>();
         if (combatEntity != null && combatEntity.CurrentHealth > 0 && !IsPartner(hitCollider))
         {
@@ -168,7 +168,7 @@ private void CheckCollision()
 
 ### 支持的敌人类型
 1. **Monster** - 基础怪物AI，继承自CombatEntity
-2. **MonsterAI_Enhanced** - 增强版怪物AI，继承自CombatEntity
+2. **Monster** - 怪物AI，继承自CombatEntity
 3. **自定义CombatEntity** - 任何继承自CombatEntity且设置ObjectType.Monster的类
 
 ### 性能优化

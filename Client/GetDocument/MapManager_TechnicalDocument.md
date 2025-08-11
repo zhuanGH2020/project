@@ -160,7 +160,7 @@ Id,Name,PrefabPath
 
 ### 怪物组件支持
 - 自动检测Monster组件并初始化
-- 支持MonsterAI_Enhanced增强AI组件
+- 支持Monster AI组件
 - 通过Init(configId)方法传递配置ID
 
 ### 占位符系统

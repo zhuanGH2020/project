@@ -149,10 +149,10 @@ public class Player : CombatEntity
 }
 ```
 
-#### MonsterAI_Enhanced - 增强版怪物AI
+#### Monster - 怪物AI
 ```csharp
 // 继承 CombatEntity，配置驱动的完整AI系统
-public class MonsterAI_Enhanced : CombatEntity
+public class Monster : CombatEntity
 {
     // 必须调用此方法来设置配置ID并加载参数
     public void Init(int configId)
@@ -161,6 +161,15 @@ public class MonsterAI_Enhanced : CombatEntity
     private void LoadConfigValues()
 }
 ```
+
+**核心特性**：
+- **智能感知系统**：结合视野角度、检测范围和视线遮挡检测
+- **记忆追击系统**：记住玩家最后已知位置，即使失去视线也能继续追击
+- **状态机AI**：Idle → Patrol → Alert → Chase → Attack 的完整状态流转
+- **被攻击响应**：玩家攻击怪物时立即锁定玩家，无论攻击方向
+- **防卡顿系统**：自动检测并处理卡在障碍物的情况
+- **智能巡逻**：带避障的巡逻点生成，避免在障碍物前反复移动
+- **对话系统**：支持玩家接近时触发随机对话
 
 **配置参数**：
 - DetectionRange - 检测范围
@@ -260,7 +269,7 @@ public class CooldownTimer
 #### 怪物AI配置驱动
 ```csharp
 // 标准初始化流程
-var monster = gameObject.AddComponent<MonsterAI_Enhanced>();
+var monster = gameObject.AddComponent<Monster>();
 monster.Init(5001); // 自动设置配置ID并加载所有参数
 
 // Monster.csv 配置示例
@@ -268,6 +277,28 @@ Id,Name,DetectionRange,AttackRange,MoveSpeed,FieldOfView,LostTargetTime
 5001,公鸡,5,2,3.5,90,3
 5002,母鸡,6,2.5,3,120,4
 5003,鸡王,8,3,4,150,5
+```
+
+#### AI行为调优
+```csharp
+// 调整感知参数来改变AI行为
+FieldOfView = 90f;      // 视野角度：90度适合大部分怪物
+LostTargetTime = 3f;    // 记忆时间：3秒记住玩家位置
+DetectionRange = 5f;    // 检测范围：与巡逻半径平衡
+
+// 调整巡逻参数控制移动模式
+PatrolRadius = 8f;      // 巡逻半径：出生点周围8米
+PatrolWaitTime = 2f;    // 巡逻等待：到达巡逻点后等待2秒
+```
+
+#### 被攻击响应机制
+```csharp
+// Monster会自动响应玩家攻击
+// 无需额外代码，装备系统会自动设置DamageInfo.Source
+// 怪物收到伤害时会：
+// 1. 立即锁定攻击者
+// 2. 根据当前状态智能切换AI状态
+// 3. 重置失去目标计时器，难以甩掉
 ```
 
 #### 装备系统使用
@@ -348,14 +379,14 @@ protected override void Awake()
 
 // 使用对象管理器查询
 var player = ObjectManager.Instance.FindAllByType<Player>(ObjectType.Player);
-var monsters = ObjectManager.Instance.FindAllByType<MonsterAI_Enhanced>(ObjectType.Monster);
+var monsters = ObjectManager.Instance.FindAllByType<Monster>(ObjectType.Monster);
 var harvestables = ObjectManager.Instance.FindAllByType<HarvestableObject>(ObjectType.Item);
 ```
 
 ## 注意事项
 
 ### 配置系统
-- MonsterAI_Enhanced必须调用`Init(configId)`来正确初始化
+- Monster必须调用`Init(configId)`来正确初始化
 - 配置ID验证：生成前验证配置ID是否存在于配置表中
 - 配置表预加载：在游戏启动时预加载常用配置表以提升性能
 - 错误处理：配置不存在时提供合理的默认值和错误提示
@@ -383,10 +414,10 @@ var harvestables = ObjectManager.Instance.FindAllByType<HarvestableObject>(Objec
 
 ### Monster.csv - 怪物配置表
 ```csv
-Id,Name,Type,MaxHealth,DetectionRange,AttackRange,MoveSpeed,RotationSpeed,FieldOfView,LostTargetTime,PatrolRadius
-5001,公鸡,Normal,50,5,2,3.5,5,90,3,8
-5002,母鸡,Normal,200,6,2.5,3,4,120,4,10
-5003,鸡王,Boss,300,8,3,4,6,150,5,15
+Id,Name,Type,MaxHealth,DetectionRange,AttackRange,MoveSpeed,RotationSpeed,FieldOfView,LostTargetTime,IdleSpeed,AttackAngle,PatrolRadius,PatrolWaitTime
+5001,公鸡,Normal,50,5,2,3.5,5,90,3,1,45,8,2
+5002,母鸡,Normal,200,6,2.5,3,4,120,4,0.8,60,10,3
+5003,鸡王,Boss,300,8,3,4,6,150,5,1.2,90,15,1
 ```
 
 ### Equip.csv - 装备配置表
@@ -422,8 +453,8 @@ EventManager.Instance.Subscribe<AttackEvent>(OnAttack);
 
 #### 添加新的怪物类型
 1. 更新Monster.csv配置表：添加新的怪物ID和属性配置
-2. 使用MonsterAI_Enhanced：`monster.Init(newMonsterId)`
-3. 自定义怪物行为（可选）：继承MonsterAI_Enhanced，重写特定的AI状态逻辑
+2. 使用Monster：`monster.Init(newMonsterId)`
+3. 自定义怪物行为（可选）：继承Monster，重写特定的AI状态逻辑
 
 #### 添加新的采集物
 1. 选择合适的脚本类型：DirectHarvestable/RepeatableHarvestable
