@@ -64,11 +64,8 @@ public enum MonsterType
 public enum PartnerType
 {
     None = 0,
-    Peashooter = 1,    // 豌豆射手
-    IceShooter = 2,    // 冰豌豆射手
-    FireShooter = 3,   // 火豌豆射手
-    LightShooter = 4,  // 光明射手
-    DarkShooter = 5,   // 黑暗射手
+    Shooter = 1,    // 豌豆射手
+    Sunflower = 2,  // 向日葵
 }
 
 // 伤害类型
