@@ -20,6 +20,15 @@ public class MonsterAI_Enhanced : CombatEntity
     private float _patrolRadius;           // 巡逻半径 - 从配置表读取
     private float _patrolWaitTime;         // 巡逻等待时间 - 从配置表读取
 
+    [Header("对话设置")]
+    [SerializeField] private float _dialogRange = 3f;    // 对话范围
+    [SerializeField] private int[] _availableDialogIds = { 1, 2, 3, 4 }; // 可用对话ID列表
+
+    // 对话相关变量
+    private float _lastDialogTime;      // 上次对话时间
+    private float _dialogCooldown = 5f; // 对话冷却时间（秒）
+    private int _currentDialogId = -1;  // 当前对话框ID
+
     protected override void Awake()
     {
         base.Awake();
@@ -185,6 +194,7 @@ public class MonsterAI_Enhanced : CombatEntity
         if (ConfigId > 0)
         {
             UpdateAI();
+            UpdateDialog();
         }
     }
 
@@ -663,6 +673,60 @@ public class MonsterAI_Enhanced : CombatEntity
     }
 
     /// <summary>
+    /// 更新对话逻辑
+    /// </summary>
+    private void UpdateDialog()
+    {
+        if (_player == null || DialogManager.Instance == null) return;
+
+        // 检查对话冷却时间
+        if (Time.time - _lastDialogTime < _dialogCooldown) return;
+
+        // 检查玩家是否在对话范围内
+        float distanceToPlayer = Vector3.Distance(transform.position, _player.transform.position);
+
+        if (distanceToPlayer <= _dialogRange)
+        {
+            // 玩家在对话范围内，创建随机对话
+            TriggerRandomDialog();
+        }
+    }
+
+    /// <summary>
+    /// 触发随机对话
+    /// </summary>
+    private void TriggerRandomDialog()
+    {
+        if (_availableDialogIds == null || _availableDialogIds.Length == 0)
+        {
+            Debug.LogWarning($"[Monster] {gameObject.name} 没有可用的对话ID");
+            return;
+        }
+
+        // 销毁当前对话框（如果存在）
+        if (_currentDialogId != -1)
+        {
+            DialogManager.Instance.DestroyDialog(_currentDialogId);
+            _currentDialogId = -1;
+        }
+
+        // 创建新的随机对话
+        Vector3 dialogOffset = new Vector3(0, 2.5f, 0); // 在怪物头顶显示
+        _currentDialogId = DialogManager.Instance.CreateRandomDialog(
+            transform,
+            _availableDialogIds,
+            dialogOffset,
+            3f // 3秒持续时间
+        );
+
+        if (_currentDialogId != -1)
+        {
+            _lastDialogTime = Time.time;
+            Debug.Log($"[Monster] {gameObject.name} 说话了，对话ID: {_currentDialogId}");
+        }
+    }
+
+    /// <summary>
     /// 处理怪物死亡
     /// </summary>
     protected override void OnDeath()
@@ -670,8 +734,14 @@ public class MonsterAI_Enhanced : CombatEntity
         base.OnDeath();
         ChangeState(MonsterState.Dead);
         _target = null;
-        
-        var config = GetConfig();
+
+        // 清理对话框
+        if (_currentDialogId != -1 && DialogManager.Instance != null)
+        {
+            DialogManager.Instance.DestroyDialog(_currentDialogId);
+            _currentDialogId = -1;
+        }
+
         // 怪物死亡处理
         Destroy(gameObject, 1f);
     }
