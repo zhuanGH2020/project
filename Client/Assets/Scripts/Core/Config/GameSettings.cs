@@ -11,7 +11,7 @@ public static class GameSettings
     public static readonly Vector3 MapDefaultSpawnPosition = Vector3.zero;
 
     // 默认可生成的怪物ID列表
-    public static readonly int[] MapDefaultMonsterIds = { 5001 };
+    public static readonly int[] MapDefaultMonsterIds = { 5000 };
 
     // 最小生成间隔限制（秒）
     public const float MapMinSpawnInterval = 0.1f;
