@@ -9,9 +9,11 @@ public abstract class ObjectBase : MonoBehaviour
 {
     [Header("Object Identity")]
     [SerializeField] private int _uid = 0;                 // Unique identifier
+    [SerializeField] private int _configId = 0;            // 配置表ID
     [SerializeField] private ObjectType _objectType = ObjectType.Other; // Object category
 
     public int Uid => _uid;
+    public int ConfigId => _configId;
     public ObjectType ObjectType => _objectType;
     public Vector3 Position => transform.position;
 
@@ -44,9 +46,31 @@ public abstract class ObjectBase : MonoBehaviour
         _uid = uid;
     }
 
+    public void SetConfigId(int configId)
+    {
+        _configId = configId;
+    }
+
     public void SetObjectType(ObjectType type)
     {
         _objectType = type;
+    }
+
+    /// <summary>
+    /// 根据对象类型获取对应的配置表读取器
+    /// </summary>
+    /// <returns>配置表读取器，如果类型不支持或加载失败则返回null</returns>
+    public ConfigReader GetConfig()
+    {
+        // 对于Other类型，不支持配置表
+        if (_objectType == ObjectType.Other)
+        {
+            Debug.LogWarning($"ObjectType.Other does not support config table");
+            return null;
+        }
+
+        string configName = _objectType.ToString();
+        return ConfigManager.Instance.GetReader(configName);
     }
 
     public T GetOrAddComponent<T>() where T : Component

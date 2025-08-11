@@ -1,7 +1,7 @@
 # Object系统技术文档
 
 **创建日期**: 2024年12月  
-**版本**: 2.0  
+**版本**: 2.4 
 
 ## 简介
 
@@ -139,8 +139,36 @@ public enum ActionType
 
 ### 基础类
 
+#### ObjectBase - 对象基类（配置系统核心）
+**继承**: MonoBehaviour  
+**职责**: 所有游戏对象的基类，提供UID、对象类型管理和**配置表查询功能**
+
+**主要属性**:
+- `_uid`: 唯一标识符
+- `_configId`: **配置表ID**
+- `_objectType`: 对象类型
+
+**配置系统核心方法**:
+```csharp
+// 根据对象类型自动获取对应配置表
+public ConfigReader GetConfig()
+
+// 设置配置ID
+public void SetConfigId(int configId)
+```
+
+**配置表映射规则**:
+- 使用枚举名称直接映射：`ObjectType.ToString()`
+- `ObjectType.Monster` → `"Monster"` → `Monster.csv`
+- `ObjectType.Building` → `"Building"` → `Building.csv`
+- `ObjectType.Item` → `"Item"` → `Item.csv`
+- `ObjectType.Player` → `"Player"` → `Player.csv`
+- `ObjectType.Other` → 不支持配置表
+
+**使用场景**: 所有需要配置表支持的游戏对象的基类
+
 #### DamageableObject - 可承伤物体基类
-**继承**: MonoBehaviour → IDamageable  
+**继承**: ObjectBase → IDamageable  
 **职责**: 所有可承伤物体的基类，提供生命值管理和伤害计算
 
 **主要属性**:
@@ -314,16 +342,117 @@ private void FaceTarget();
 
 **使用方式**: 挂载到怪物GameObject上，自动寻找Player实例
 
-#### MonsterAI_Enhanced - 增强版怪物AI
+#### MonsterAI_Enhanced - 增强版怪物AI（配置驱动）
 **继承**: CombatEntity  
-**职责**: 完整的怪物AI系统，包含状态机、视野检测、巡逻等
+**职责**: 完整的怪物AI系统，包含状态机、智能感知、记忆追击等
 
-**主要属性**:
-- `_detectRange`: 检测范围
-- `_attackRange`: 攻击范围
-- `_fieldOfView`: 视野角度
-- `_patrolRadius`: 巡逻半径
-- `_spawnPoint`: 出生点
+**核心特性**:
+- **配置驱动**: 所有AI参数从Monster.csv配置表读取
+- **智能感知**: 基于状态的不同感知策略
+- **记忆追击**: 记录玩家最后已知位置，避免因障碍物立即失去目标
+- **状态机**: 支持空闲、巡逻、警戒、追击、攻击、眩晕等状态
+
+**初始化方法**:
+```csharp
+// 必须调用此方法来设置配置ID并加载参数
+public void Init(int configId)
+{
+    SetConfigId(configId);
+    LoadConfigValues();
+    // ... 其他初始化逻辑
+}
+
+// 从配置表加载所有AI参数
+private void LoadConfigValues()
+{
+    var config = GetConfig();
+    if (config == null) return;
+    
+    int configId = ConfigId;
+    // 基础战斗参数
+    _detectRange = config.GetValue(configId, "DetectionRange", 5f);
+    _attackRange = config.GetValue(configId, "AttackRange", 2f);
+    _chaseSpeed = config.GetValue(configId, "MoveSpeed", 3.5f);
+    _rotationSpeed = config.GetValue(configId, "RotationSpeed", 5f);
+    _maxHealth = config.GetValue(configId, "MaxHealth", 100f);
+    
+    // AI行为参数
+    _fieldOfView = config.GetValue(configId, "FieldOfView", 90f);
+    _lostTargetTime = config.GetValue(configId, "LostTargetTime", 3f);
+    _idleSpeed = config.GetValue(configId, "IdleSpeed", 1f);
+    _attackAngle = config.GetValue(configId, "AttackAngle", 45f);
+    _patrolRadius = config.GetValue(configId, "PatrolRadius", 8f);
+    _patrolWaitTime = config.GetValue(configId, "PatrolWaitTime", 2f);
+}
+```
+
+**配置参数映射**:
+- `DetectionRange` → 检测范围
+- `AttackRange` → 攻击范围  
+- `MoveSpeed` → 移动速度
+- `RotationSpeed` → 旋转速度
+- `MaxHealth` → 最大生命值
+- `FieldOfView` → 视野角度
+- `LostTargetTime` → 失去目标记忆时间
+- `IdleSpeed` → 空闲速度
+- `AttackAngle` → 攻击角度
+- `PatrolRadius` → 巡逻半径
+- `PatrolWaitTime` → 巡逻等待时间
+
+**智能感知系统**:
+```csharp
+// 基于状态的感知策略
+private void UpdatePerception()
+{
+    if (_currentState == MonsterState.Idle || _currentState == MonsterState.Patrol)
+    {
+        // 空闲/巡逻状态：需要严格的视线检查才能发现目标
+        shouldLoseTarget = !CanSeePlayer();
+    }
+    else if (_currentState == MonsterState.Alert || _currentState == MonsterState.Chase || _currentState == MonsterState.Attack)
+    {
+        // 警戒/追击/攻击状态：只要在扩大范围内就不会立即失去目标
+        // 模拟怪物的记忆能力 - 一旦发现玩家，会记住玩家的大致位置
+        shouldLoseTarget = _lastDistanceCheck > _detectRange * 1.5f;
+    }
+}
+
+// 严格的视线检查（空闲状态使用）
+private bool CanSeePlayer()
+{
+    // 检查距离、视野角度、视线遮挡
+    return inRange && inFieldOfView && !isBlocked;
+}
+```
+
+**记忆追击系统**:
+```csharp
+// 追击状态的智能目标选择
+private void UpdateChaseState()
+{
+    Vector3 chaseTarget;
+    if (CanSeePlayer())
+    {
+        // 能看到玩家：直接追击玩家当前位置
+        chaseTarget = _target.position;
+    }
+    else
+    {
+        // 玩家被遮挡：追击最后已知位置
+        chaseTarget = _lastKnownPlayerPos;
+        
+        // 到达最后已知位置后，切换到巡逻状态继续寻找
+        if (Vector3.Distance(transform.position, _lastKnownPlayerPos) < 1f)
+        {
+            ChangeState(MonsterState.Patrol);
+            return;
+        }
+    }
+    
+    Vector3 direction = (chaseTarget - transform.position).normalized;
+    MoveTo(direction, _chaseSpeed);
+}
+```
 
 **AI状态**:
 ```csharp
@@ -331,19 +460,52 @@ public enum MonsterState
 {
     Idle,       // 空闲状态
     Patrol,     // 巡逻状态
+    Alert,      // 警戒状态
     Chase,      // 追击状态
     Attack,     // 攻击状态
-    Return      // 返回状态
+    Stunned,    // 眩晕状态
+    Dead        // 死亡状态
 }
 ```
 
-**核心功能**:
-- 视野角度检测
-- 状态机管理
-- 巡逻路径生成
-- 调试可视化
+**状态机行为说明**:
+- **Idle（空闲）**: 等待巡逻，使用严格的视线检查发现玩家
+- **Patrol（巡逻）**: 在巡逻半径内随机移动，寻找玩家
+- **Alert（警戒）**: 发现玩家后的过渡状态，决定追击或攻击
+- **Chase（追击）**: 智能追击，记忆玩家最后位置，绕过障碍物
+- **Attack（攻击）**: 在攻击范围内对玩家造成伤害
+- **Stunned（眩晕）**: 受到控制效果时的无行动状态
+- **Dead（死亡）**: 生命值为0时的死亡状态
 
-**使用方式**: 挂载到怪物GameObject上，提供完整的AI行为
+**核心功能**:
+- 智能感知系统（基于状态的不同感知策略）
+- 记忆追击系统（记录最后已知位置）
+- 视野角度检测和视线遮挡检查
+- 状态机管理和流畅的状态转换
+- 巡逻路径生成
+- 配置表热重载支持
+
+**使用方式**: 
+```csharp
+// 1. 添加组件
+var monster = gameObject.AddComponent<MonsterAI_Enhanced>();
+
+// 2. 使用配置ID初始化
+monster.Init(5001); // 初始化为公鸡类型
+
+// 3. AI自动运行，所有参数从配置表加载
+```
+
+### 工具类
+
+#### ConfigSystemTest - 配置系统测试
+**职责**: 验证配置系统的完整性和性能
+
+**测试功能**:
+- Monster配置表加载测试
+- ObjectBase配置功能测试
+- MonsterAI_Enhanced初始化测试
+- 配置查询性能测试
 
 ### 采集系统
 
@@ -579,7 +741,85 @@ private void UpdateTargetInteraction();
 
 ## 最佳实践
 
-### 1. 装备系统使用
+### 1. 配置驱动开发
+
+#### ObjectBase配置系统
+```csharp
+// 1. 设置对象类型和配置ID
+var monster = gameObject.AddComponent<MonsterAI_Enhanced>();
+monster.SetObjectType(ObjectType.Monster);
+monster.SetConfigId(5001);
+
+// 2. 获取配置表并查询值
+var config = monster.GetConfig();
+if (config != null)
+{
+    string name = config.GetValue(5001, "Name", "Unknown");
+    float health = config.GetValue(5001, "MaxHealth", 100f);
+    // 执行更复杂的配置查询逻辑
+}
+```
+
+#### 怪物AI配置驱动
+```csharp
+// 标准初始化流程
+var monster = gameObject.AddComponent<MonsterAI_Enhanced>();
+monster.Init(5001); // 自动设置配置ID并加载所有参数
+
+// 配置会自动加载以下参数:
+// - DetectionRange: 检测范围
+// - AttackRange: 攻击范围  
+// - MoveSpeed: 移动速度
+// - RotationSpeed: 旋转速度
+// - MaxHealth: 最大生命值
+// - FieldOfView: 视野角度
+// - LostTargetTime: 失去目标记忆时间
+// - IdleSpeed: 空闲速度
+// - AttackAngle: 攻击角度
+// - PatrolRadius: 巡逻半径
+// - PatrolWaitTime: 巡逻等待时间
+// - Name: 怪物名称
+```
+
+#### AI行为调优
+```csharp
+// 通过配置表调整不同类型怪物的AI行为
+
+// 公鸡 - 警觉但容易放弃追击
+5001,公鸡,Normal,50,5,5,2,3.5,5,90,3,1,45,8,2
+
+// 母鸡 - 更持久的追击和更大的感知范围  
+5002,母鸡,Normal,200,10,6,2.5,3,4,120,4,0.8,60,10,3
+
+// 鸡王 - 极强的感知和记忆能力
+5003,鸡王,Boss,30,5,8,3,4,6,150,5,1.2,90,15,1
+
+// 关键参数说明:
+// - LostTargetTime: 越大越持久追击
+// - FieldOfView: 越大越容易发现玩家  
+// - DetectionRange: 基础感知范围
+// - PatrolRadius: 巡逻搜索范围
+```
+
+#### 智能感知机制
+```csharp
+// 怪物会根据当前状态使用不同的感知策略:
+
+// 1. 初次发现(Idle/Patrol状态):
+// - 需要严格的视线检查(距离+角度+无遮挡)
+// - 保证怪物不会隔墙发现玩家
+
+// 2. 追击状态(Chase/Attack状态):  
+// - 只检查距离(1.5倍检测范围)
+// - 记忆玩家最后位置，绕过障碍物追击
+// - 到达最后位置后切换到巡逻状态继续搜索
+
+// 3. 记忆时间控制:
+// - LostTargetTime控制失去目标后的记忆保持时间
+// - 时间越长，怪物越难甩掉
+```
+
+### 2. 装备系统使用
 
 #### 数据驱动装备
 ```csharp
@@ -595,7 +835,7 @@ ID,Name,EquipType,Type,Damage,Defense,Durability,DurabilityLoss,UseCooldown,Rang
 30002,Axe,Axe,Hand,50,0,200,2,1.0,2,Prefabs/Weapons/Axe,Null
 ```
 
-### 2. 伤害系统使用
+### 3. 伤害系统使用
 
 #### 造成伤害
 ```csharp
@@ -627,7 +867,7 @@ public override float TakeDamage(DamageInfo damageInfo)
 }
 ```
 
-### 3. AI系统使用
+### 4. AI系统使用
 
 #### 基础AI（Monster）
 ```csharp
@@ -647,7 +887,7 @@ public override float TakeDamage(DamageInfo damageInfo)
 // 支持调试可视化
 ```
 
-### 4. 采集系统使用
+### 5. 采集系统使用
 
 #### 直接采集物（DirectHarvestable）
 **适用于**：草、花等可直接收获的物品
@@ -719,7 +959,7 @@ directHarvestable.SetDropCount(count);
 2. 玩家寻路过去拾取
 3. 物品进入背包，掉落物消失
 
-### 5. 建筑系统使用
+### 6. 建筑系统使用
 
 #### 创建建筑物
 ```csharp
@@ -772,7 +1012,7 @@ public class CustomHarvestable : HarvestableObject
 }
 ```
 
-### 6. 装备开发
+### 7. 装备开发
 
 #### 创建新装备
 ```csharp
@@ -786,49 +1026,111 @@ public class CustomWeapon : HandEquipBase
 }
 ```
 
+### 8. 配置表管理最佳实践
+
+#### 预加载配置表
+```csharp
+private void Start()
+{
+    // 预加载常用配置表
+    ConfigManager.Instance.LoadConfig("Monster");
+    ConfigManager.Instance.LoadConfig("Equip");
+    ConfigManager.Instance.LoadConfig("Source");
+}
+```
+
+#### 配置验证
+```csharp
+public void SpawnMonster(int configId)
+{
+    // 验证配置是否存在
+    var config = ConfigManager.Instance.GetReader("Monster");
+    if (config == null || !config.HasKey(configId))
+    {
+        Debug.LogError($"Monster config {configId} not found!");
+        return;
+    }
+    
+    // 安全地生成怪物
+    // ...
+}
+```
+
+#### 性能优化
+```csharp
+// 缓存配置读取器
+private ConfigReader _monsterConfig;
+
+private void Awake()
+{
+    _monsterConfig = ConfigManager.Instance.GetReader("Monster");
+}
+
+private void UseConfig()
+{
+    // 直接使用缓存的读取器，避免重复查找
+    string name = _monsterConfig.GetValue(configId, "Name", "Unknown");
+}
+```
+
 ## 注意事项
 
-### 1. 性能优化
+### 1. 配置系统最佳实践
+- **必须调用Init方法**: MonsterAI_Enhanced必须调用`Init(configId)`来正确初始化
+- **配置ID验证**: 生成前验证配置ID是否存在于配置表中
+- **配置表预加载**: 在游戏启动时预加载常用配置表以提升性能
+- **错误处理**: 配置不存在时提供合理的默认值和错误提示
+- **性能考虑**: 缓存`ConfigReader`实例，避免重复查找
+
+### 2. 性能优化
 - 避免在Update中进行频繁的GetComponent调用
 - 使用缓存的距离计算结果
 - 合理设置AI检测频率
 - 交互检测使用合理的更新频率（默认0.1秒）
 - 掉落物自动超时清理（默认300秒）
 - 使用对象池管理频繁创建的掉落物
+- **配置查询优化**: 缓存ConfigReader实例，避免重复加载
 
-### 2. 内存管理
+### 3. 内存管理
 - 装备模型使用ResourceManager加载和释放
 - 及时销毁不需要的特效对象
 - 避免内存泄漏
 - 视觉组件按需激活/停用，减少渲染开销
+- **配置表内存**: 合理使用ConfigManager.ClearConfig()清理不需要的配置
 
-### 3. 配置管理
+### 4. 配置管理
 - 所有装备属性通过CSV配置表管理
 - 采集物配置通过Source.csv管理
+- **怪物配置通过Monster.csv管理**
 - 确保配置表路径正确
 - 验证配置数据的有效性
 - 配置表在启动时一次性加载，运行时高效查询
+- **配置表格式**: 必须包含列名、类型定义、中文说明和数据行
 
-### 4. 调试支持
+### 5. 调试支持
 - 使用Debug.Log输出关键信息
 - 启用Gizmos可视化调试
 - 合理设置日志级别
+- **配置测试**: 使用ConfigSystemTest验证配置系统功能
 
-### 5. 扩展性
+### 6. 扩展性
 - 遵循接口设计原则
 - 使用虚方法支持重写
 - 保持类的单一职责
+- **配置扩展**: 通过ObjectType轻松添加新的配置表类型
 
-### 6. 兼容性保证
+### 7. 兼容性保证
 - 所有现有的 `Pull()`, `Harvest()` 等方法都保持可用
 - 现有的预制体和场景无需修改，自动获得新功能
 - 原有的特效和动画系统完全兼容
+- **配置兼容**: ObjectBase配置系统向下兼容所有现有对象
 
-### 7. 系统集成
+### 8. 系统集成
 - InteractionManager会在GameMain中自动创建
 - 采集物需要添加Collider组件用于射线检测
 - 掉落物会自动添加SphereCollider
 - 重新生长计时器仅在需要时更新
+- **配置集成**: 配置表自动按需加载，无需手动管理
 
 ## 文件组织
 
@@ -844,6 +1146,7 @@ Assets/Scripts/Object/
 │   ├── CooldownTimer.cs
 │   └── HarvestData.cs  # 包含HarvestInfo、DropItem、ActionType
 ├── Base/               # 基础类
+│   ├── ObjectBase.cs   # 配置系统核心基类
 │   ├── DamageableObject.cs
 │   ├── CombatEntity.cs
 │   ├── HarvestableObject.cs
@@ -851,7 +1154,7 @@ Assets/Scripts/Object/
 ├── Actor/              # 角色类
 │   ├── Player.cs
 │   ├── Monster.cs
-│   └── MonsterAI_Enhanced.cs
+│   └── MonsterAI_Enhanced.cs  # 配置驱动AI
 ├── Item/               # 采集和交互物品
 │   ├── DirectHarvestable.cs
 │   ├── RepeatableHarvestable.cs
@@ -871,9 +1174,11 @@ Assets/Scripts/Object/
 │   ├── Body/
 │   │   └── Armor.cs
 │   └── Head/            # 头部装备目录（当前为空）
-└── Effect/             # 特效系统
-    ├── BulletTrail.cs
-    └── README_BulletTrail.md
+├── Effect/             # 特效系统
+│   ├── BulletTrail.cs
+│   └── README_BulletTrail.md
+└── Test/               # 测试和示例
+    └── ConfigSystemTest.cs  # 配置系统测试
 
 Assets/Scripts/Manager/  # 管理器
 ├── InteractionManager.cs
@@ -881,11 +1186,44 @@ Assets/Scripts/Manager/  # 管理器
 └── ...其他管理器
 
 Assets/Scripts/Core/    # 核心系统
-├── Enums.cs           # 包含ToolType、DamageType等枚举
+├── Enums.cs           # 包含ToolType、DamageType、ObjectType等枚举
+├── Config/            # 配置系统
+│   ├── ConfigManager.cs
+│   ├── ConfigReader.cs
+│   └── ConfigDefinition.cs
 └── ...其他核心文件
 ```
 
 ## 配置表结构
+
+### Monster.csv 怪物配置表（新增）
+```csv
+Id,Name,Type,MaxHealth,RespawnTime,PrefabPath,IconPath,DropId,DropCount,DropChance,DetectionRange,AttackRange,MoveSpeed,RotationSpeed,DialogIds,DialogRange,FieldOfView,LostTargetTime,IdleSpeed,AttackAngle,PatrolRadius,PatrolWaitTime
+5001,公鸡,Normal,50,5,Prefabs/Monsters/zombie,Icons/Monsters/zombie,4004,1,0.5,5,2,3.5,5,1|2,10,90,3,1,45,8,2
+5002,母鸡,Normal,200,10,Prefabs/Monsters/tank_zombie,Icons/Monsters/tank_zombie,4004,2,0.8,6,2.5,3,4,3|4,10,120,4,0.8,60,10,3
+5003,鸡王,Boss,30,5,Prefabs/Monsters/poison_zombie,Icons/Monsters/poison_zombie,4004,1,0.3,8,3,4,6,1|2|3|4,15,150,5,1.2,90,15,1
+```
+
+**字段说明**：
+- `Id`: 怪物ID（主键）
+- `Name`: 怪物名称
+- `Type`: 怪物类型（Normal/Boss/Friend）
+- `MaxHealth`: 最大生命值
+- `DetectionRange`: 检测范围（用于MonsterAI_Enhanced）
+- `AttackRange`: 攻击范围（用于MonsterAI_Enhanced）
+- `MoveSpeed`: 移动速度（用于MonsterAI_Enhanced）
+- `RotationSpeed`: 旋转速度（用于MonsterAI_Enhanced）
+- `FieldOfView`: 视野角度（用于MonsterAI_Enhanced）
+- `LostTargetTime`: 失去目标记忆时间（用于MonsterAI_Enhanced）
+- `IdleSpeed`: 空闲速度（用于MonsterAI_Enhanced）
+- `AttackAngle`: 攻击角度（用于MonsterAI_Enhanced）
+- `PatrolRadius`: 巡逻半径（用于MonsterAI_Enhanced）
+- `PatrolWaitTime`: 巡逻等待时间（用于MonsterAI_Enhanced）
+- `RespawnTime`: 重生时间
+- `PrefabPath`: 预制体路径
+- `DropId`: 掉落物品ID
+- `DropCount`: 掉落数量
+- `DropChance`: 掉落概率
 
 ### Equip.csv 装备配置表
 ```csv
@@ -945,40 +1283,51 @@ public class ObjectInteractionEvent : IGameEvent
 
 ## 其他需要补充的关键点
 
-### 1. 网络同步支持
+### 1. 配置系统高级特性
+- **热重载支持**: 运行时修改配置表立即生效
+- **类型安全**: 强类型配置值获取，避免类型错误
+- **性能优化**: 配置表一次加载，多次查询
+- **错误恢复**: 配置缺失时的优雅降级机制
+
+### 2. 网络同步支持
 - 系统设计支持网络同步扩展
 - 关键数据使用可序列化结构
 - 预留网络事件接口
+- **配置同步**: 支持服务器端配置下发
 
-### 2. 数据持久化
+### 3. 数据持久化
 - 装备耐久度可保存
 - 角色状态可序列化
 - 采集物重新生长状态可持久化
 - 建筑物状态可持久化
 - 支持存档系统
+- **配置版本**: 配置表版本控制和迁移支持
 
-### 3. 音效系统集成
+### 4. 音效系统集成
 - 攻击音效支持
 - 装备使用音效
 - 采集动作音效
 - 建筑音效
 - 环境音效集成
+- **配置音效**: 音效配置表支持
 
-### 4. 动画系统集成
+### 5. 动画系统集成
 - 攻击动画支持
 - 装备切换动画
 - 采集动作动画
 - 建筑动画
 - 死亡动画系统
+- **配置动画**: 动画配置表支持
 
-### 5. 粒子系统集成
+### 6. 粒子系统集成
 - 攻击特效
 - 装备特效
 - 采集特效
 - 建筑特效
 - 环境特效
+- **配置特效**: 特效配置表支持
 
-### 6. 扩展指南
+### 7. 扩展指南
 
 #### 添加新的采集物
 1. **选择合适的脚本类型**：
@@ -1007,3 +1356,76 @@ public class ObjectInteractionEvent : IGameEvent
 3. **事件处理**：
    - 订阅建筑物相关事件
    - 实现自定义的建筑物行为
+
+#### 添加新的怪物类型
+1. **更新Monster.csv配置表**：
+   - 添加新的怪物ID和属性配置
+   - 设置AI参数（检测范围、攻击范围等）
+
+2. **使用MonsterAI_Enhanced**：
+   ```csharp
+   var monster = gameObject.AddComponent<MonsterAI_Enhanced>();
+   monster.Init(newMonsterId); // 使用新的配置ID
+   ```
+
+3. **自定义怪物行为**（可选）：
+   - 继承MonsterAI_Enhanced
+   - 重写特定的AI状态逻辑
+
+#### 添加新的配置表类型
+1. **扩展ObjectType枚举**：
+   ```csharp
+   public enum ObjectType
+   {
+       // ... 现有类型
+       NewType = 5,  // 添加新类型
+   }
+   ```
+
+2. **无需修改ObjectBase代码**：
+   - 系统使用`ObjectType.ToString()`自动映射
+   - 新的`ObjectType.NewType`会自动映射到`"NewType"`
+   - 对应配置文件：`NewType.csv`
+
+3. **创建对应的配置表文件**：
+   - 在 `Assets/Resources/Configs/` 目录下创建 `NewTypeConfig.csv`
+   - 遵循配置表格式规范
+
+---
+
+## 版本历史
+
+### 版本 2.4 (2024年12月)
+**MonsterAI追击系统重大优化**:
+- ✅ **智能感知系统**: 基于状态的不同感知策略，空闲状态需要严格视线检查，追击状态具有记忆能力
+- ✅ **记忆追击机制**: 记录玩家最后已知位置，避免因障碍物立即失去目标
+- ✅ **状态感知差异化**: 追击状态使用1.5倍检测范围，提升追击持续性
+- ✅ **智能路径规划**: 到达最后已知位置后自动切换巡逻状态继续搜索
+- ✅ **调试日志清理**: 移除所有调试日志，提升运行性能
+
+### 版本 2.3 (2024年12月)
+**配置系统完善**:
+- ✅ ObjectBase配置功能实现
+- ✅ MonsterAI_Enhanced全面配置驱动
+- ✅ Monster.csv配置表扩展（包含所有AI参数）
+- ✅ MonsterSpawner示例脚本移除
+
+### 版本 2.2 (2024年12月)
+**系统整合优化**:
+- ✅ 采集系统与对象系统合并
+- ✅ 技术文档统一和更新
+- ✅ 代码规范统一（中文注释）
+
+### 版本 2.1 (2024年12月)
+**装备系统增强**:
+- ✅ 配置驱动装备系统
+- ✅ 子弹轨迹系统
+- ✅ 装备耐久和冷却机制
+
+### 版本 2.0 (2024年12月)
+**初始版本**:
+- ✅ 核心接口设计（IDamageable, IAttacker, IEquipable）
+- ✅ 基础类架构（ObjectBase, CombatEntity等）
+- ✅ 基础AI系统和装备系统
+
+---

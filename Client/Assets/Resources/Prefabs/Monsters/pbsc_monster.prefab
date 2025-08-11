@@ -42,8 +42,7 @@ GameObject:
   - component: {fileID: 3128599068757524648}
   - component: {fileID: 6404892903365203824}
   - component: {fileID: 4059857766838730773}
-  - component: {fileID: 4248646794374414670}
-  - component: {fileID: 3890026264171884941}
+  - component: {fileID: 3720056039655889059}
   m_Layer: 0
   m_Name: pbsc_monster
   m_TagString: Untagged
@@ -97,7 +96,7 @@ MonoBehaviour:
   m_Area: 0
   m_IgnoreFromBuild: 1
   m_AffectedAgents: ffffffff
---- !u!114 &4248646794374414670
+--- !u!114 &3720056039655889059
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -106,9 +105,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 3692670631378318017}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c9e0bdeea14eee743a6e2b5c3d2f28a2, type: 3}
+  m_Script: {fileID: 11500000, guid: de6cfdfc503f5744297a42919066264d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _uid: 0
+  _configId: 5001
+  _objectType: 0
   _maxHealth: 100
   _defense: 0
   _baseAttack: 10
@@ -118,27 +120,18 @@ MonoBehaviour:
   _bodyMesh: {fileID: 0}
   _equips: []
   _detectRange: 5
-  _attackRange: 2
-  _moveSpeed: 3.5
+  _fieldOfView: 120
+  _lostTargetTime: 3
+  _obstacleLayer:
+    serializedVersion: 2
+    m_Bits: 1
+  _idleSpeed: 1
+  _chaseSpeed: 3.5
   _rotationSpeed: 5
-  _dialogRange: 6
-  _availableDialogIds: 01000000020000000300000004000000
---- !u!114 &3890026264171884941
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3692670631378318017}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_OverrideArea: 0
-  m_Area: 0
-  m_IgnoreFromBuild: 1
-  m_AffectedAgents: ffffffff
+  _attackRange: 2
+  _attackAngle: 45
+  _patrolRadius: 16
+  _patrolWaitTime: 2
 --- !u!1 &3949424144216014306
 GameObject:
   m_ObjectHideFlags: 0

@@ -1937,6 +1937,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: pbsc_monster
       objectReference: {fileID: 0}
+    - target: {fileID: 3720056039655889059, guid: ef812aa6288728d48aa7232e22f5928b, type: 3}
+      propertyPath: _obstacleLayer.m_Bits
+      value: 65
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ef812aa6288728d48aa7232e22f5928b, type: 3}
 --- !u!1001 &3919781104637160837

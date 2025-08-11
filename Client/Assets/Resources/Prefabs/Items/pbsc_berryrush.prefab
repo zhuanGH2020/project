@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6429796164277673043}
   - component: {fileID: 7310494501517832369}
   - component: {fileID: 4007395212949598226}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: berry
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -94,7 +94,7 @@ GameObject:
   - component: {fileID: 8093395517088884798}
   - component: {fileID: 8093395517088884793}
   - component: {fileID: 8093395517088884792}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: berryrush
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -179,7 +179,7 @@ GameObject:
   - component: {fileID: 8093395518188988325}
   - component: {fileID: 1993272577529286279}
   - component: {fileID: 7279460334557973630}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: pbsc_berryrush
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -238,8 +238,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0.5, z: 0}
+  m_Size: {x: 3.5, y: 3.5, z: 3.5}
+  m_Center: {x: 0, y: 1.75, z: 0}
 --- !u!114 &7279460334557973630
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -252,6 +252,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e45da78e9146f2e47bd7bba4c91363d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _uid: 0
+  _configId: 0
+  _objectType: 0
   _maxHealth: 100
   _defense: 0
   _drops: []
