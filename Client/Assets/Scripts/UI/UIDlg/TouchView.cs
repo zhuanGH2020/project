@@ -123,11 +123,6 @@ public class TouchView : BaseView
         
         // 检查悬停的对象类型
         CombatEntity combatEntity = e.HoveredObject.GetComponent<Monster>();
-        if (combatEntity == null)
-        {
-            combatEntity = e.HoveredObject.GetComponent<MonsterAI_Enhanced>();
-        }
-        
         if (combatEntity != null)
         {
             int currentHp = Mathf.RoundToInt(combatEntity.CurrentHealth);

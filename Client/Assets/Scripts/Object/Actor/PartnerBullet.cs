@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// 伙伴子弹 - Partner攻击时发射的投射物
 /// 移动一定距离后自动消失，碰到敌人时造成伤害并消失
-/// 统一检测所有CombatEntity类型的敌人（Monster、MonsterAI_Enhanced等）
+/// 统一检测所有CombatEntity类型的敌人（Monster等）
 /// </summary>
 public class PartnerBullet : ObjectBase
 {
@@ -116,7 +116,7 @@ public class PartnerBullet : ObjectBase
         
         foreach (var hitCollider in hitColliders)
         {
-            // 检查是否是CombatEntity类型的敌人（统一处理Monster和MonsterAI_Enhanced）
+            // 检查是否是CombatEntity类型的敌人（Monster等）
             var combatEntity = hitCollider.GetComponent<CombatEntity>();
             if (combatEntity != null && combatEntity.CurrentHealth > 0 && !IsPartner(hitCollider))
             {

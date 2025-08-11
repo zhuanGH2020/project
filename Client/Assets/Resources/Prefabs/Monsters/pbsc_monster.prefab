@@ -105,11 +105,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 3692670631378318017}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: de6cfdfc503f5744297a42919066264d, type: 3}
+  m_Script: {fileID: 11500000, guid: c9e0bdeea14eee743a6e2b5c3d2f28a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _uid: 0
-  _configId: 5001
+  _configId: 0
   _objectType: 0
   _maxHealth: 100
   _defense: 0
@@ -119,19 +119,6 @@ MonoBehaviour:
   _headMesh: {fileID: 0}
   _bodyMesh: {fileID: 0}
   _equips: []
-  _detectRange: 5
-  _fieldOfView: 120
-  _lostTargetTime: 3
-  _obstacleLayer:
-    serializedVersion: 2
-    m_Bits: 1
-  _idleSpeed: 1
-  _chaseSpeed: 3.5
-  _rotationSpeed: 5
-  _attackRange: 2
-  _attackAngle: 45
-  _patrolRadius: 16
-  _patrolWaitTime: 2
 --- !u!1 &3949424144216014306
 GameObject:
   m_ObjectHideFlags: 0

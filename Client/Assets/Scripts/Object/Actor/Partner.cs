@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 /// <summary>
 /// 伙伴系统 - 防御植物
-/// 参考MonsterAI_Enhanced的架构，简化实现
+/// 参考Monster的架构，简化实现
 /// </summary>
 public class Partner : CombatEntity
 {
@@ -111,7 +111,7 @@ public class Partner : CombatEntity
     {
         _enemiesInRange.Clear();
         
-        // 获取所有怪物类型的对象（包括Monster和MonsterAI_Enhanced）
+        // 获取所有怪物类型的对象（Monster等）
         var allMonsterObjects = ObjectManager.Instance.FindAllByType(ObjectType.Monster);
         
         foreach (var monsterObj in allMonsterObjects)

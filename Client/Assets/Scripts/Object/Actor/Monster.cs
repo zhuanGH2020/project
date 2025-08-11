@@ -20,9 +20,8 @@ public class Monster : CombatEntity
     private float _patrolRadius;           // 巡逻半径 - 从配置表读取
     private float _patrolWaitTime;         // 巡逻等待时间 - 从配置表读取
 
-    [Header("对话设置")]
-    [SerializeField] private float _dialogRange = 3f;    // 对话范围
-    [SerializeField] private int[] _availableDialogIds = { 1, 2, 3, 4 }; // 可用对话ID列表
+    private float _dialogRange;            // 对话范围
+    private int[] _availableDialogIds;     // 可用对话ID列表
 
     // 对话相关变量
     private float _lastDialogTime;      // 上次对话时间
@@ -91,6 +90,10 @@ public class Monster : CombatEntity
         // 设置基础属性
         _maxHealth = config.GetValue(configId, "MaxHealth", 100f);
         _currentHealth = _maxHealth;
+
+        // 读取对话参数
+        _dialogRange = config.GetValue(configId, "DialogRange", 3f);
+        _availableDialogIds = config.GetValue(configId, "DialogIds", new int[] { 1, 2, 3, 4 });
     }
 
     /// <summary>

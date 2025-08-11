@@ -116,12 +116,7 @@ public class MapManager
         var monsterComponent = monsterInstance.GetComponent<Monster>();
         if (monsterComponent == null)
         {
-            // 尝试获取增强版AI组件
-            var enhancedMonster = monsterInstance.GetComponent<MonsterAI_Enhanced>();
-            if (enhancedMonster != null)
-            {
-                enhancedMonster.Init(selectedMonsterId);
-            }
+            monsterComponent.Init(selectedMonsterId);
         }
 
         // 发布怪物生成事件
