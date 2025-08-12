@@ -336,6 +336,9 @@ public class PackageModel
         }
         
         Debug.Log($"[PackageModel] Loaded {_packageItems.Count} items from save");
+        
+        // 发送背包刷新事件，通知UI刷新
+        EventManager.Instance.Publish(new PackageRefreshEvent(_packageItems.Count));
     }
     
     /// <summary>

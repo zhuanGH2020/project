@@ -92,6 +92,7 @@ public class PackageView : BaseView
     private void SubscribeEvents()
     {
         EventManager.Instance.Subscribe<ItemChangeEvent>(OnItemChanged);
+        EventManager.Instance.Subscribe<PackageRefreshEvent>(OnPackageRefresh);
         
         // 订阅右键点击事件，用于取消选中物品
         if (InputManager.Instance != null)
@@ -103,6 +104,7 @@ public class PackageView : BaseView
     private void UnsubscribeEvents()
     {
         EventManager.Instance.Unsubscribe<ItemChangeEvent>(OnItemChanged);
+        EventManager.Instance.Unsubscribe<PackageRefreshEvent>(OnPackageRefresh);
         
         // 取消订阅右键点击事件
         if (InputManager.Instance != null)
@@ -115,6 +117,13 @@ public class PackageView : BaseView
     {
         // 背包变化时刷新UI
         InitializePackageList();
+    }
+    
+    private void OnPackageRefresh(PackageRefreshEvent eventData)
+    {
+        // 背包刷新时更新UI
+        InitializePackageList();
+        Debug.Log($"[PackageView] Package refreshed with {eventData.ItemCount} items, UI updated");
     }
     
     /// <summary>

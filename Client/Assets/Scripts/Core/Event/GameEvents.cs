@@ -43,6 +43,17 @@ public class PackageItemSelectedEvent : IEvent
     }
 }
 
+// 背包刷新事件 - 用于所有需要刷新背包UI的场景
+public class PackageRefreshEvent : IEvent
+{
+    public int ItemCount { get; }
+
+    public PackageRefreshEvent(int itemCount)
+    {
+        ItemCount = itemCount;
+    }
+}
+
 // 时间段切换事件
 public class TimeOfDayChangeEvent : IEvent
 {
