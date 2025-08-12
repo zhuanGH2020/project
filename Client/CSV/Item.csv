@@ -41,4 +41,5 @@ int,string,enum<ItemType>,int,string,string,string
 50006,综合炖菜,Food,99,UI/Icon/Food/Turkey_Dinner,,多种材料制作的炖菜，效果极佳
 50007,简单汤品,Food,99,UI/Icon/Food/Bisque,,简单的汤品，基础恢复效果
 50008,烤蔬菜,Food,99,UI/Icon/Food/Carrot,,烤制的蔬菜，健康美味
+70000,向日葵,Building,1,UI/Icon/item_homestead_iron_mini,Prefabs/Partners/pbsc_partner_sunflower,建筑物 - 防御植物，生产阳光资源的植物
 70001,豌豆射手,Building,1,UI/Icon/item_homestead_iron_mini,Prefabs/Partners/pbsc_peashooter,建筑物 - 防御植物，可以发射豌豆攻击敌人 

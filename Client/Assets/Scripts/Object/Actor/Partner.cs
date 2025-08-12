@@ -287,6 +287,22 @@ public class Partner : CombatEntity
     }
 
     /// <summary>
+    /// 计算发射位置和方向
+    /// </summary>
+    /// <param name="shootPoint">发射位置</param>
+    /// <param name="shootDirection">射击方向</param>
+    private void CalculateShootingParams(out Vector3 shootPoint, out Vector3 shootDirection)
+    {
+        // 计算发射位置（伙伴前方稍高位置）
+        shootPoint = transform.position + Vector3.up * 0.5f + transform.forward * 0.3f;
+        
+        // 计算射击方向（水平方向，y轴保持与发射点一致）
+        Vector3 targetPosition = _currentTarget.transform.position;
+        targetPosition.y = shootPoint.y; // 保持与发射点相同的y轴高度
+        shootDirection = (targetPosition - shootPoint).normalized;
+    }
+
+    /// <summary>
     /// 创建投射物 - 发射子弹攻击目标
     /// </summary>
     private void CreateProjectile()
@@ -304,8 +320,7 @@ public class Partner : CombatEntity
         string bulletPath = config.GetValue<string>(ConfigId, "BulletPath", "");
         if (string.IsNullOrEmpty(bulletPath))
         {
-            Debug.LogWarning($"[Partner] 配置ID {ConfigId} 没有设置BulletPath，使用默认子弹");
-            CreateDefaultBullet();
+            Debug.LogError($"[Partner] 配置ID {ConfigId} 没有设置BulletPath，无法发射子弹");
             return;
         }
         
@@ -313,16 +328,12 @@ public class Partner : CombatEntity
         GameObject bulletPrefab = ResourceManager.Instance.Load<GameObject>(bulletPath);
         if (bulletPrefab == null)
         {
-            Debug.LogError($"[Partner] 无法加载子弹预制体: {bulletPath}，使用默认子弹");
-            CreateDefaultBullet();
+            Debug.LogError($"[Partner] 无法加载子弹预制体: {bulletPath}，无法发射子弹");
             return;
         }
         
-        // 计算发射位置（伙伴前方稍高位置）
-        Vector3 shootPoint = transform.position + Vector3.up * 0.5f + transform.forward * 0.3f;
-        
-        // 计算射击方向（指向目标）
-        Vector3 shootDirection = (_currentTarget.transform.position - shootPoint).normalized;
+        // 计算发射位置和方向
+        CalculateShootingParams(out Vector3 shootPoint, out Vector3 shootDirection);
         
         // 实例化子弹预制体
         GameObject bulletGO = Object.Instantiate(bulletPrefab, shootPoint, Quaternion.LookRotation(shootDirection));
@@ -333,7 +344,6 @@ public class Partner : CombatEntity
         {
             Debug.LogError($"[Partner] 子弹预制体缺少PartnerBullet组件: {bulletPath}");
             Object.Destroy(bulletGO);
-            CreateDefaultBullet();
             return;
         }
         
@@ -352,36 +362,7 @@ public class Partner : CombatEntity
         
         Debug.Log($"[Partner] {gameObject.name} 发射子弹攻击 {_currentTarget.name} (预制体: {bulletPath})");
     }
-    
-    /// <summary>
-    /// 创建默认子弹（当预制体加载失败时使用）
-    /// </summary>
-    private void CreateDefaultBullet()
-    {
-        // 创建默认子弹GameObject
-        var bulletGO = new GameObject("PartnerBullet_Default");
-        var bullet = bulletGO.AddComponent<PartnerBullet>();
-        
-        // 计算发射位置和方向
-        Vector3 shootPoint = transform.position + Vector3.up * 0.5f + transform.forward * 0.3f;
-        Vector3 shootDirection = (_currentTarget.transform.position - shootPoint).normalized;
-        
-        // 使用Partner的攻击参数
-        float bulletSpeed = _attackSpeed;
-        float bulletMaxDistance = _attackRange;
-        
-        // 初始化默认子弹
-        bullet.Initialize(
-            shootPoint, 
-            shootDirection, 
-            _attackDamage,      // 使用Partner的攻击伤害
-            this, 
-            bulletSpeed,        // 根据攻击速度计算的子弹速度
-            bulletMaxDistance   // 基于攻击范围的飞行距离
-        );
-        
-        Debug.Log($"[Partner] {gameObject.name} 使用默认子弹攻击 {_currentTarget.name}");
-    }
+
 
     /// <summary>
     /// 处理伙伴死亡

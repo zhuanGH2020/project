@@ -119,6 +119,12 @@ public class TouchView : BaseView
     /// </summary>
     private void OnMouseHover(MouseHoverEvent e)
     {
+        // 如果在建筑放置模式，不显示悬停提示文本
+        if (_inBuildingPlacementMode && _currentPendingBuildingId > 0)
+        {
+            return;
+        }
+        
         string touchText = null;
         
         // 检查悬停的对象类型
@@ -165,6 +171,12 @@ public class TouchView : BaseView
     /// </summary>
     private void OnMouseHoverExit(MouseHoverExitEvent e)
     {
+        // 如果在建筑放置模式，不处理悬停退出事件
+        if (_inBuildingPlacementMode && _currentPendingBuildingId > 0)
+        {
+            return;
+        }
+        
         _currentHoveredObject = null;
         HideTouch();
     }

@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 7737894420483339840}
   - component: {fileID: -8983390604072069836}
   m_Layer: 0
-  m_Name: pbsc_partner_shooter
+  m_Name: pbsc_peashooter
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
