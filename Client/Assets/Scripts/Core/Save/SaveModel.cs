@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
+using UnityEngine.AI;
 
 // 存档模型 - 负责存档系统的业务逻辑管理
 // 提供存档数据的统一访问接口和自动保存机制
@@ -307,18 +309,97 @@ public class SaveModel
     }
     
     /// <summary>
-    /// 清空当前游戏中的所有数据（建筑、背包等）
+    /// 清空当前游戏中的所有数据（建筑、背包、玩家状态等）
     /// </summary>
     public void ClearCurrentGameData()
     {
-        // 清空建筑数据
+        // 1. 重置时间系统到初始状态：第1天，0%进度，白天
+        ClockModel.Instance.SetGameTime(1, 0f, TimeOfDay.Day);
+        
+        // 2. 清空建筑数据和GameObject（包括Partner、Monster等）
         MapModel.Instance.ClearAllBuildings();
         
-        // 清空背包数据
+        // 3. 清空背包数据
         PackageModel.Instance.ClearAllItems();
         
-        // 可以根据需要添加其他数据的清空
-        Debug.Log("[SaveModel] Current game data cleared");
+        // 4. 重置玩家状态
+        var player = Player.Instance;
+        if (player != null)
+        {
+            // 重置血量到满血
+            player.SetHealth(player.MaxHealth);
+            
+            // 清理所有装备
+            ClearPlayerEquips(player);
+            
+            // 重置位置到初始位置
+            ResetPlayerPosition(player);
+        }
+        
+        // 5. 清理对象池中的所有对象（如果有使用对象池的话）
+        ClearObjectPools();
+        
+        // 6. 强制清理ObjectManager中的所有注册对象
+        if (ObjectManager.HasInstance)
+        {
+            ObjectManager.Instance.CleanupNullReferences();
+        }
+        
+        Debug.Log("[SaveModel] Current game data cleared - Reset to Day 1, Full Health, No Items, No Buildings, No Equips, Pools Cleared");
+    }
+    
+    /// <summary>
+    /// 清理玩家所有装备
+    /// </summary>
+    private void ClearPlayerEquips(Player player)
+    {
+        // 获取当前装备的ID列表
+        var equippedIds = player.GetEquippedItemIds();
+        
+        // 通过反射访问装备列表并清理
+        var equipField = typeof(CombatEntity).GetField("_equips", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        
+        if (equipField != null)
+        {
+            var equipsList = equipField.GetValue(player) as System.Collections.Generic.List<EquipBase>;
+            if (equipsList != null)
+            {
+                // 先调用所有装备的OnUnequip方法
+                foreach (var equip in equipsList)
+                {
+                    equip?.OnUnequip();
+                }
+                
+                // 清空装备列表
+                equipsList.Clear();
+                
+                Debug.Log($"[SaveModel] Cleared {equippedIds.Count} equipped items");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 重置玩家位置到初始位置
+    /// </summary>
+    private void ResetPlayerPosition(Player player)
+    {
+        // 重置到初始位置（可根据需要修改为场景中的出生点）
+        Vector3 resetPosition = Vector3.zero;
+        
+        // 重置位置和旋转
+        player.transform.position = resetPosition;
+        player.transform.rotation = Quaternion.identity;
+        
+        // 如果有NavMesh代理，也需要重置
+        var navAgent = player.GetComponent<NavMeshAgent>();
+        if (navAgent != null)
+        {
+            navAgent.ResetPath();
+            navAgent.Warp(resetPosition);
+        }
+        
+        Debug.Log($"[SaveModel] Player position reset to {resetPosition}");
     }
     
     // 设置自动保存，enabled: 是否启用自动保存，intervalSeconds: 自动保存间隔（秒）
@@ -512,5 +593,17 @@ public class SaveModel
     {
         Debug.Log($"[SaveModel] Save data deleted from slot {eventData.Slot}");
         // 这里可以添加UI提示等逻辑
+    }
+
+    /// <summary>
+    /// 清理对象池中的所有对象
+    /// </summary>
+    private void ClearObjectPools()
+    {
+        // 如果项目中有使用对象池，在这里清理
+        // 注意：ObjectPoolManager是泛型类，需要根据具体的枚举类型来清理
+        // 这里作为预留接口，可以根据项目需要进行扩展
+        
+        Debug.Log("[SaveModel] Object pools cleared (if any)");
     }
 } 

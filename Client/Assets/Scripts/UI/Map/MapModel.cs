@@ -45,6 +45,7 @@ public class MapModel
     // 私有字段
     private List<MapData> _mapDataList = new List<MapData>();
     private MapData _selectedMapData; // 当前选中的地图数据
+    private List<GameObject> _createdGameObjects = new List<GameObject>(); // 记录所有通过MapModel创建的GameObject
 
     // 公共属性
     public List<MapData> MapDataList => _mapDataList;
@@ -103,6 +104,9 @@ public class MapModel
             return false;
         }
 
+        // 删除对应的GameObject
+        RemoveGameObjectByUID(mapData.buildingUID);
+        
         _mapDataList.Remove(mapData);
 
         // 如果删除的是当前选中的数据，清空选中状态
@@ -278,6 +282,9 @@ public class MapModel
         Vector3 worldPosition = new Vector3(posX, 0, posY);
         GameObject buildingInstance = GameObject.Instantiate(prefab, worldPosition, Quaternion.identity);
         
+        // 将创建的GameObject添加到跟踪列表
+        _createdGameObjects.Add(buildingInstance);
+        
         // 添加Building组件并初始化
         var buildingComponent = buildingInstance.GetComponent<Building>();
         if (buildingComponent == null)
@@ -320,6 +327,57 @@ public class MapModel
     }
     
     /// <summary>
+    /// 根据UID删除对应的GameObject
+    /// </summary>
+    private void RemoveGameObjectByUID(int uid)
+    {
+        if (uid <= 0) return;
+        
+        for (int i = _createdGameObjects.Count - 1; i >= 0; i--)
+        {
+            var gameObj = _createdGameObjects[i];
+            if (gameObj == null)
+            {
+                // 清理空引用
+                _createdGameObjects.RemoveAt(i);
+                continue;
+            }
+            
+            var building = gameObj.GetComponent<Building>();
+            if (building != null && building.UID == uid)
+            {
+                GameObject.Destroy(gameObj);
+                _createdGameObjects.RemoveAt(i);
+                Debug.Log($"[MapModel] 删除UID为 {uid} 的GameObject");
+                return;
+            }
+        }
+        
+        Debug.LogWarning($"[MapModel] 未找到UID为 {uid} 的GameObject");
+    }
+    
+    /// <summary>
+    /// 清理GameObject列表中的空引用
+    /// </summary>
+    public void CleanupNullGameObjects()
+    {
+        int removedCount = 0;
+        for (int i = _createdGameObjects.Count - 1; i >= 0; i--)
+        {
+            if (_createdGameObjects[i] == null)
+            {
+                _createdGameObjects.RemoveAt(i);
+                removedCount++;
+            }
+        }
+        
+        if (removedCount > 0)
+        {
+            Debug.Log($"[MapModel] 清理了 {removedCount} 个空GameObject引用");
+        }
+    }
+    
+    /// <summary>
     /// 从存档数据中加载建筑物
     /// </summary>
     public void LoadBuildingsFromSave(List<MapData> buildingData)
@@ -334,11 +392,11 @@ public class MapModel
         {
             _mapDataList.Add(mapData);
             
-            // 重新生成建筑物GameObject
+            // 重新生成建筑物GameObject（LoadBuildingPrefab会自动添加到_createdGameObjects列表）
             LoadBuildingPrefab(mapData.itemId, mapData.posX, mapData.posY, mapData.buildingUID);
         }
         
-        Debug.Log($"[MapModel] 恢复了 {buildingData.Count} 个建筑物");
+        Debug.Log($"[MapModel] 恢复了 {buildingData.Count} 个建筑物，创建了 {_createdGameObjects.Count} 个GameObject");
     }
     
     /// <summary>
@@ -346,20 +404,83 @@ public class MapModel
     /// </summary>
     public void ClearAllBuildings()
     {
-        // 销毁所有建筑GameObject
-        var allBuildings = GameObject.FindObjectsOfType<Building>();
-        foreach (var building in allBuildings)
+        int destroyedCount = 0;
+        
+        // 1. 销毁所有通过MapModel创建的GameObject
+        for (int i = _createdGameObjects.Count - 1; i >= 0; i--)
         {
-            if (building != null && building.gameObject != null)
+            var gameObj = _createdGameObjects[i];
+            if (gameObj != null)
             {
-                GameObject.Destroy(building.gameObject);
+                GameObject.Destroy(gameObj);
+                destroyedCount++;
             }
         }
+        _createdGameObjects.Clear();
         
-        // 清空地图数据
+        // 2. 清理其他可能存在的游戏对象（不是通过MapModel创建的）
+        ClearOtherGameObjects(ref destroyedCount);
+        
+        // 3. 清空地图数据
         _mapDataList.Clear();
         _selectedMapData = null;
         
-        Debug.Log("[MapModel] 已清空所有建筑物");
+        // 4. 清理ObjectManager中的相关注册（可选，因为OnDisable会自动清理）
+        if (ObjectManager.HasInstance)
+        {
+            ObjectManager.Instance.CleanupNullReferences();
+        }
+        
+        Debug.Log($"[MapModel] 已清空所有建筑物和相关GameObject，共销毁 {destroyedCount} 个对象");
+    }
+    
+    /// <summary>
+    /// 清理其他可能存在的游戏对象（Partner、Monster、子弹、特效等）
+    /// </summary>
+    private void ClearOtherGameObjects(ref int destroyedCount)
+    {
+        // 销毁所有Partner（伙伴）GameObject
+        var allPartners = GameObject.FindObjectsOfType<Partner>();
+        foreach (var partner in allPartners)
+        {
+            if (partner != null && partner.gameObject != null)
+            {
+                GameObject.Destroy(partner.gameObject);
+                destroyedCount++;
+            }
+        }
+        
+        // 销毁所有Monster（怪物）GameObject
+        var allMonsters = GameObject.FindObjectsOfType<Monster>();
+        foreach (var monster in allMonsters)
+        {
+            if (monster != null && monster.gameObject != null)
+            {
+                GameObject.Destroy(monster.gameObject);
+                destroyedCount++;
+            }
+        }
+        
+        // 销毁所有PartnerBullet（伙伴子弹）GameObject
+        var allBullets = GameObject.FindObjectsOfType<PartnerBullet>();
+        foreach (var bullet in allBullets)
+        {
+            if (bullet != null && bullet.gameObject != null)
+            {
+                GameObject.Destroy(bullet.gameObject);
+                destroyedCount++;
+            }
+        }
+        
+        // 销毁所有BulletTrail（子弹轨迹）GameObject
+        var allTrails = GameObject.FindObjectsOfType<BulletTrail>();
+        foreach (var trail in allTrails)
+        {
+            if (trail != null && trail.gameObject != null)
+            {
+                GameObject.Destroy(trail.gameObject);
+                destroyedCount++;
+            }
+        }
     }
 } 
