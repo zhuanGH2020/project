@@ -16,7 +16,7 @@ public class PackageItem
 
     public PackageItem(int itemId, int count, int index = -1)
     {
-        this.uid = ResourceUtils.GenerateUID();
+        this.uid = ResourceUtils.GenerateUid();
         this.itemId = itemId;
         this.count = count;
         this.index = index;
@@ -24,9 +24,9 @@ public class PackageItem
     }
     
     /// <summary>
-    /// 公共属性访问UID
+    /// 公共属性访问Uid
     /// </summary>
-    public int UID => uid;
+    public int Uid => uid;
 }
 
 /// <summary>

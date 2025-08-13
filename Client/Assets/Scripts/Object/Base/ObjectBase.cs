@@ -19,10 +19,10 @@ public abstract class ObjectBase : MonoBehaviour
 
     protected virtual void Awake()
     {
-        // Ensure UID exists
+        // Ensure Uid exists
         if (_uid == 0)
         {
-            _uid = ResourceUtils.GenerateUID();
+            _uid = ResourceUtils.GenerateUid();
         }
     }
 

@@ -36,7 +36,7 @@ public static class GameSettings
     public const float ClockDuskAmbientIntensity = 0.6f;
 
     // 夜晚环境光强度
-    public const float ClockNightAmbientIntensity = 0.3f;
+    public const float ClockNightAmbientIntensity = 0.1f;
 
     // 白天时间占比 (0.0-0.5)
     public const float ClockDayTimeRatio = 0.5f;

@@ -8,22 +8,22 @@ int,string,enum<ItemType>,int,string,string,string
 10001,石头盔,Equip,1,UI/Icon/item_homestead_iron_mini,,进阶头部防护装备，防御力更强
 11001,草,Item,99,UI/Icon/item_homestead_iron_mini,,基础材料，用于制作工具
 11002,花,Item,99,UI/Icon/item_homestead_iron_mini,,基础材料，用于制作工具
-12001,浆果,Food,99,UI/Icon/item_homestead_iron_mini,,食物
+12001,浆果,Food,99,UI/Icon/Food/Berries,,食物
 12002,苹果,Food,99,UI/Icon/item_homestead_iron_mini,,食物
-13001,木头,Item,99,UI/Icon/item_quest_human_woods_01_mini,,基础材料，用于制作各种物品
-14001,石头,Item,99,UI/Icon/item_homestead_original_ore_mini,,基础材料，用于制作工具和建筑
-14002,铁块,Item,50,UI/Icon/item_homestead_iron_mini,,基础材料，用于制作武器和护甲
-14003,金块,Item,50,UI/Icon/item_mine_minecoin,,基础材料，用于制作工具
-15001,皮革,Item,99,UI/Icon/item_homestead_iron_mini,,常见材料，用于制作护甲
-15002,布料,Item,50,UI/Icon/item_homestead_iron_mini,,基础材料，用于制作轻型护甲
-16001,僵尸心脏,Item,10,UI/Icon/item_homestead_iron_mini,,稀有材料，用于制作特殊物品
-20000,木胸甲,Equip,1,UI/Icon/item_homestead_iron_mini,,基础身体防护装备，提供基本防御
-20001,石胸甲,Equip,1,UI/Icon/item_homestead_iron_mini,,进阶身体防护装备，防御力显著提升
+13001,木头,Item,99,UI/Icon/Mat/Log_Build2,,基础材料，用于制作各种物品
+14001,石头,Item,99,UI/Icon/Mat/Rocks_Build_1,,基础材料，用于制作工具和建筑
+14002,燧石,Item,50,UI/Icon/Mat/Flint,,基础材料，用于制作武器和护甲
+14003,金块,Item,50,UI/Icon/Mat/Gold_Nugget_Build,,基础材料，用于制作工具
+15001,皮革,Item,99,UI/Icon/Mat/Thick_Fur,,常见材料，用于制作护甲
+15002,布料,Item,50,UI/Icon/Mat/Cloth,,基础材料，用于制作轻型护甲
+16001,僵尸心脏,Item,10,UI/Icon/Mat/item_homestead_iron_mini,,稀有材料，用于制作特殊物品
+20000,草胸甲,Equip,1,UI/Icon/Tool/Grass_Suit,,基础身体防护装备，提供基本防御
+20001,石胸甲,Equip,1,UI/Icon/Tool/Marble_Suit,,进阶身体防护装备，防御力显著提升
 20002,皮甲,Equip,1,UI/Icon/item_homestead_iron_mini,,轻型身体防护装备，灵活性好
 20003,布衣,Equip,1,UI/Icon/item_homestead_iron_mini,,基础服装，提供最基本的防护
-30001,铁锅,Building,1,UI/Icon/item_homestead_iron_mini,Prefabs/Items/pbsc_pot,建筑物 - 烹饪设施，用于烹饪食物和煮水
-30002,斧头,Equip,1,UI/Icon/item_homestead_carddraw_bun,,砍伐工具，对树木有额外伤害
-30003,火把,Equip,1,UI/Icon/item_homestead_iron_mini,,点燃后可造成火焰伤害和照明
+30001,铁锅,Building,1,UI/Icon/Building/Crock_Pot_Build,Prefabs/Items/pbsc_pot,建筑物 - 烹饪设施，用于烹饪食物和煮水
+30002,斧头,Equip,1,UI/Icon/Tool/Fanciful_Axe_Icon,,砍伐工具，对树木有额外伤害
+30003,火把,Equip,1,UI/Icon/Tool/Torch,,点燃后可造成火焰伤害和照明
 40000,机枪,Equip,1,UI/Icon/item_homestead_iron_mini,,自动武器，高射速低精度
 50001,烤肉,Food,99,UI/Icon/item_food_meat,,美味的烤肉，恢复大量生命值
 50002,蔬菜汤,Food,99,UI/Icon/item_food_soup,,营养丰富的蔬菜汤，恢复生命值和饥饿度
@@ -41,5 +41,5 @@ int,string,enum<ItemType>,int,string,string,string
 50006,综合炖菜,Food,99,UI/Icon/Food/Turkey_Dinner,,多种材料制作的炖菜，效果极佳
 50007,简单汤品,Food,99,UI/Icon/Food/Bisque,,简单的汤品，基础恢复效果
 50008,烤蔬菜,Food,99,UI/Icon/Food/Carrot,,烤制的蔬菜，健康美味
-70000,向日葵,Building,1,UI/Icon/item_homestead_iron_mini,Prefabs/Partners/pbsc_partner_sunflower,建筑物 - 防御植物，生产阳光资源的植物
-70001,豌豆射手,Building,1,UI/Icon/item_homestead_iron_mini,Prefabs/Partners/pbsc_peashooter,建筑物 - 防御植物，可以发射豌豆攻击敌人 
+70000,向日葵,Building,1,UI/Icon/Plant/Sunflower2009HD,Prefabs/Plants/pbsc_plant_sunflower,建筑物 - 防御植物，生产阳光资源的植物
+70001,豌豆射手,Building,1,UI/Icon/Plant/Peashooter,Prefabs/Plants/pbsc_plant_peashooter,建筑物 - 防御植物，可以发射豌豆攻击敌人 

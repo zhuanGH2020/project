@@ -20,11 +20,11 @@ public class ObjectManager
     {
         if (obj == null) return;
         
-        // Check for UID conflicts
+        // Check for Uid conflicts
         if (_uidToObject.ContainsKey(obj.Uid) && _uidToObject[obj.Uid] != obj)
         {
-            Debug.LogWarning($"[ObjectManager] UID conflict detected: {obj.Uid} for {obj.name}. Generating new UID.");
-            obj.SetUid(ResourceUtils.GenerateUID());
+            Debug.LogWarning($"[ObjectManager] Uid conflict detected: {obj.Uid} for {obj.name}. Generating new Uid.");
+            obj.SetUid(ResourceUtils.GenerateUid());
         }
         
         _uidToObject[obj.Uid] = obj;

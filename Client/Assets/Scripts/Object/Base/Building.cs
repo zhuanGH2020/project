@@ -19,7 +19,7 @@ public class Building : DamageableObject
     [SerializeField] private bool _isConstructed = true;     // 是否建造完成
     
     // 公共属性
-    public int UID => Uid; // 兼容旧接口
+
     public int ItemId => _itemId;
     public Vector2 MapPosition => _mapPosition;
     public int Level => _level;
@@ -54,14 +54,12 @@ public class Building : DamageableObject
         }
         else if (Uid == 0)
         {
-            SetUid(ResourceUtils.GenerateUID());
+            SetUid(ResourceUtils.GenerateUid());
         }
         _constructTime = Time.time;
         
         LoadBuildingConfig();
         UpdateGameObjectName();
-        
-        Debug.Log($"[Building] 初始化建筑物: {GetBuildingName()} (UID: {Uid})");
     }
     
     /// <summary>
@@ -85,7 +83,7 @@ public class Building : DamageableObject
     /// </summary>
     private void UpdateGameObjectName()
     {
-        gameObject.name = $"{GetBuildingName()}_{Uid}";
+        gameObject.name = $"{GetPrefabName()}_{Uid}";
     }
     
     /// <summary>
@@ -97,6 +95,20 @@ public class Building : DamageableObject
     }
     
     /// <summary>
+    /// 获取预制体名称
+    /// </summary>
+    public string GetPrefabName()
+    {
+        // 获取当前GameObject的名称（预制体名称），移除Unity自动添加的"(Clone)"后缀
+        string currentName = gameObject.name;
+        if (currentName.EndsWith("(Clone)"))
+        {
+            currentName = currentName.Replace("(Clone)", "");
+        }
+        return currentName;
+    }
+    
+    /// <summary>
     /// 升级建筑物
     /// </summary>
     public bool UpgradeLevel()
@@ -104,15 +116,12 @@ public class Building : DamageableObject
         int maxLevel = GetMaxLevel();
         if (_level >= maxLevel)
         {
-            Debug.LogWarning($"[Building] 建筑物已达到最大等级: {_level}");
             return false;
         }
         
         int oldLevel = _level;
         _level++;
         OnLevelChanged?.Invoke(this, oldLevel);
-        
-        Debug.Log($"[Building] 建筑物升级: {GetBuildingName()} {oldLevel} -> {_level}");
         return true;
     }
     
@@ -125,7 +134,6 @@ public class Building : DamageableObject
         {
             _canInteract = canInteract;
             OnInteractStateChanged?.Invoke(this, canInteract);
-            Debug.Log($"[Building] 建筑物交互状态改变: {GetBuildingName()} -> {canInteract}");
         }
     }
     
@@ -152,7 +160,6 @@ public class Building : DamageableObject
     /// </summary>
     private void OnBuildingDestroyed()
     {
-        Debug.Log($"[Building] 建筑物被摧毁: {GetBuildingName()} (UID: {Uid})");
         Demolish();
     }
     
@@ -162,20 +169,7 @@ public class Building : DamageableObject
     public void Demolish()
     {
         OnDemolished?.Invoke(this);
-        MapModel.Instance.RemoveBuildingByUID(UID);
+        MapModel.Instance.RemoveBuildingByUid(Uid);
         Destroy(gameObject);
-    }
-    
-    /// <summary>
-    /// 获取建筑物详细信息
-    /// </summary>
-    public string GetBuildingInfo()
-    {
-        return $"建筑物: {GetBuildingName()}\n" +
-               $"等级: {_level}/{GetMaxLevel()}\n" +
-               $"血量: {_currentHealth:F0}/{_maxHealth:F0}\n" +
-               $"位置: ({_mapPosition.x:F1}, {_mapPosition.y:F1})\n" +
-               $"可交互: {(_canInteract ? "是" : "否")}\n" +
-               $"UID: {Uid}";
     }
 } 

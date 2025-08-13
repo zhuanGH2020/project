@@ -316,7 +316,7 @@ public class SaveModel
         // 1. 重置时间系统到初始状态：第1天，0%进度，白天
         ClockModel.Instance.SetGameTime(1, 0f, TimeOfDay.Day);
         
-        // 2. 清空建筑数据和GameObject（包括Partner、Monster等）
+        // 2. 清空建筑数据和GameObject（包括Plant、Monster等）
         MapModel.Instance.ClearAllBuildings();
         
         // 3. 清空背包数据

@@ -475,7 +475,7 @@ public class TouchView : BaseView
     private void HandleBuildingPlacement(Vector3 worldPosition)
     {
         // 生成新的建筑物UID
-        int newBuildingUID = ResourceUtils.GenerateUID();
+        int newBuildingUID = ResourceUtils.GenerateUid();
         
         // 在地图上放置建筑物，传递buildingUID参数
         bool placed = MapModel.Instance.AddMapData(_currentPendingBuildingId, worldPosition.x, worldPosition.z, newBuildingUID);
@@ -487,7 +487,7 @@ public class TouchView : BaseView
             // 退出建筑放置模式并隐藏图标
             ExitBuildingPlacementMode();
             
-            Debug.Log($"建筑物放置成功: {_currentPendingBuildingId} at ({worldPosition.x}, {worldPosition.z}), UID: {newBuildingUID}");
+            Debug.Log($"建筑物放置成功: {_currentPendingBuildingId} at ({worldPosition.x}, {worldPosition.z}), Uid: {newBuildingUID}");
         }
         else
         {

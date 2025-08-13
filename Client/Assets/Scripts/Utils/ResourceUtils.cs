@@ -163,13 +163,13 @@ public static class ResourceUtils
     
     #endregion
     
-    #region UID生成工具
+    #region Uid生成工具
     
     /// <summary>
-    /// 生成带随机数的UID - 在同一时刻创建多个对象时确保唯一性
+    /// 生成带随机数的Uid - 在同一时刻创建多个对象时确保唯一性
     /// </summary>
-    /// <returns>时间戳+随机数组合UID</returns>
-    public static int GenerateUID()
+    /// <returns>时间戳+随机数组合Uid</returns>
+    public static int GenerateUid()
     {
         long timestamp = System.DateTime.Now.Ticks / System.TimeSpan.TicksPerMillisecond;
         int random = UnityEngine.Random.Range(1000, 9999);

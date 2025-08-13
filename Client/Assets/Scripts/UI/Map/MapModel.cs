@@ -80,12 +80,11 @@ public class MapModel
         int finalUID = LoadBuildingPrefab(itemId, posX, posY, buildingUID);
         if (finalUID > 0)
         {
-            newMapData.buildingUID = finalUID; // 更新实际生成的UID
+            newMapData.buildingUID = finalUID; // 更新实际生成的Uid
         }
 
         // 发布地图数据添加事件
         EventManager.Instance.Publish(new MapDataAddedEvent(newMapData));
-        Debug.Log($"[MapModel] 添加地图数据: ItemId={itemId}, Pos=({posX}, {posY}), UID={buildingUID}");
         
         return true;
     }
@@ -105,7 +104,7 @@ public class MapModel
         }
 
         // 删除对应的GameObject
-        RemoveGameObjectByUID(mapData.buildingUID);
+        RemoveGameObjectByUid(mapData.buildingUID);
         
         _mapDataList.Remove(mapData);
 
@@ -295,22 +294,22 @@ public class MapModel
         // 初始化建筑物数据
         buildingComponent.Initialize(itemId, new Vector2(posX, posY), uid);
         
-        Debug.Log($"[MapModel] 成功加载建筑物预制体: {prefabPath} at ({posX}, {posY}), UID: {buildingComponent.UID}");
+        //Debug.Log($"[MapModel] 成功加载建筑物预制体: {prefabPath} at ({posX}, {posY}), Uid: {buildingComponent.Uid}");
         
-        return buildingComponent.UID;
+        return buildingComponent.Uid;
     }
     
     /// <summary>
-    /// 根据UID移除建筑物
+    /// 根据Uid移除建筑物
     /// </summary>
-    public bool RemoveBuildingByUID(int uid)
+    public bool RemoveBuildingByUid(int uid)
     {
         if (uid <= 0) return false;
         
         MapData mapData = _mapDataList.Find(data => data.buildingUID == uid);
         if (mapData == null)
         {
-            Debug.LogWarning($"[MapModel] Building with UID {uid} not found");
+            Debug.LogWarning($"[MapModel] Building with Uid {uid} not found");
             return false;
         }
         
@@ -318,18 +317,18 @@ public class MapModel
     }
     
     /// <summary>
-    /// 根据UID获取建筑物数据
+    /// 根据Uid获取建筑物数据
     /// </summary>
-    public MapData GetBuildingByUID(int uid)
+    public MapData GetBuildingByUid(int uid)
     {
         if (uid <= 0) return null;
         return _mapDataList.Find(data => data.buildingUID == uid);
     }
     
     /// <summary>
-    /// 根据UID删除对应的GameObject
+    /// 根据Uid删除对应的GameObject
     /// </summary>
-    private void RemoveGameObjectByUID(int uid)
+    private void RemoveGameObjectByUid(int uid)
     {
         if (uid <= 0) return;
         
@@ -344,16 +343,16 @@ public class MapModel
             }
             
             var building = gameObj.GetComponent<Building>();
-            if (building != null && building.UID == uid)
+                            if (building != null && building.Uid == uid)
             {
                 GameObject.Destroy(gameObj);
                 _createdGameObjects.RemoveAt(i);
-                Debug.Log($"[MapModel] 删除UID为 {uid} 的GameObject");
+                Debug.Log($"[MapModel] 删除Uid为 {uid} 的GameObject");
                 return;
             }
         }
         
-        Debug.LogWarning($"[MapModel] 未找到UID为 {uid} 的GameObject");
+        Debug.LogWarning($"[MapModel] 未找到Uid为 {uid} 的GameObject");
     }
     
     /// <summary>
@@ -435,17 +434,17 @@ public class MapModel
     }
     
     /// <summary>
-    /// 清理其他可能存在的游戏对象（Partner、Monster、子弹、特效等）
+    /// 清理其他可能存在的游戏对象（Plant、Monster、子弹、特效等）
     /// </summary>
     private void ClearOtherGameObjects(ref int destroyedCount)
     {
-        // 销毁所有Partner（伙伴）GameObject
-        var allPartners = GameObject.FindObjectsOfType<Partner>();
-        foreach (var partner in allPartners)
+        // 销毁所有Plant（植物）GameObject
+        var allPlants = GameObject.FindObjectsOfType<Plant>();
+        foreach (var plant in allPlants)
         {
-            if (partner != null && partner.gameObject != null)
+            if (plant != null && plant.gameObject != null)
             {
-                GameObject.Destroy(partner.gameObject);
+                GameObject.Destroy(plant.gameObject);
                 destroyedCount++;
             }
         }
@@ -461,8 +460,8 @@ public class MapModel
             }
         }
         
-        // 销毁所有PartnerBullet（伙伴子弹）GameObject
-        var allBullets = GameObject.FindObjectsOfType<PartnerBullet>();
+                    // 销毁所有PlantBullet（植物子弹）GameObject
+            var allBullets = GameObject.FindObjectsOfType<PlantBullet>();
         foreach (var bullet in allBullets)
         {
             if (bullet != null && bullet.gameObject != null)

@@ -60,8 +60,8 @@ public enum MonsterType
     Friend = 4,    // 友军
 }
 
-// 伙伴类型
-public enum PartnerType
+// 植物类型
+public enum PlantType
 {
     None = 0,
     Shooter = 1,    // 豌豆射手
