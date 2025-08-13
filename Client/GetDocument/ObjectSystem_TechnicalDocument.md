@@ -87,6 +87,12 @@ public class ObjectBase : MonoBehaviour
 }
 ```
 
+**配置表映射规则**：
+- ObjectType.Monster → "Monster.csv"
+- ObjectType.Item → "Source.csv"
+- ObjectType.Equip → "Equip.csv"
+- ObjectType.Building → "Building.csv"
+
 #### DamageableObject - 可承伤物体基类
 ```csharp
 // 继承 ObjectBase，实现 IDamageable
@@ -149,16 +155,37 @@ public class Player : CombatEntity
 }
 ```
 
-#### Monster - 怪物AI
+#### 怪物AI继承结构
+
+新的怪物AI系统采用继承结构，Monster为基类，Zombie为特殊子类：
+
 ```csharp
-// 继承 CombatEntity，配置驱动的完整AI系统
+CombatEntity
+    ↓
+Monster (基类)
+    ↓  
+Zombie (特殊子类)
+```
+
+##### Monster - 怪物AI基类
+**位置**: `Assets/Scripts/Object/Actor/Monster.cs`
+```csharp
+// 继承 CombatEntity，配置驱动的基础AI系统
 public class Monster : CombatEntity
 {
-    // 必须调用此方法来设置配置ID并加载参数
-    public void Init(int configId)
+    public void Init(int configId)      // 设置配置ID并加载参数
+    private void LoadConfigValues()     // 从配置表加载AI参数
     
-    // 从配置表加载所有AI参数
-    private void LoadConfigValues()
+    // 基础AI属性访问（供子类使用）
+    protected float _detectRange;       // 检测范围
+    protected float _attackRange;       // 攻击范围
+    protected float _chaseSpeed;        // 追击速度
+    protected float _attackAngle;       // 攻击角度
+    
+    // 移动方法（供子类使用）
+    protected void MoveTo(Vector3 direction, float speed)                   // 正常移动（带避障）
+    protected void MoveToIgnoreObstacles(Vector3 direction, float speed)    // 无障碍移动（僵尸专用）
+    protected void FaceTarget(Vector3 targetPosition)                       // 面向目标
 }
 ```
 
@@ -169,20 +196,77 @@ public class Monster : CombatEntity
 - **被攻击响应**：玩家攻击怪物时立即锁定玩家，无论攻击方向
 - **防卡顿系统**：自动检测并处理卡在障碍物的情况
 - **智能巡逻**：带避障的巡逻点生成，避免在障碍物前反复移动
-- **对话系统**：支持玩家接近时触发随机对话
+- **对话系统**：支持随机对话显示，可配置对话范围和冷却时间
+- **双重移动模式**：提供正常避障移动和无障碍移动两种模式
 
-**配置参数**：
-- DetectionRange - 检测范围
-- AttackRange - 攻击范围  
-- MoveSpeed - 移动速度
-- RotationSpeed - 旋转速度
-- MaxHealth - 最大生命值
-- FieldOfView - 视野角度
-- LostTargetTime - 失去目标记忆时间
-- IdleSpeed - 空闲速度
-- AttackAngle - 攻击角度
-- PatrolRadius - 巡逻半径
-- PatrolWaitTime - 巡逻等待时间
+##### Zombie - 特殊僵尸AI
+**位置**: `Assets/Scripts/Object/Actor/Zombie.cs`
+```csharp
+// 继承 Monster，具备特殊AI能力的僵尸系统
+public class Zombie : Monster
+{
+    // 僵尸核心AI方法
+    private void UpdateTarget()         // 智能目标选择
+    private Transform GetPlantInPath() // 检测路径上的Plant
+    private void MoveTowardsTarget()    // 无障碍移动
+    private Vector3 CalculateZombieAvoidance() // 僵尸间距保持
+}
+```
+
+**特殊能力**：
+1. **无障碍移动**：不受墙壁、树木等障碍物影响，可直接穿越
+2. **智能优先级攻击**：
+   - 玩家在攻击范围内 → 立即攻击玩家（最高优先级）
+   - 前进路线上有Plant → 攻击路径上的Plant 
+   - 科技台存在 → 攻击科技台
+   - 玩家不在攻击范围内 → 追击玩家
+3. **Plant路径检测**：使用锥形检测前进路线上的伙伴
+4. **僵尸间距保持**：自动避开其他僵尸，防止穿模和聚集
+5. **配置继承**：完全使用Monster基类配置，无独立参数
+
+**使用Monster基类配置**：
+- `_detectRange` - 检测范围和Plant检测范围
+- `_attackRange` - 攻击范围和僵尸避让距离  
+- `_attackAngle` - Plant检测角度
+- `_chaseSpeed` - 移动速度
+
+#### Partner - 伙伴角色
+**位置**: `Assets/Scripts/Object/Actor/Partner.cs`
+```csharp
+// 继承 CombatEntity，伙伴AI系统
+public class Partner : CombatEntity
+{
+    public void Init(int configId)      // 配置驱动初始化
+    public PartnerType PartnerType { get; }
+    
+    // 跟随和战斗AI
+    private void UpdateFollowAI()
+    private void UpdateCombatAI()
+}
+```
+
+#### Building - 建筑基类
+**位置**: `Assets/Scripts/Object/Building/Building.cs`
+```csharp
+// 继承 DamageableObject，建筑物基类
+public class Building : DamageableObject, IClickable
+{
+    public void Init(int configId)      // 配置驱动初始化
+    public virtual void OnClick(Vector3 clickPosition)
+}
+```
+
+#### CookingPot - 烹饪锅
+**位置**: `Assets/Scripts/Object/Building/CookingPot.cs`
+```csharp
+// 继承 Building，烹饪功能建筑
+public class CookingPot : Building
+{
+    public void StartCooking(int recipeId)
+    public bool IsCooking { get; }
+    public float CookingProgress { get; }
+}
+```
 
 ### 装备系统
 
@@ -262,15 +346,51 @@ public class CooldownTimer
 }
 ```
 
+## 文件组织
+
+### 核心脚本结构
+```
+Scripts/Object/
+├── Base/                     # 基础类
+│   ├── ObjectBase.cs
+│   ├── DamageableObject.cs
+│   ├── CombatEntity.cs
+│   └── HarvestableObject.cs
+├── Actor/                    # 角色类
+│   ├── Player.cs
+│   ├── Monster.cs            # 怪物基类（标准AI）
+│   ├── Zombie.cs             # 僵尸（特殊AI）
+│   └── Partner.cs
+├── Building/                 # 建筑类  
+│   ├── Building.cs
+│   └── CookingPot.cs
+├── Equip/                    # 装备系统
+│   ├── Base/                 # 装备基类
+│   ├── Hand/                 # 手部装备
+│   ├── Head/                 # 头部装备
+│   └── Body/                 # 身体装备
+├── Interactive/              # 采集物
+│   ├── DirectHarvestable.cs
+│   └── RepeatableHarvestable.cs
+├── Item/                     # 掉落物
+├── Manager/                  # 管理器
+│   └── InteractionManager.cs
+├── Effect/                   # 特效
+│   └── BulletTrail.cs
+└── Data/                     # 数据结构
+    ├── DamageInfo.cs
+    └── CooldownTimer.cs
+```
+
 ## 最佳实践
 
-### 配置驱动开发
+### 怪物AI使用
 
-#### 怪物AI配置驱动
+#### 标准怪物初始化
 ```csharp
-// 标准初始化流程
+// 基础怪物 - 标准AI行为
 var monster = gameObject.AddComponent<Monster>();
-monster.Init(5001); // 自动设置配置ID并加载所有参数
+monster.Init(5001); // 使用Monster.csv配置
 
 // Monster.csv 配置示例
 Id,Name,DetectionRange,AttackRange,MoveSpeed,FieldOfView,LostTargetTime
@@ -279,29 +399,56 @@ Id,Name,DetectionRange,AttackRange,MoveSpeed,FieldOfView,LostTargetTime
 5003,鸡王,8,3,4,150,5
 ```
 
-#### AI行为调优
+#### 特殊僵尸初始化
 ```csharp
-// 调整感知参数来改变AI行为
-FieldOfView = 90f;      // 视野角度：90度适合大部分怪物
-LostTargetTime = 3f;    // 记忆时间：3秒记住玩家位置
-DetectionRange = 5f;    // 检测范围：与巡逻半径平衡
+// 僵尸 - 特殊AI能力
+var zombie = gameObject.AddComponent<Zombie>();
+zombie.Init(5000); // 外部调用Init，使用僵尸专用配置
 
-// 调整巡逻参数控制移动模式
-PatrolRadius = 8f;      // 巡逻半径：出生点周围8米
-PatrolWaitTime = 2f;    // 巡逻等待：到达巡逻点后等待2秒
+// Monster.csv 僵尸配置示例
+Id,Name,DetectionRange,AttackRange,MoveSpeed,AttackAngle
+5000,僵尸,8,2,5,60
 ```
 
-#### 被攻击响应机制
+#### 僵尸AI调优
 ```csharp
-// Monster会自动响应玩家攻击
+// 僵尸特殊行为优先级
+// 1. 玩家在攻击范围内 → 立即攻击玩家
+// 2. 路径上有Plant → 攻击Plant
+// 3. 科技台存在 → 攻击科技台
+// 4. 追击玩家
+```
+
+### 怪物类型选择指南
+
+#### 使用Monster基类的场景
+- ✅ **标准AI行为**：巡逻、追击、攻击等正常怪物行为
+- ✅ **受障碍物影响**：需要绕过墙壁、树木等障碍物
+- ✅ **平衡游戏性**：玩家可以利用地形优势
+
+#### 使用Zombie子类的场景
+- ✅ **特殊敌人**：BOSS级或特殊事件中的敌人
+- ✅ **无障碍追击**：需要穿越地形直接追击玩家
+- ✅ **智能索敌**：优先攻击重要目标（科技台、伙伴）
+- ✅ **高威胁性**：营造紧张感的特殊敌人
+
+### 被攻击响应机制
+```csharp
+// Monster和Zombie都会自动响应玩家攻击
 // 无需额外代码，装备系统会自动设置DamageInfo.Source
-// 怪物收到伤害时会：
+
+// 基础怪物响应
 // 1. 立即锁定攻击者
 // 2. 根据当前状态智能切换AI状态
-// 3. 重置失去目标计时器，难以甩掉
+// 3. 重置失去目标计时器
+
+// 僵尸特殊响应
+// 1. 立即将玩家设为当前目标
+// 2. 覆盖其他目标优先级
+// 3. 无障碍直接追击
 ```
 
-#### 装备系统使用
+### 装备系统使用
 ```csharp
 // 通过装备ID装备物品
 player.Equip(30001); // 装备UZI
@@ -318,8 +465,7 @@ ID,Name,EquipType,Damage,Defense,Durability,UseCooldown,Range
 #### 直接采集物（DirectHarvestable）
 ```csharp
 // 适用于：草、花等可直接收获的物品
-// 在Inspector中设置
-[SerializeField] private int _itemId = 1001;  // 草的物品ID
+[SerializeField] private int _itemId = 1001;
 
 // Source.csv 配置示例
 ID,DropItemId,DropCount,DropRate,HarvestTime,DestroyAfterHarvest
@@ -386,14 +532,14 @@ var harvestables = ObjectManager.Instance.FindAllByType<HarvestableObject>(Objec
 ## 注意事项
 
 ### 配置系统
-- Monster必须调用`Init(configId)`来正确初始化
+- Monster和Zombie都必须调用`Init(configId)`来正确初始化
+- Zombie完全使用Monster.csv配置，无独立配置参数
 - 配置ID验证：生成前验证配置ID是否存在于配置表中
 - 配置表预加载：在游戏启动时预加载常用配置表以提升性能
-- 错误处理：配置不存在时提供合理的默认值和错误提示
 
 ### 性能优化
 - 避免在Update中进行频繁的GetComponent调用
-- 使用缓存的距离计算结果
+- 僵尸AI每0.3秒更新目标，每0.2秒检测Plant
 - 合理设置AI检测频率
 - 交互检测使用合理的更新频率（默认0.1秒）
 - 掉落物自动超时清理（默认300秒）
@@ -410,29 +556,28 @@ var harvestables = ObjectManager.Instance.FindAllByType<HarvestableObject>(Objec
 - 掉落物会自动添加SphereCollider
 - 重新生长计时器仅在需要时更新
 
+### 僵尸AI设计要点
+- **无障碍移动**：使用`MoveToIgnoreObstacles`而非普通`MoveTo`
+- **配置继承**：所有参数来自Monster.csv，保持统一性
+- **目标优先级**：玩家在攻击范围 > Plant路径 > 科技台 > 玩家追击
+- **间距保持**：使用攻击范围作为避让距离，防止僵尸聚集
+- **外部初始化**：必须由外部代码调用`Init(configId)`
+
 ## 配置表结构
 
 ### Monster.csv - 怪物配置表
 ```csv
-Id,Name,Type,MaxHealth,DetectionRange,AttackRange,MoveSpeed,RotationSpeed,FieldOfView,LostTargetTime,IdleSpeed,AttackAngle,PatrolRadius,PatrolWaitTime
-5001,公鸡,Normal,50,5,2,3.5,5,90,3,1,45,8,2
-5002,母鸡,Normal,200,6,2.5,3,4,120,4,0.8,60,10,3
-5003,鸡王,Boss,300,8,3,4,6,150,5,1.2,90,15,1
+Id,Name,Type,MaxHealth,DetectionRange,AttackRange,MoveSpeed,RotationSpeed,FieldOfView,LostTargetTime,IdleSpeed,AttackAngle,PatrolRadius,PatrolWaitTime,DialogRange,DialogIds
 ```
 
 ### Equip.csv - 装备配置表
 ```csv
 ID,Name,EquipType,Type,Damage,Defense,Durability,DurabilityLoss,UseCooldown,Range,ModelPath
-30001,UZI,Uzi,Hand,25,0,100,1,0.1,10,Prefabs/Weapons/Uzi
-30002,Axe,Axe,Hand,50,0,200,2,1.0,2,Prefabs/Weapons/Axe
 ```
 
 ### Source.csv - 采集物配置表
 ```csv
 ID,DropItemId,DropCount,DropRate,HarvestTime,DestroyAfterHarvest,InteractionRange,ActionType
-1001,2001,1,1.0,0.0,true,2.0,Pull
-1002,2002,1,1.0,1.0,false,2.0,Pick
-1003,2003,2,1.0,0.5,true,3.0,Chop
 ```
 
 ## 其他需要补充的关键点
@@ -452,9 +597,18 @@ EventManager.Instance.Subscribe<AttackEvent>(OnAttack);
 ### 扩展指南
 
 #### 添加新的怪物类型
-1. 更新Monster.csv配置表：添加新的怪物ID和属性配置
-2. 使用Monster：`monster.Init(newMonsterId)`
-3. 自定义怪物行为（可选）：继承Monster，重写特定的AI状态逻辑
+```csharp
+// 方式1：直接使用基类Monster（推荐）
+var newMonster = gameObject.AddComponent<Monster>();
+newMonster.Init(newMonsterId); // 更新Monster.csv配置表
+
+// 方式2：继承Monster创建新类型
+public class Boss : Monster
+{
+    // 重写特定AI行为
+    protected override void UpdateChaseState() { ... }
+}
+```
 
 #### 添加新的采集物
 1. 选择合适的脚本类型：DirectHarvestable/RepeatableHarvestable
@@ -465,3 +619,36 @@ EventManager.Instance.Subscribe<AttackEvent>(OnAttack);
 1. 继承对应的装备基类：HandEquipBase/HeadEquipBase/BodyEquipBase
 2. 实现特定的装备逻辑：攻击效果、特殊能力等
 3. 更新Equip.csv配置表：添加装备的属性配置
+
+### 调试和可视化
+
+#### Monster基类调试
+- **黄色圆**：检测范围
+- **红色圆**：攻击范围
+- **蓝色扇形**：视野角度
+- **绿色圆**：巡逻范围
+- **青色点**：巡逻目标点
+- **洋红点**：玩家最后已知位置
+
+#### Zombie特殊调试
+- **红色线**：当前目标连线
+- **黄色圆**：检测范围（用于Plant检测）
+- **红色圆**：攻击范围（也是避让距离）
+- **绿色锥形**：Plant检测区域
+
+## 版本历史
+
+### v2.5
+- **重大重构**：Monster-Zombie继承架构
+- **僵尸特殊AI**：无障碍移动、智能优先级攻击、Plant路径检测
+- **配置统一**：Zombie使用Monster.csv配置，无独立参数
+- **双重移动模式**：Monster基类提供正常和无障碍两种移动方式
+- **性能优化**：僵尸AI更新频率和检测间隔优化
+- **调试增强**：完善的Gizmos可视化调试功能
+
+### v2.4 
+- 添加智能怪物AI优先级索敌系统
+- 实现Monster与NormalMonster双AI系统
+- 添加配置表驱动的怪物系统
+- 完善装备系统和采集系统
+ 

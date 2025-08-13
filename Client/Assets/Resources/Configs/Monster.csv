@@ -1,7 +1,7 @@
 Id,Name,Type,MaxHealth,RespawnTime,PrefabPath,IconPath,DropId,DropCount,DropChance,DetectionRange,AttackRange,MoveSpeed,RotationSpeed,DialogIds,DialogRange,FieldOfView,LostTargetTime,IdleSpeed,AttackAngle,PatrolRadius,PatrolWaitTime
 int,string,enum<MonsterType>,float,float,string,string,int,int,float,float,float,float,float,int[],int,float,float,float,float,float,float
 编号,名称,类型,最大生命值,重生时间,预制体路径,图标路径,掉落物ID,掉落数量,掉落概率,检测范围,攻击范围,移动速度,旋转速度,对话,对话范围,视野角度,失去目标时间,空闲速度,攻击角度,巡逻半径,巡逻等待时间
-5000,怪,Normal,100,5,Prefabs/Monsters/pbsc_monster,Icons/Monsters/zombie,4004,1,0.5,30,20,3.5,5,1|2,10,360,3,1,90,30,1
+5000,僵尸,Normal,100,5,Prefabs/Monsters/pbsc_zombie,Icons/Monsters/zombie,4004,1,0.5,30,2,2,3,1|2,10,120,3,0.5,45,30,1
 5001,公鸡,Normal,50,5,Prefabs/Monsters/pbsc_monster,Icons/Monsters/zombie,4004,1,0.5,5,2,3.5,5,1|2,10,90,3,1,45,8,2
 5002,母鸡,Normal,200,10,Prefabs/Monsters/pbsc_monster,Icons/Monsters/tank_zombie,4004,2,0.8,6,2.5,3,4,3|4,10,120,4,0.8,60,10,3
 5003,鸡王,Boss,30,5,Prefabs/Monsters/pbsc_monster,Icons/Monsters/poison_zombie,4004,1,0.3,8,3,4,6,1|2|3|4,15,150,5,1.2,90,15,1 
