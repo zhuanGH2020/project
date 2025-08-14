@@ -11,8 +11,8 @@ public static class GameSettings
     public static readonly Vector3 MapDefaultSpawnPosition = Vector3.zero;
 
     // 默认可生成的怪物ID列表
-    //public static readonly int[] MapDefaultMonsterIds = { 5000 };
-    public static readonly int[] MapDefaultMonsterIds = {  };
+    public static readonly int[] MapDefaultMonsterIds = { 5000 };
+    //public static readonly int[] MapDefaultMonsterIds = {  };
 
     // 最小生成间隔限制（秒）
     public const float MapMinSpawnInterval = 0.1f;
@@ -23,17 +23,22 @@ public static class GameSettings
     public const int PackageMaxSlots = 9;
     #endregion
 
+    #region Player配置
+    // 玩家最大血量
+    public const float PlayerMaxHealth = 100f;
+    #endregion
+
     #region Clock配置
     // 游戏中一天的持续时间（秒）
-    public const float ClockDayDuration = 20f;
+    public const float ClockDayDuration = 60f;
 
     // 游戏最大天数
     public const int ClockMaxDays = 60;
 
     // 时间段比例配置
-    public const float ClockDayTimeRatio = 0.4f;        // 白天时间占比
-    public const float ClockDuskTimeRatio = 0.3f;       // 黄昏时间占比
-    public const float ClockNightTimeRatio = 0.3f;      // 夜晚时间占比
+    public const float ClockDayTimeRatio = 0.5f;        // 白天时间占比
+    public const float ClockDuskTimeRatio = 0.25f;       // 黄昏时间占比
+    public const float ClockNightTimeRatio = 0.25f;      // 夜晚时间占比
 
     // 主光源颜色配置
     public static readonly Color ClockDayMainLightColor = Color.white;                  // 白天主光源颜色

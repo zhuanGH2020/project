@@ -27,6 +27,10 @@ public partial class Player : CombatEntity
         _instance = this;
         _navMeshAgent = GetComponent<NavMeshAgent>();
         
+        // 设置玩家最大血量
+        _maxHealth = GameSettings.PlayerMaxHealth;
+        _currentHealth = _maxHealth;
+        
         // 订阅输入事件
         SubscribeToInputEvents();
         SetObjectType(ObjectType.Player);
@@ -185,5 +189,46 @@ public partial class Player : CombatEntity
     public override void PerformAttack(IDamageable target)
     {
         // 玩家不能直接攻击，必须通过装备
+    }
+
+    /// <summary>
+    /// 重写受伤方法，添加血量变化事件触发
+    /// </summary>
+    public override float TakeDamage(DamageInfo damageInfo)
+    {
+        float previousHealth = CurrentHealth;
+        float actualDamage = base.TakeDamage(damageInfo);
+        
+        // 如果血量发生了变化，触发血量变化事件
+        if (Mathf.Abs(CurrentHealth - previousHealth) > 0.001f)
+        {
+            TriggerHealthChangeEvent(previousHealth, CurrentHealth);
+        }
+        
+        return actualDamage;
+    }
+
+    /// <summary>
+    /// 重写设置血量方法，添加血量变化事件触发
+    /// </summary>
+    public override void SetHealth(float health)
+    {
+        float previousHealth = CurrentHealth;
+        base.SetHealth(health);
+        
+        // 如果血量发生了变化，触发血量变化事件
+        if (Mathf.Abs(CurrentHealth - previousHealth) > 0.001f)
+        {
+            TriggerHealthChangeEvent(previousHealth, CurrentHealth);
+        }
+    }
+
+    /// <summary>
+    /// 触发血量变化事件
+    /// </summary>
+    private void TriggerHealthChangeEvent(float previousHealth, float currentHealth)
+    {
+        var healthChangeEvent = new PlayerHealthChangeEvent(previousHealth, currentHealth);
+        EventManager.Instance.Publish(healthChangeEvent);
     }
 } 

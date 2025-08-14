@@ -41,6 +41,9 @@ public class GameMain : MonoBehaviour
         var saveModel = SaveModel.Instance;
         saveModel.Initialize();
         
+        // 初始化UI管理器 - 确保UI系统可用
+        var uiManager = UIManager.Instance;
+        
         Debug.Log("[GameMain] All systems initialized");
     }
 
@@ -58,6 +61,9 @@ public class GameMain : MonoBehaviour
         // 驱动对话管理器
         DialogManager.Instance.Update();
         
+        // 驱动UI管理器
+        UIManager.Instance.Update();
+        
         // 定期清理ObjectManager中的空引用（每10秒一次）
         if (Time.time % 10f < Time.deltaTime)
         {
@@ -74,6 +80,9 @@ public class GameMain : MonoBehaviour
         
         // 清理对话管理器
         DialogManager.Instance.Cleanup();
+        
+        // 清理UI管理器
+        UIManager.Instance.Cleanup();
         
         // 清理对象管理器
         if (ObjectManager.HasInstance)

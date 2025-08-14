@@ -388,3 +388,18 @@ public class MonsterSpawnedEvent : IEvent
         SpawnPosition = spawnPosition;
     }
 }
+
+/// <summary>
+/// 玩家血量变化事件
+/// </summary>
+public class PlayerHealthChangeEvent : IEvent
+{
+    public float PreviousHealth { get; private set; }
+    public float CurrentHealth { get; private set; }
+    
+    public PlayerHealthChangeEvent(float previousHealth, float currentHealth)
+    {
+        PreviousHealth = previousHealth;
+        CurrentHealth = currentHealth;
+    }
+}

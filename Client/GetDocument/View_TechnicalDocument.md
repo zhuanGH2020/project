@@ -1,6 +1,6 @@
 # View系统技术文档
 
-*最后更新：2024年 - v1.3版本：新增配置工具类、UID生成工具和增强的BaseView功能*
+*最后更新：2024年12月 - v1.4版本：UIManager集成，完善UI管理系统架构*
 
 ## 简介
 
@@ -307,7 +307,104 @@ public class InventoryView : BaseView
 }
 ```
 
-### 6. UID生成工具使用场景 🔥**v1.3新增**
+### 6. UIManager完整集成示例 🔥**v1.4新增**
+
+```csharp
+// 完整的UIManager+BaseView+ViewUtils集成示例
+public class ShopView : BaseView
+{
+    private Transform _itemContainer;
+    private Button _closeButton;
+    
+    private void Start()
+    {
+        InitializeComponents();
+        SubscribeEvents();
+        RefreshShopItems();
+    }
+    
+    private void InitializeComponents()
+    {
+        // BaseView自动管理资源
+        LoadAndSetSprite("img_background", "UI/shop_background");
+        LoadAndSetSprite("img_title", "UI/shop_title");
+        
+        // 查找UI组件
+        _itemContainer = transform.Find("ItemContainer");
+        _closeButton = transform.Find("btn_close")?.GetComponent<Button>();
+        
+        if (_closeButton != null)
+        {
+            _closeButton.onClick.AddListener(OnCloseClick);
+        }
+    }
+    
+    private void SubscribeEvents()
+    {
+        EventManager.Instance.Subscribe<ShopRefreshEvent>(OnShopRefresh);
+    }
+    
+    private void OnCloseClick()
+    {
+        // 通过UIManager隐藏自己
+        UIManager.Instance.Hide<ShopView>();
+    }
+    
+    private void RefreshShopItems()
+    {
+        if (_itemContainer == null) return;
+        
+        var shopItems = ShopModel.Instance.GetAllItems();
+        for (int i = 0; i < _itemContainer.childCount; i++)
+        {
+            var slot = _itemContainer.GetChild(i).gameObject;
+            if (i < shopItems.Count)
+            {
+                var item = shopItems[i];
+                // 使用ViewUtils快速设置道具UI
+                ViewUtils.QuickSetItemUI(slot, item.itemId, item.stock);
+            }
+            else
+            {
+                // 清空多余槽位
+                ViewUtils.QuickSetItemUI(slot, 0, 0);
+            }
+        }
+    }
+    
+    private void OnShopRefresh(ShopRefreshEvent eventData)
+    {
+        RefreshShopItems();
+    }
+    
+    protected override void OnViewDestroy()
+    {
+        EventManager.Instance.Unsubscribe<ShopRefreshEvent>(OnShopRefresh);
+        _closeButton?.onClick.RemoveListener(OnCloseClick);
+    }
+}
+
+// 其他系统中使用UIManager控制ShopView
+public class PlayerController : MonoBehaviour
+{
+    private void OnInteractWithShop()
+    {
+        // 显示商店界面
+        UIManager.Instance.Show<ShopView>(UILayer.Popup);
+    }
+    
+    private void OnEscapePressed()
+    {
+        // 检查商店是否打开，如果打开则关闭
+        if (UIManager.Instance.IsVisible<ShopView>())
+        {
+            UIManager.Instance.Hide<ShopView>();
+        }
+    }
+}
+```
+
+### 8. UID生成工具使用场景 🔥**v1.3新增**
 
 ```csharp
 public class GameObjectFactory : MonoBehaviour
@@ -348,31 +445,62 @@ public class GameObjectFactory : MonoBehaviour
 - **生命周期**：`OnViewDestroy`虚方法供子类扩展清理逻辑
 - **自动清理**：资源在OnDestroy时自动释放，无需手动处理
 
-### 4. 架构选择指南
+### 4. 架构选择指南 🔥**v1.4更新**
 - **ViewUtils.QuickSetItemUI**：适用于标准道具UI设置，简化重复代码
 - **BaseView继承**：适用于需要资源管理的View，推荐方式
+- **UIManager统一管理**：推荐用于UI显示控制，替代传统SetActive方式 🔥**新增**
 - **ResourceUtils静态方法**：适用于非View类或特殊需求
 - **配置工具方法**：适用于需要频繁访问配置数据的场景
 
-### 5. 组合使用建议
-- **View类**：继承BaseView + 使用ViewUtils + 使用ResourceUtils配置工具
+### 5. 组合使用建议 🔥**v1.4更新**
+- **完整View类**：UIManager + BaseView + ViewUtils + ResourceUtils配置工具 🔥**推荐**
+- **传统View类**：继承BaseView + 使用ViewUtils + 使用ResourceUtils配置工具
 - **非View类**：直接使用ViewUtils + ResourceUtils
-- **复杂场景**：BaseView管理整体资源，ViewUtils处理道具UI，配置工具提供数据访问
+- **复杂场景**：UIManager管理显示，BaseView管理资源，ViewUtils处理道具UI
 
-### 6. 性能优化 🔥**v1.3更新**
+### 7. 性能优化 🔥**v1.3更新**
 - ViewUtils无状态设计，调用开销极小
 - BaseView按实例管理资源，避免全局状态
 - 资源在ResourceManager层面自动缓存
 - OnDestroy时统一释放，避免内存泄漏
 - UID生成算法高效，适合频繁调用
 
-### 7. 代码参考位置
+### 9. 代码参考位置 🔥**v1.4更新**
+- **UIManager**：`Assets/Scripts/Manager/UIManager.cs` 🔥**新增**
 - **ViewUtils**：`Assets/Scripts/Utils/ViewUtils.cs`
 - **ResourceUtils**：`Assets/Scripts/Utils/ResourceUtils.cs`
 - **BaseView**：`Assets/Scripts/UI/Base/BaseView.cs`
 - **使用示例**：`Assets/Scripts/UI/Package/PackageView.cs`
 
 ## 系统集成
+
+### 与UIManager集成 🔥**v1.4新增**
+```csharp
+// BaseView与UIManager完美集成
+public class InventoryView : BaseView
+{
+    private void Start()
+    {
+        // BaseView管理资源，UIManager管理显示
+        LoadAndSetSprite("img_background", "UI/inventory_bg");
+    }
+    
+    private void OnCloseButtonClick()
+    {
+        // 通过UIManager隐藏自己
+        UIManager.Instance.Hide<InventoryView>();
+    }
+}
+
+// 在其他系统中通过UIManager显示UI
+public class GameController : MonoBehaviour
+{
+    private void OpenInventory()
+    {
+        UIManager.Instance.Show<InventoryView>(UILayer.Popup);
+    }
+}
+```
 
 ### 与ConfigManager集成
 ```csharp
@@ -399,6 +527,7 @@ ViewUtils.QuickSetItemUI(slot, itemId, count);         // 自动获取物品配�
 - **v1.1**: ResourceUtils基础工具，BaseView资源管理
 - **v1.2**: 图片加载工具完善，支持图集和纹理模式
 - **v1.3**: 新增配置工具类、UID生成工具、BaseView功能增强 🔥
+- **v1.4**: UIManager集成，完善UI管理系统架构 🔥**新增**
 
 ## 其他要点
 
@@ -411,5 +540,5 @@ ViewUtils.QuickSetItemUI(slot, itemId, count);         // 自动获取物品配�
 ---
 
 创建日期：2024-12-19  
-更新日期：2024-12-19  
-版本：1.3.0 
+更新日期：2024-12-23  
+版本：1.4.0 🔥**UIManager集成版本** 
