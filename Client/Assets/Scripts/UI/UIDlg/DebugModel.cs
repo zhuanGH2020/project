@@ -71,14 +71,8 @@ public class DebugModel
     /// </summary>
     public void GetMaterials()
     {
-        var materials = new System.Collections.Generic.Dictionary<int, int>
-        {
-            { 13001, 1 },
-            { 14001, 1 },
-            { 14002, 1 },
-            { 14003, 1 },
-            { 15002, 1 },
-        };
+        // 使用GameSettings中的配置数据
+        var materials = GameSettings.DebugMaterials;
 
         int successCount = 0;
         var obtainedItems = new System.Collections.Generic.List<string>();

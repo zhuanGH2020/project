@@ -241,7 +241,7 @@ public partial class Player : CombatEntity
         
         // 暂停时间系统
         DebugModel.Instance.SetTimeEnabled(false);
-        
+        DebugModel.Instance.ManualSave();
         // 显示死亡菜单界面
         UIManager.Instance.Show<MenuView>(UILayer.System);
     }

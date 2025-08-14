@@ -55,4 +55,17 @@ public static class GameSettings
     public const float ClockDayToDuskRotationTime = 2f;      // 白天到黄昏旋转时间（秒）
     public const float ClockDuskToNightRotationTime = 4f;    // 黄昏到夜晚旋转时间（秒）
     #endregion
+
+    #region Debug配置
+    // 调试模式获取材料的物品列表 - 物品ID和数量的键值对
+    public static readonly System.Collections.Generic.Dictionary<int, int> DebugMaterials = 
+        new System.Collections.Generic.Dictionary<int, int>
+        {
+            { 13001, 1 },  // 木头 - 基础材料，用于制作各种物品
+            { 14001, 1 },  // 石头 - 基础材料，用于制作工具和建筑
+            { 14002, 1 },  // 燧石 - 基础材料，用于制作武器和护甲
+            { 14003, 1 },  // 金块 - 基础材料，用于制作工具
+            { 15002, 1 },  // 布料 - 基础材料，用于制作轻型护甲
+        };
+    #endregion
 } 
