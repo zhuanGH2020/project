@@ -24,6 +24,7 @@ int,string,enum<ItemType>,int,string,string,string
 30001,铁锅,Building,1,UI/Icon/Building/Crock_Pot_Build,Prefabs/Items/pbsc_pot,建筑物 - 烹饪设施，用于烹饪食物和煮水
 30002,斧头,Equip,1,UI/Icon/Tool/Fanciful_Axe_Icon,,砍伐工具，对树木有额外伤害
 30003,火把,Equip,1,UI/Icon/Tool/Torch,,点燃后可造成火焰伤害和照明
+30004,火堆,Building,1,UI/Icon/Building/Obsidian_Firepit,Prefabs/Items/candle-stick-c-lit,建筑物 - 篝火设施，提供照明和温暖，可用于简单烹饪
 40000,机枪,Equip,1,UI/Icon/item_homestead_iron_mini,,自动武器，高射速低精度
 50001,烤肉,Food,99,UI/Icon/item_food_meat,,美味的烤肉，恢复大量生命值
 50002,蔬菜汤,Food,99,UI/Icon/item_food_soup,,营养丰富的蔬菜汤，恢复生命值和饥饿度
