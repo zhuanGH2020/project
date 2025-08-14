@@ -18,6 +18,7 @@ public enum ObjectType
     Monster = 2,
     Building = 3,
     Item = 4,
+    TechTable = 5,
 }
 
 // 装备部位

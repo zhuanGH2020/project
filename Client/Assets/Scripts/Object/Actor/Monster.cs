@@ -1,24 +1,24 @@
 using UnityEngine;
 
 /// <summary>
-/// 怪物AI - 带状态机和智能感知系统
+/// 怪物AI基类 - 带状态机和智能感知系统
 /// </summary>
 public class Monster : CombatEntity
 {
-    private float _detectRange;            // 检测范围 - 从配置表读取
-    private float _fieldOfView;            // 视野角度 - 从配置表读取
-    private float _lostTargetTime;         // 失去目标记忆时间 - 从配置表读取
-    private LayerMask _obstacleLayer = 1;  // 障碍物层
+    protected float _detectRange;            // 检测范围 - 从配置表读取
+    protected float _fieldOfView;            // 视野角度 - 从配置表读取
+    protected float _lostTargetTime;         // 失去目标记忆时间 - 从配置表读取
+    protected LayerMask _obstacleLayer = 1;  // 障碍物层
 
-    private float _idleSpeed;              // 空闲速度 - 从配置表读取
-    private float _chaseSpeed;             // 追击速度 - 从配置表读取
-    private float _rotationSpeed;          // 旋转速度 - 从配置表读取
+    protected float _idleSpeed;              // 空闲速度 - 从配置表读取
+    protected float _chaseSpeed;             // 追击速度 - 从配置表读取
+    protected float _rotationSpeed;          // 旋转速度 - 从配置表读取
 
-    private float _attackRange;            // 攻击范围 - 从配置表读取
-    private float _attackAngle;            // 攻击角度 - 从配置表读取
+    protected float _attackRange;            // 攻击范围 - 从配置表读取
+    protected float _attackAngle;            // 攻击角度 - 从配置表读取
 
-    private float _patrolRadius;           // 巡逻半径 - 从配置表读取
-    private float _patrolWaitTime;         // 巡逻等待时间 - 从配置表读取
+    protected float _patrolRadius;           // 巡逻半径 - 从配置表读取
+    protected float _patrolWaitTime;         // 巡逻等待时间 - 从配置表读取
 
     private float _dialogRange;            // 对话范围
     private int[] _availableDialogIds;     // 可用对话ID列表
@@ -33,8 +33,6 @@ public class Monster : CombatEntity
         base.Awake();
         _obstacleLayer = LayerMask.GetMask("Obstacle");
         SetObjectType(ObjectType.Monster);
-        
-        Init(5001);
     }
 
     /// <summary>
@@ -183,7 +181,6 @@ public class Monster : CombatEntity
     private float _currentSpeed;            // 当前移动速度
     private Vector3 _lastPosition;          // 上一帧位置（用于卡住检测）
     private float _stuckTimer;              // 卡住计时器
-    private float _lastStateChangeTime;     // 上次状态改变的时间（防止频繁切换）
 
 
     // 公共属性
@@ -483,8 +480,6 @@ public class Monster : CombatEntity
         
         // 进入新状态
         OnEnterState(newState);
-        
-        Debug.Log($"[Monster] State changed: {oldState} -> {newState}");
     }
 
     /// <summary>
@@ -516,27 +511,111 @@ public class Monster : CombatEntity
     }
 
     /// <summary>
-    /// 移动到指定方向
+    /// 移动到指定方向 - 带避让机制
     /// </summary>
-    private void MoveTo(Vector3 direction, float speed)
+    protected void MoveTo(Vector3 direction, float speed)
     {
         direction.y = 0;
+        if (direction == Vector3.zero) return;
+
+        // 1. 检查基础移动方向是否有障碍
+        Vector3 desiredMove = direction * speed * Time.deltaTime;
+        Vector3 newPosition = transform.position + desiredMove;
         
-        if (direction != Vector3.zero)
+        // 2. 检查是否有其他怪物或障碍物
+        if (CanMoveTo(newPosition))
         {
-            // 移动
-            transform.position += direction * speed * Time.deltaTime;
-            
-            // 旋转
+            // 直接移动
+            transform.position = newPosition;
+        }
+        else
+        {
+            // 3. 尝试侧向避让
+            Vector3 avoidanceDirection = GetAvoidanceDirection(direction);
+            if (avoidanceDirection != Vector3.zero)
+            {
+                Vector3 avoidanceMove = avoidanceDirection * speed * 0.7f * Time.deltaTime; // 稍慢的避让速度
+                Vector3 avoidancePosition = transform.position + avoidanceMove;
+                
+                if (CanMoveTo(avoidancePosition))
+                {
+                    transform.position = avoidancePosition;
+                }
+                // 4. 如果避让也失败，暂停移动，让怪物自然分散
+            }
+        }
+        
+        // 5. 旋转面向移动方向
             Quaternion targetRotation = Quaternion.LookRotation(direction);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * _rotationSpeed);
         }
+
+    /// <summary>
+    /// 检查是否可以移动到指定位置
+    /// </summary>
+    private bool CanMoveTo(Vector3 position)
+    {
+        float checkRadius = 0.8f; // 怪物的碰撞检测半径
+        
+        // 检查障碍物
+        if (Physics.CheckSphere(position, checkRadius, _obstacleLayer))
+        {
+            return false;
+        }
+        
+        // 检查其他怪物
+        Collider[] monsters = Physics.OverlapSphere(position, checkRadius);
+        foreach (var collider in monsters)
+        {
+            // 排除自己
+            if (collider.transform == transform) continue;
+            
+            // 检查是否是其他怪物
+            var otherMonster = collider.GetComponent<Monster>();
+            if (otherMonster != null)
+            {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /// <summary>
+    /// 获取避让方向
+    /// </summary>
+    private Vector3 GetAvoidanceDirection(Vector3 originalDirection)
+    {
+        // 尝试左右两个避让方向
+        Vector3 rightAvoidance = Vector3.Cross(Vector3.up, originalDirection).normalized;
+        Vector3 leftAvoidance = -rightAvoidance;
+        
+        // 混合原方向和避让方向
+        Vector3[] avoidanceOptions = {
+            (originalDirection + rightAvoidance).normalized,  // 右前方
+            (originalDirection + leftAvoidance).normalized,   // 左前方
+            rightAvoidance,                                   // 纯右方
+            leftAvoidance,                                    // 纯左方
+            -originalDirection * 0.3f                        // 稍微后退
+        };
+        
+        // 选择第一个可行的避让方向
+        foreach (var option in avoidanceOptions)
+        {
+            Vector3 testPosition = transform.position + option * 0.5f;
+            if (CanMoveTo(testPosition))
+            {
+                return option;
+            }
+        }
+        
+        return Vector3.zero; // 无法避让
     }
 
     /// <summary>
     /// 面向目标
     /// </summary>
-    private void FaceTarget()
+    protected void FaceTarget()
     {
         if (_target == null) return;
 
@@ -548,6 +627,83 @@ public class Monster : CombatEntity
             Quaternion targetRotation = Quaternion.LookRotation(direction);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * _rotationSpeed);
         }
+    }
+
+    /// <summary>
+    /// 面向指定目标位置
+    /// </summary>
+    protected void FaceTarget(Vector3 targetPosition)
+    {
+        Vector3 direction = (targetPosition - transform.position).normalized;
+        direction.y = 0;
+        
+        if (direction != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * _rotationSpeed);
+        }
+    }
+
+    /// <summary>
+    /// 无障碍移动
+    /// </summary>
+    protected void MoveToIgnoreObstacles(Vector3 direction, float speed)
+    {
+        direction.y = 0;
+        if (direction == Vector3.zero) return;
+
+        Vector3 desiredMove = direction * speed * Time.deltaTime;
+        Vector3 newPosition = transform.position + desiredMove;
+        
+        // 只检查其他怪物，忽略障碍物
+        if (CanMoveToIgnoreObstacles(newPosition))
+        {
+            transform.position = newPosition;
+        }
+        else
+        {
+            // 尝试侧向避让其他怪物
+            Vector3 avoidanceDirection = GetAvoidanceDirection(direction);
+            if (avoidanceDirection != Vector3.zero)
+            {
+                Vector3 avoidanceMove = avoidanceDirection * speed * 0.8f * Time.deltaTime;
+                Vector3 avoidancePosition = transform.position + avoidanceMove;
+                
+                if (CanMoveToIgnoreObstacles(avoidancePosition))
+                {
+                    transform.position = avoidancePosition;
+                }
+            }
+        }
+        
+        // 旋转面向移动方向
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * _rotationSpeed);
+    }
+
+    /// <summary>
+    /// 检查是否可以移动到指定位置（忽略障碍物）
+    /// </summary>
+    private bool CanMoveToIgnoreObstacles(Vector3 position)
+    {
+        float checkRadius = 0.8f; // 怪物的碰撞检测半径
+        
+        // 只检查其他怪物，不检查障碍物
+        Collider[] monsters = Physics.OverlapSphere(position, checkRadius);
+        foreach (var collider in monsters)
+        {
+            // 排除自己
+            if (collider.transform == transform) continue;
+            
+            // 检查是否是其他怪物
+            var otherMonster = collider.GetComponent<Monster>();
+            if (otherMonster != null)
+            {
+                return false;
+            }
+        }
+        
+        return true;
     }
 
     /// <summary>
@@ -725,7 +881,6 @@ public class Monster : CombatEntity
         if (_currentDialogId != -1)
         {
             _lastDialogTime = Time.time;
-            Debug.Log($"[Monster] {gameObject.name} 说话了，对话ID: {_currentDialogId}");
         }
     }
 

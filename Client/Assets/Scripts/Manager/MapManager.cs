@@ -114,7 +114,7 @@ public class MapManager
         
         // 获取Monster组件并初始化
         var monsterComponent = monsterInstance.GetComponent<Monster>();
-        if (monsterComponent == null)
+        if (monsterComponent != null)
         {
             monsterComponent.Init(selectedMonsterId);
         }
