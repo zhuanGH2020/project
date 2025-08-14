@@ -20,18 +20,29 @@ public class ClockModel
     }
 
     // 私有字段
-    private float _dayDuration = GameSettings.ClockDayDuration; // 一天持续时间（秒）
-    private int _maxDays = GameSettings.ClockMaxDays; // 最大天数
-    private float _dayAmbientIntensity = GameSettings.ClockDayAmbientIntensity; // 白天环境光强度
-    private float _duskAmbientIntensity = GameSettings.ClockDuskAmbientIntensity; // 黄昏环境光强度  
-    private float _nightAmbientIntensity = GameSettings.ClockNightAmbientIntensity; // 夜晚环境光强度
-    private float _dayProgress; // 当天进度 (0.0-1.0)
-    private int _clockDay = 1; // 当前天数 (1-60)
+    private float _dayDuration = GameSettings.ClockDayDuration;
+    private int _maxDays = GameSettings.ClockMaxDays;
+    private float _dayProgress;
+    private int _clockDay = 1;
     private TimeOfDay _currentTimeOfDay = TimeOfDay.Day;
-    private float _targetAmbientIntensity;
     
-    // 时间控制
-    private bool _isTimePaused = false; // 时间是否暂停
+    private readonly float _dayEndRatio;
+    private readonly float _duskEndRatio;
+    
+    private bool _isTimePaused = false;
+    
+    private bool _isRotating = false;
+    private Vector3 _startRotation;
+    private Vector3 _targetRotation;
+    private float _rotationTimer = 0f;
+    private float _rotationDuration = 0f;
+    
+    // 环境光照强度过渡相关字段
+    private bool _isAmbientTransitioning = false;
+    private float _startAmbientIntensity;
+    private float _targetAmbientIntensity;
+    private float _ambientTimer = 0f;
+    private float _ambientDuration = 0f;
 
     // 公共属性
     public int ClockDay => _clockDay;
@@ -39,9 +50,10 @@ public class ClockModel
     public TimeOfDay CurrentTimeOfDay => _currentTimeOfDay;
     public bool IsTimePaused => _isTimePaused;
 
-    // 私有构造函数
     private ClockModel()
     {
+        _dayEndRatio = GameSettings.ClockDayTimeRatio;
+        _duskEndRatio = GameSettings.ClockDayTimeRatio + GameSettings.ClockDuskTimeRatio;
         InitializeTime();
     }
 
@@ -56,7 +68,8 @@ public class ClockModel
             UpdateTimeProgress();
             UpdateTimeOfDay();
         }
-        UpdateAmbientLight();
+        UpdateMainLightRotation();
+        UpdateAmbientIntensity();
     }
 
     // 私有方法
@@ -64,14 +77,13 @@ public class ClockModel
     {
         _dayProgress = 0f;
         _currentTimeOfDay = TimeOfDay.Day;
-        _targetAmbientIntensity = _dayAmbientIntensity;
         
-        // 确保环境光模式正确设置
-        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-        RenderSettings.ambientIntensity = _targetAmbientIntensity;
-        RenderSettings.ambientLight = Color.white;
-        
-        Debug.Log($"[ClockModel] Initialize Time - Mode: {RenderSettings.ambientMode}, Current: {RenderSettings.ambientIntensity}, Target: {_targetAmbientIntensity}, Day Intensity: {_dayAmbientIntensity}");
+        // 设置主光源初始旋转
+        Light mainLight = RenderSettings.sun;
+        if (mainLight != null)
+        {
+            mainLight.transform.rotation = Quaternion.Euler(GameSettings.ClockDayMainLightRotation);
+        }
     }
 
     private void UpdateTimeProgress()
@@ -84,7 +96,6 @@ public class ClockModel
             int previousDay = _clockDay;
             _clockDay = Mathf.Min(_clockDay + 1, _maxDays);
             
-            // 发布天数变化事件
             if (_clockDay != previousDay)
             {
                 EventManager.Instance.Publish(new DayChangeEvent(previousDay, _clockDay));
@@ -101,130 +112,190 @@ public class ClockModel
             TimeOfDay previousTime = _currentTimeOfDay;
             _currentTimeOfDay = newTimeOfDay;
             
-            UpdateTargetAmbientIntensity();
-            
-            // 发布时间段切换事件
+            UpdateMainLight(previousTime);
             EventManager.Instance.Publish(new TimeOfDayChangeEvent(previousTime, _currentTimeOfDay));
         }
     }
 
     private TimeOfDay GetTimeOfDayFromProgress(float progress)
     {
-        if (progress < GameSettings.ClockDayTimeRatio) return TimeOfDay.Day;       // 白天 (0.0-0.5)
-        if (progress < GameSettings.ClockDuskTimeRatio) return TimeOfDay.Dusk;     // 黄昏 (0.5-0.75)
-        return TimeOfDay.Night;                          // 夜晚 (0.75-1.0)
+        if (progress < _dayEndRatio) return TimeOfDay.Day;
+        if (progress < _duskEndRatio) return TimeOfDay.Dusk;
+        return TimeOfDay.Night;
     }
 
-    private void UpdateTargetAmbientIntensity()
+    private void UpdateMainLight(TimeOfDay previousTime)
     {
-        switch (_currentTimeOfDay)
-        {
-            case TimeOfDay.Day:
-                _targetAmbientIntensity = _dayAmbientIntensity;
-                RenderSettings.ambientLight = Color.white; // 白天：亮白色
-                break;
-            case TimeOfDay.Dusk:
-                _targetAmbientIntensity = _duskAmbientIntensity;
-                RenderSettings.ambientLight = new Color(1f, 0.7f, 0.4f); // 黄昏：橙黄色
-                break;
-            case TimeOfDay.Night:
-                _targetAmbientIntensity = _nightAmbientIntensity;
-                RenderSettings.ambientLight = new Color(0.2f, 0.3f, 0.6f); // 夜晚：深蓝色
-                break;
-        }
-        
-        // 同时调整主光源强度，让夜晚更暗
         Light mainLight = RenderSettings.sun;
         if (mainLight != null)
         {
             switch (_currentTimeOfDay)
             {
                 case TimeOfDay.Day:
-                    mainLight.intensity = 1.0f; // 白天：最亮
-                    mainLight.color = Color.white;
+                    mainLight.color = GameSettings.ClockDayMainLightColor;
                     break;
                 case TimeOfDay.Dusk:
-                    mainLight.intensity = 0.5f; // 黄昏：中等
-                    mainLight.color = new Color(1f, 0.8f, 0.6f);
+                    mainLight.color = GameSettings.ClockDuskMainLightColor;
                     break;
                 case TimeOfDay.Night:
-                    mainLight.intensity = 0.1f; // 夜晚：很暗
-                    mainLight.color = new Color(0.6f, 0.7f, 1f);
+                    mainLight.color = GameSettings.ClockNightMainLightColor;
                     break;
             }
+            Vector3 targetRotation = Vector3.zero;
+            float rotationDuration = 0f;
+
+            switch (_currentTimeOfDay)
+            {
+                case TimeOfDay.Day:
+                    targetRotation = GameSettings.ClockDayMainLightRotation;
+                    rotationDuration = previousTime == TimeOfDay.Night ? GameSettings.ClockNightToDayRotationTime : 0f;
+                    break;
+                case TimeOfDay.Dusk:
+                    targetRotation = GameSettings.ClockDuskMainLightRotation;
+                    rotationDuration = previousTime == TimeOfDay.Day ? GameSettings.ClockDayToDuskRotationTime : 0f;
+                    break;
+                case TimeOfDay.Night:
+                    targetRotation = GameSettings.ClockNightMainLightRotation;
+                    rotationDuration = previousTime == TimeOfDay.Dusk ? GameSettings.ClockDuskToNightRotationTime : 0f;
+                    break;
+            }
+
+            if (rotationDuration > 0f)
+            {
+                StartMainLightRotation(targetRotation, rotationDuration);
+            }
+            else if (!_isRotating)
+            {
+                mainLight.transform.rotation = Quaternion.Euler(targetRotation);
+            }
+        }
+        
+        // 环境光照强度过渡控制
+        float targetAmbientIntensity = 2f; // 默认强度
+        float ambientDuration = 0f;
+        
+        switch (_currentTimeOfDay)
+        {
+            case TimeOfDay.Night:
+                targetAmbientIntensity = 0f;
+                if (previousTime == TimeOfDay.Dusk)
+                {
+                    ambientDuration = GameSettings.ClockDuskToNightRotationTime;
+                }
+                break;
+            case TimeOfDay.Day:
+                targetAmbientIntensity = 2f;
+                if (previousTime == TimeOfDay.Night)
+                {
+                    ambientDuration = GameSettings.ClockNightToDayRotationTime;
+                }
+                break;
+        }
+        
+        if (ambientDuration > 0f)
+        {
+            StartAmbientIntensityTransition(targetAmbientIntensity, ambientDuration);
+        }
+        else if (!_isAmbientTransitioning)
+        {
+            RenderSettings.ambientIntensity = targetAmbientIntensity;
         }
     }
 
-    private void UpdateAmbientLight()
+    /// <summary>
+    /// 更新主光源旋转
+    /// </summary>
+    private void UpdateMainLightRotation()
     {
-        float oldIntensity = RenderSettings.ambientIntensity;
-        RenderSettings.ambientIntensity = Mathf.Lerp(
-            RenderSettings.ambientIntensity, 
-            _targetAmbientIntensity, 
-            Time.deltaTime * 2f
-        );
-        
-        // 只在强度变化较大时打印调试信息
-        if (Mathf.Abs(RenderSettings.ambientIntensity - oldIntensity) > 0.01f)
+        if (!_isRotating) return;
+
+        Light mainLight = RenderSettings.sun;
+        if (mainLight == null) return;
+
+        _rotationTimer += Time.deltaTime;
+        float progress = Mathf.Clamp01(_rotationTimer / _rotationDuration);
+
+        Vector3 currentRotation = Vector3.Lerp(_startRotation, _targetRotation, progress);
+        mainLight.transform.rotation = Quaternion.Euler(currentRotation);
+
+        if (progress >= 1f)
         {
-            Debug.Log($"[ClockModel] Ambient Light Update - From: {oldIntensity:F2} To: {RenderSettings.ambientIntensity:F2} Target: {_targetAmbientIntensity:F2} TimeOfDay: {_currentTimeOfDay} Color: {RenderSettings.ambientLight}");
+            _isRotating = false;
         }
     }
+
+    /// <summary>
+    /// 启动主光源旋转
+    /// </summary>
+    private void StartMainLightRotation(Vector3 targetRotation, float duration)
+    {
+        Light mainLight = RenderSettings.sun;
+        if (mainLight == null) return;
+
+        _startRotation = mainLight.transform.rotation.eulerAngles;
+        _targetRotation = targetRotation;
+        _rotationTimer = 0f;
+        _rotationDuration = duration;
+        _isRotating = true;
+    }
+
+    /// <summary>
+    /// 更新环境光照强度过渡
+    /// </summary>
+    private void UpdateAmbientIntensity()
+    {
+        if (!_isAmbientTransitioning) return;
+
+        _ambientTimer += Time.deltaTime;
+        float progress = Mathf.Clamp01(_ambientTimer / _ambientDuration);
+
+        float currentIntensity = Mathf.Lerp(_startAmbientIntensity, _targetAmbientIntensity, progress);
+        RenderSettings.ambientIntensity = currentIntensity;
+
+        if (progress >= 1f)
+        {
+            _isAmbientTransitioning = false;
+        }
+    }
+
+    /// <summary>
+    /// 启动环境光照强度过渡
+    /// </summary>
+    private void StartAmbientIntensityTransition(float targetIntensity, float duration)
+    {
+        _startAmbientIntensity = RenderSettings.ambientIntensity;
+        _targetAmbientIntensity = targetIntensity;
+        _ambientTimer = 0f;
+        _ambientDuration = duration;
+        _isAmbientTransitioning = true;
+    }
     
-    // 设置游戏时间 - 用于加载存档
-    /// <param name="day">天数</param>
-    /// <param name="progress">当天进度</param>
-    /// <param name="timeOfDay">时间段</param>
     public void SetGameTime(int day, float progress, TimeOfDay timeOfDay)
     {
         _clockDay = Mathf.Clamp(day, 1, _maxDays);
         _dayProgress = Mathf.Clamp01(progress);
         _currentTimeOfDay = timeOfDay;
-        UpdateTargetAmbientIntensity();
-        RenderSettings.ambientIntensity = _targetAmbientIntensity;
+        UpdateMainLight(_currentTimeOfDay);
     }
 
     /// <summary>
     /// 暂停时间系统
-    /// 时间记录暂停，环境光设为白天状态
     /// </summary>
     public void PauseTime()
     {
         if (_isTimePaused) return;
 
         _isTimePaused = true;
-
-        // 强制设置为白天环境光
-        _targetAmbientIntensity = _dayAmbientIntensity;
-        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-        RenderSettings.ambientIntensity = _dayAmbientIntensity;
-        RenderSettings.ambientLight = Color.white;
-        
-        // 同时设置主光源为白天状态
-        Light mainLight = RenderSettings.sun;
-        if (mainLight != null)
-        {
-            mainLight.intensity = 1.0f;
-            mainLight.color = Color.white;
-        }
-        
-        Debug.Log($"[ClockModel] Time paused - Ambient Intensity: {RenderSettings.ambientIntensity}, Mode: {RenderSettings.ambientMode}");
     }
 
     /// <summary>
     /// 恢复时间系统
-    /// 恢复计时和根据当前时间段恢复环境光
     /// </summary>
     public void ResumeTime()
     {
         if (!_isTimePaused) return;
 
         _isTimePaused = false;
-
-        // 根据当前时间段设置正确的环境光目标强度
-        // UpdateAmbientLight()会平滑过渡到目标强度
-        UpdateTargetAmbientIntensity();
-        
-        Debug.Log($"[ClockModel] Time resumed - Current TimeOfDay: {_currentTimeOfDay}, Target Intensity: {_targetAmbientIntensity}, Current Intensity: {RenderSettings.ambientIntensity}");
+        UpdateMainLight(_currentTimeOfDay);
     }
 }

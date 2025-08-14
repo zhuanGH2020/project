@@ -9,6 +9,7 @@ public class ClockDayView : BaseView
 {
     private TextMeshProUGUI txt_time; // 时间段文本
     private TextMeshProUGUI txt_day;  // 天数文本
+    private TextMeshProUGUI txt_update; // 一天进度文本
 
     void Start()
     {
@@ -26,9 +27,11 @@ public class ClockDayView : BaseView
         // 自动查找UI组件（如果未在Inspector中指定）
         txt_time = transform.Find("txt_time")?.GetComponent<TextMeshProUGUI>();
         txt_day = transform.Find("txt_day")?.GetComponent<TextMeshProUGUI>();
+        txt_update = transform.Find("txt_update")?.GetComponent<TextMeshProUGUI>();
 
         RefreshTimeDisplay();
         RefreshDayDisplay();
+        RefreshProgressDisplay();
     }
 
     // 订阅事件
@@ -67,6 +70,15 @@ public class ClockDayView : BaseView
         txt_day.text = ClockModel.Instance.ClockDay.ToString();
     }
 
+    // 刷新一天进度显示
+    private void RefreshProgressDisplay()
+    {
+        if (txt_update == null) return;
+
+        float progress = ClockModel.Instance.DayProgress;
+        txt_update.text = $"{(progress * 100):F1}%";
+    }
+
     // 根据时间段枚举获取中文文本
     private string GetTimeOfDayText(TimeOfDay timeOfDay)
     {
@@ -87,5 +99,6 @@ public class ClockDayView : BaseView
     {
         // 每帧更新天数显示（处理天数变化但没有时间段切换的情况）
         RefreshDayDisplay();
+        RefreshProgressDisplay();
     }
 }

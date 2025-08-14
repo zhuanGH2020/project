@@ -50,9 +50,6 @@ public class DebugModel
         {
             ClockModel.Instance.PauseTime();
         }
-        
-        // 发布时间控制事件（如果需要通知其他组件）
-        EventManager.Instance.Publish(new TimeControlToggleEvent(enabled));
     }
 
     /// <summary>
