@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 /// <summary>
 /// 调试视图 - 提供调试相关UI交互功能
@@ -12,9 +13,12 @@ public class DebugView : BaseView
     private Button _btnRevert;
     private Button _btnSave;
     private Button _btnGetMat; // 获取材料按钮
+    private Button _btnGetCustomItem; // 获取自定义物品按钮
     
     private Toggle _toggleUIPath; // UI路径打印开关
     private Toggle _toggleUITime; // 时间系统开关
+    
+    private TMP_InputField _inputItemId; // 物品ID输入框
     
     private int _lastSavedDay = -1; // 上次保存的天数
     
@@ -53,13 +57,16 @@ public class DebugView : BaseView
         _btnRevert = transform.Find("btn_revert")?.GetComponent<Button>();
         _btnSave = transform.Find("btn_save")?.GetComponent<Button>();
         _btnGetMat = transform.Find("btn_get_mat")?.GetComponent<Button>();
+        _btnGetCustomItem = transform.Find("ui_group_get_item/btn_get_custom_item")?.GetComponent<Button>();
         _toggleUIPath = transform.Find("toggle_ui_path")?.GetComponent<Toggle>();
         _toggleUITime = transform.Find("toggle_ui_time")?.GetComponent<Toggle>();
+        _inputItemId = transform.Find("ui_group_get_item/input_item_id")?.GetComponent<TMP_InputField>();
         
         _btnPrint?.onClick.AddListener(OnPrintButtonClick);
         _btnRevert?.onClick.AddListener(OnRevertButtonClick);
         _btnSave?.onClick.AddListener(OnSaveButtonClick);
         _btnGetMat?.onClick.AddListener(OnGetMatButtonClick);
+        _btnGetCustomItem?.onClick.AddListener(OnGetCustomItemButtonClick);
         _toggleUIPath?.onValueChanged.AddListener(OnUIPathToggleChanged);
         _toggleUITime?.onValueChanged.AddListener(OnUITimeToggleChanged);
         
@@ -113,6 +120,12 @@ public class DebugView : BaseView
     private void OnGetMatButtonClick()
     {
         GetMaterials();
+    }
+    
+    // 获取自定义物品按钮点击事件
+    private void OnGetCustomItemButtonClick()
+    {
+        GetCustomItem();
     }
     
     /// <summary>
@@ -172,6 +185,34 @@ public class DebugView : BaseView
     private void GetMaterials()
     {
         DebugModel.Instance.GetMaterials();
+    }
+    
+    /// <summary>
+    /// 获取自定义物品 - 根据输入框中的物品ID获得一个物品
+    /// </summary>
+    private void GetCustomItem()
+    {
+        if (_inputItemId == null)
+        {
+            Debug.LogWarning("[DebugView] Item ID input field not found");
+            return;
+        }
+        
+        string inputText = _inputItemId.text.Trim();
+        if (string.IsNullOrEmpty(inputText))
+        {
+            Debug.LogWarning("[DebugView] Please enter an item ID");
+            return;
+        }
+        
+        if (int.TryParse(inputText, out int itemId))
+        {
+            DebugModel.Instance.GetCustomItem(itemId);
+        }
+        else
+        {
+            Debug.LogWarning($"[DebugView] Invalid item ID format: {inputText}");
+        }
     }
     
     /// <summary>

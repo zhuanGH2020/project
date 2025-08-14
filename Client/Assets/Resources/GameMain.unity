@@ -2684,6 +2684,54 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 487146795}
     m_Modifications:
+    - target: {fileID: 464963525913465904, guid: 9439f89fdba3abb4296d1b6939ad52fb, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 464963525913465904, guid: 9439f89fdba3abb4296d1b6939ad52fb, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 464963525913465904, guid: 9439f89fdba3abb4296d1b6939ad52fb, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 464963525913465904, guid: 9439f89fdba3abb4296d1b6939ad52fb, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 717103745288755625, guid: 9439f89fdba3abb4296d1b6939ad52fb, type: 3}
+      propertyPath: isInit
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1604294062531198248, guid: 9439f89fdba3abb4296d1b6939ad52fb, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1604294062531198248, guid: 9439f89fdba3abb4296d1b6939ad52fb, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1604294062531198248, guid: 9439f89fdba3abb4296d1b6939ad52fb, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1604294062531198248, guid: 9439f89fdba3abb4296d1b6939ad52fb, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3863454771291251542, guid: 9439f89fdba3abb4296d1b6939ad52fb, type: 3}
+      propertyPath: isInit
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5723359190758981195, guid: 9439f89fdba3abb4296d1b6939ad52fb, type: 3}
+      propertyPath: m_Name
+      value: btn_get_custom_item
+      objectReference: {fileID: 0}
+    - target: {fileID: 6660687731105977993, guid: 9439f89fdba3abb4296d1b6939ad52fb, type: 3}
+      propertyPath: isInit
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8532016033486078726, guid: 9439f89fdba3abb4296d1b6939ad52fb, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5

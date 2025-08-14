@@ -77,6 +77,7 @@ public class DebugModel
             { 14001, 1 },
             { 14002, 1 },
             { 14003, 1 },
+            { 15002, 1 },
         };
 
         int successCount = 0;
@@ -106,6 +107,33 @@ public class DebugModel
         else
         {
             EventManager.Instance.Publish(new NoticeEvent("材料获取失败"));
+        }
+    }
+
+    /// <summary>
+    /// 获取指定ID的物品一个
+    /// </summary>
+    public void GetCustomItem(int itemId)
+    {
+        if (itemId <= 0)
+        {
+            EventManager.Instance.Publish(new NoticeEvent("请输入有效的物品ID"));
+            return;
+        }
+
+        bool addSuccess = PackageModel.Instance.AddItem(itemId, 1);
+        if (addSuccess)
+        {
+            var itemConfig = ItemManager.Instance.GetItem(itemId);
+            string itemName = itemConfig?.Csv.GetValue<string>(itemId, "Name", $"Item_{itemId}") ?? $"Item_{itemId}";
+            string noticeMessage = $"获得物品：{itemName} x1";
+            EventManager.Instance.Publish(new NoticeEvent(noticeMessage));
+            Debug.Log($"[DebugModel] Successfully obtained item: {itemName} (ID: {itemId})");
+        }
+        else
+        {
+            EventManager.Instance.Publish(new NoticeEvent($"获取物品失败 (ID: {itemId})"));
+            Debug.LogWarning($"[DebugModel] Failed to obtain item with ID: {itemId}");
         }
     }
 
