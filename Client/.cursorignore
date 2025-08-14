@@ -61,3 +61,6 @@ Assets/TextMesh Pro/
 # Package files that are typically not edited
 Packages/
 packages-lock.json
+
+# Reference files
+Assets/Resources/Ref/
