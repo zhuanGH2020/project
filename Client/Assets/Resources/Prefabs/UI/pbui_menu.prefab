@@ -159,7 +159,7 @@ GameObject:
   - component: {fileID: 6011099585435112197}
   - component: {fileID: 6156145031200837724}
   m_Layer: 5
-  m_Name: Button
+  m_Name: btn_revert
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -371,6 +371,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7070326616024760161}
   - component: {fileID: 726510311491422590}
+  - component: {fileID: 2917689754667900413}
   m_Layer: 5
   m_Name: pbui_menu
   m_TagString: Untagged
@@ -409,6 +410,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4228116660220928721}
   m_CullTransparentMesh: 1
+--- !u!114 &2917689754667900413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4228116660220928721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 928912835d48d9d4ea1f639f792b6532, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &6205402180567965097
 GameObject:
   m_ObjectHideFlags: 0
