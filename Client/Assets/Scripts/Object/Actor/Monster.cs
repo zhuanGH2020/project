@@ -35,6 +35,8 @@ public class Monster : CombatEntity
         SetObjectType(ObjectType.Monster);
     }
 
+
+
     /// <summary>
     /// 初始化怪物 - 设置配置ID并加载配置参数
     /// </summary>
@@ -47,7 +49,6 @@ public class Monster : CombatEntity
         _player = FindObjectOfType<Player>();
         _spawnPoint = transform.position;
         _lastPosition = transform.position;
-        _currentSpeed = _idleSpeed;
         ChangeState(MonsterState.Idle);
     }
 
@@ -92,6 +93,9 @@ public class Monster : CombatEntity
         // 读取对话参数
         _dialogRange = config.GetValue(configId, "DialogRange", 3f);
         _availableDialogIds = config.GetValue(configId, "DialogIds", new int[] { 1, 2, 3, 4 });
+        
+        // 设置默认速度
+        _moveSpeed = _idleSpeed;
     }
 
     /// <summary>
@@ -178,7 +182,7 @@ public class Monster : CombatEntity
     private float _lostTargetTimer;         // 失去目标计时器
     private float _patrolTimer;             // 巡逻计时器
     private float _lastDistanceCheck;       // 距离缓存
-    private float _currentSpeed;            // 当前移动速度
+
     private Vector3 _lastPosition;          // 上一帧位置（用于卡住检测）
     private float _stuckTimer;              // 卡住计时器
 
@@ -491,13 +495,9 @@ public class Monster : CombatEntity
         {
             case MonsterState.Idle:
                 _patrolTimer = 0f;
-                _currentSpeed = _idleSpeed;
                 break;
             case MonsterState.Patrol:
                 GeneratePatrolTarget();
-                break;
-            case MonsterState.Chase:
-                _currentSpeed = _chaseSpeed;
                 break;
         }
     }
@@ -511,9 +511,35 @@ public class Monster : CombatEntity
     }
 
     /// <summary>
-    /// 移动到指定方向 - 带避让机制
+    /// 移动到指定方向 - 优先使用NavMesh，备用直接移动
     /// </summary>
     protected void MoveTo(Vector3 direction, float speed)
+    {
+        direction.y = 0;
+        if (direction == Vector3.zero) return;
+
+        // 设置速度
+        _moveSpeed = speed;
+        SetMoveSpeed(speed);
+
+        // 计算目标位置
+        Vector3 targetPosition = transform.position + direction.normalized * 2f; // 2米前的位置作为目标
+
+        // 优先尝试使用NavMesh寻路
+        if (HasNavMeshAgent && base.MoveToPosition(targetPosition))
+        {
+            // NavMesh寻路成功，让NavMesh处理移动
+            return;
+        }
+
+        // NavMesh不可用或失败，使用原有的直接移动逻辑（带避让机制）
+        MoveToDirectly(direction, speed);
+    }
+
+    /// <summary>
+    /// 直接移动逻辑 - 带避让机制（原有逻辑）
+    /// </summary>
+    protected void MoveToDirectly(Vector3 direction, float speed)
     {
         direction.y = 0;
         if (direction == Vector3.zero) return;
@@ -546,9 +572,18 @@ public class Monster : CombatEntity
         }
         
         // 5. 旋转面向移动方向
-            Quaternion targetRotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * _rotationSpeed);
-        }
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * _rotationSpeed);
+    }
+
+    /// <summary>
+    /// Monster专用移动到目标位置方法
+    /// </summary>
+    protected bool MoveToTargetPosition(Vector3 targetPosition)
+    {
+        // 调用基类的统一移动接口
+        return base.MoveToPosition(targetPosition);
+    }
 
     /// <summary>
     /// 检查是否可以移动到指定位置

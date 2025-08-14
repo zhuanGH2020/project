@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -11,6 +12,9 @@ public abstract class CombatEntity : DamageableObject, IAttacker
     [SerializeField] protected float _baseAttack = 10f;
     [SerializeField] protected float _attackCooldown = 1f;
 
+    [Header("移动设置")]
+    [SerializeField] protected float _moveSpeed = 5f;
+
     [Header("装备挂载点")]
     [SerializeField] protected Transform _handPoint;           // 手部挂载点
     [SerializeField] protected SkinnedMeshRenderer _headMesh; // 头部渲染器
@@ -20,12 +24,19 @@ public abstract class CombatEntity : DamageableObject, IAttacker
     [SerializeField] protected List<EquipBase> _equips = new List<EquipBase>();  // 装备列表
 
     protected CooldownTimer _attackTimer;
+    protected NavMeshAgent _navMeshAgent;
 
     public float BaseAttack => _baseAttack;
     public bool CanAttack => _attackTimer.IsReady;
     public Transform HandPoint => _handPoint;            // 提供手部节点访问
     public SkinnedMeshRenderer HeadMesh => _headMesh;   // 提供头部渲染器访问
     public SkinnedMeshRenderer BodyMesh => _bodyMesh;   // 提供身体渲染器访问
+
+    // 移动相关属性
+    public float MoveSpeed => _moveSpeed;
+    public bool IsMoving => _navMeshAgent != null && _navMeshAgent.hasPath && _navMeshAgent.remainingDistance > 0.1f;
+    public bool HasNavMeshAgent => _navMeshAgent != null;
+    public Vector3 Destination => _navMeshAgent != null && _navMeshAgent.hasPath ? _navMeshAgent.destination : transform.position;
 
     // 计算总攻击力
     public virtual float TotalAttack
@@ -61,6 +72,9 @@ public abstract class CombatEntity : DamageableObject, IAttacker
         // 默认把战斗实体归类为Monster，子类如Player可在Awake里覆盖
         SetObjectType(ObjectType.Monster);
         _attackTimer = new CooldownTimer(_attackCooldown);
+        
+        // 初始化NavMeshAgent
+        InitializeNavMeshAgent();
     }
 
     protected virtual void Update()
@@ -284,4 +298,129 @@ public abstract class CombatEntity : DamageableObject, IAttacker
         }
         return 0;
     }
+
+    /// <summary>
+    /// 初始化NavMeshAgent组件
+    /// </summary>
+    protected virtual void InitializeNavMeshAgent()
+    {
+        _navMeshAgent = GetComponent<NavMeshAgent>();
+        if (_navMeshAgent != null)
+        {
+            _navMeshAgent.speed = _moveSpeed;
+            _navMeshAgent.stoppingDistance = 0.5f;
+            _navMeshAgent.angularSpeed = 120f;
+            _navMeshAgent.acceleration = 8f;
+        }
+    }
+
+    #region 移动接口
+
+    /// <summary>
+    /// 移动到指定位置 - 统一移动接口
+    /// </summary>
+    public virtual bool MoveToPosition(Vector3 targetPosition)
+    {
+        if (_navMeshAgent == null)
+        {
+            Debug.LogWarning($"[{name}] NavMeshAgent component is missing!");
+            return false;
+        }
+
+        if (!_navMeshAgent.enabled)
+        {
+            Debug.LogWarning($"[{name}] NavMeshAgent is disabled!");
+            return false;
+        }
+
+        // 检查目标位置是否在NavMesh上
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(targetPosition, out hit, 5f, NavMesh.AllAreas))
+        {
+            _navMeshAgent.SetDestination(hit.position);
+            return true;
+        }
+        else
+        {
+            Debug.LogWarning($"[{name}] Target position is not on NavMesh: {targetPosition}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 移动到指定目标 - 重载方法
+    /// </summary>
+    public virtual bool MoveToTarget(Transform target)
+    {
+        if (target == null)
+        {
+            Debug.LogWarning($"[{name}] Target transform is null!");
+            return false;
+        }
+
+        return MoveToPosition(target.position);
+    }
+
+    /// <summary>
+    /// 停止移动
+    /// </summary>
+    public virtual void StopMovement()
+    {
+        if (_navMeshAgent != null && _navMeshAgent.enabled)
+        {
+            _navMeshAgent.ResetPath();
+        }
+    }
+
+    /// <summary>
+    /// 设置移动速度
+    /// </summary>
+    public virtual void SetMoveSpeed(float speed)
+    {
+        _moveSpeed = speed;
+        if (_navMeshAgent != null)
+        {
+            _navMeshAgent.speed = speed;
+        }
+    }
+
+    /// <summary>
+    /// 获取到目标的剩余距离
+    /// </summary>
+    public virtual float GetRemainingDistance()
+    {
+        if (_navMeshAgent != null && _navMeshAgent.hasPath)
+        {
+            return _navMeshAgent.remainingDistance;
+        }
+        return 0f;
+    }
+
+    /// <summary>
+    /// 检查是否能到达指定位置
+    /// </summary>
+    public virtual bool CanReachPosition(Vector3 targetPosition)
+    {
+        if (_navMeshAgent == null) return false;
+
+        NavMeshPath path = new NavMeshPath();
+        if (_navMeshAgent.CalculatePath(targetPosition, path))
+        {
+            return path.status == NavMeshPathStatus.PathComplete;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// 暂停/恢复NavMeshAgent
+    /// </summary>
+    public virtual void SetNavMeshEnabled(bool enabled)
+    {
+        if (_navMeshAgent != null)
+        {
+            _navMeshAgent.enabled = enabled;
+        }
+    }
+
+    #endregion
 } 

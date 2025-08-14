@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.AI;
 
 /// <summary>
 /// 玩家角色
@@ -9,11 +8,7 @@ public partial class Player : CombatEntity
     private static Player _instance;
     public static Player Instance => _instance;
 
-    [Header("Movement")]
-    [SerializeField] private float _moveSpeed = 5f;          // 移动速度
-
     private Vector3 _moveDirection;     // 移动方向
-    private NavMeshAgent _navMeshAgent; // NavMesh代理
     private bool _inBuildingPlacementMode = false; // 是否在建筑放置模式（阻止移动）
 
     protected override void Awake()
@@ -25,7 +20,9 @@ public partial class Player : CombatEntity
             return;
         }
         _instance = this;
-        _navMeshAgent = GetComponent<NavMeshAgent>();
+        
+        // 设置玩家移动速度
+        _moveSpeed = 5f;
         
         // 设置玩家最大血量
         _maxHealth = GameSettings.PlayerMaxHealth;
@@ -35,6 +32,8 @@ public partial class Player : CombatEntity
         SubscribeToInputEvents();
         SetObjectType(ObjectType.Player);
     }
+
+
 
     private void OnDestroy()
     {
@@ -99,8 +98,8 @@ public partial class Player : CombatEntity
             return;
         }
         
-        // No interactable found, use unified movement method
-        MoveToPosition(targetPosition);
+        // No interactable found, use unified movement method from base class
+        MoveToPlayerPosition(targetPosition);
     }
 
     /// <summary>
@@ -154,10 +153,7 @@ public partial class Player : CombatEntity
         if (_moveDirection != Vector3.zero)
         {
             // 停止NavMesh移动，使用键盘移动
-            if (_navMeshAgent != null)
-            {
-                _navMeshAgent.ResetPath();
-            }
+            StopMovement();
             
             // 直接设置朝向
             transform.rotation = Quaternion.LookRotation(_moveDirection);
@@ -167,20 +163,26 @@ public partial class Player : CombatEntity
     }
 
     /// <summary>
-    /// 公开方法：移动到指定位置 - 供其他系统调用
+    /// Player专用移动方法，增加建筑放置模式检查
     /// </summary>
-    public void MoveToPosition(Vector3 targetPosition)
+    public bool MoveToPlayerPosition(Vector3 targetPosition)
     {
         // 如果在建筑放置模式，不响应移动命令
         if (_inBuildingPlacementMode)
         {
-            return;
+            return false;
         }
         
-        if (_navMeshAgent != null)
-        {
-            _navMeshAgent.SetDestination(targetPosition);
-        }
+        // 调用基类的统一移动接口
+        return base.MoveToPosition(targetPosition);
+    }
+
+    /// <summary>
+    /// 重写移动接口，增加建筑放置模式检查
+    /// </summary>
+    public override bool MoveToPosition(Vector3 targetPosition)
+    {
+        return MoveToPlayerPosition(targetPosition);
     }
 
     /// <summary>
