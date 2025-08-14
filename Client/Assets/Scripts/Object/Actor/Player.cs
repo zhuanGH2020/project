@@ -231,4 +231,18 @@ public partial class Player : CombatEntity
         var healthChangeEvent = new PlayerHealthChangeEvent(previousHealth, currentHealth);
         EventManager.Instance.Publish(healthChangeEvent);
     }
+
+    /// <summary>
+    /// 重写死亡方法，玩家死亡时显示MenuView
+    /// </summary>
+    protected override void OnDeath()
+    {
+        base.OnDeath();
+        
+        // 暂停时间系统
+        DebugModel.Instance.SetTimeEnabled(false);
+        
+        // 显示死亡菜单界面
+        UIManager.Instance.Show<MenuView>(UILayer.System);
+    }
 } 

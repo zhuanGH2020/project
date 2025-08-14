@@ -188,8 +188,8 @@ public class UIManager
             return sceneView;
         }
         
-        // 从Resources加载预制体
-        string prefabPath = $"Prefabs/UI/{viewType.Name}";
+        // 获取预制体路径 - 支持自定义路径
+        string prefabPath = GetViewPrefabPath(viewType);
         GameObject prefab = Resources.Load<GameObject>(prefabPath);
         
         if (prefab != null)
@@ -199,6 +199,28 @@ public class UIManager
         }
         
         return null;
+    }
+    
+    /// <summary>
+    /// 获取View的预制体路径 - 支持自定义路径
+    /// </summary>
+    private string GetViewPrefabPath(Type viewType)
+    {
+        // 检查View类是否有自定义PrefabPath属性
+        var prefabPathProperty = viewType.GetProperty("PrefabPath", 
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            
+        if (prefabPathProperty != null && prefabPathProperty.PropertyType == typeof(string))
+        {
+            string customPath = (string)prefabPathProperty.GetValue(null);
+            if (!string.IsNullOrEmpty(customPath))
+            {
+                return customPath;
+            }
+        }
+        
+        // 使用默认路径
+        return $"Prefabs/UI/{viewType.Name}";
     }
     
     /// <summary>

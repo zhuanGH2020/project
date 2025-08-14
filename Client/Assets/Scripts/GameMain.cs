@@ -4,8 +4,24 @@ using UnityEngine;
 
 public class GameMain : MonoBehaviour
 {
-    private static readonly GameMain m_Instance = new GameMain();
-    public static GameMain Instance { get { return m_Instance; } }
+    private static GameMain _instance;
+    public static GameMain Instance => _instance;
+
+    void Awake()
+    {
+        // 单例模式：确保只有一个GameMain实例
+        if (_instance != null && _instance != this)
+        {
+            Debug.LogWarning("[GameMain] Multiple GameMain instances detected. Destroying duplicate.");
+            Destroy(gameObject);
+            return;
+        }
+        
+        _instance = this;
+        DontDestroyOnLoad(gameObject);  // 可选：跨场景保持
+        
+        Debug.Log("[GameMain] GameMain instance initialized");
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -73,6 +89,12 @@ public class GameMain : MonoBehaviour
     
     void OnDestroy()
     {
+        // 清理单例引用
+        if (_instance == this)
+        {
+            _instance = null;
+        }
+        
         SaveModel.Instance.Cleanup();
         
         // 清理地图管理器
