@@ -5,7 +5,7 @@ public static class GameSettings
 {
     #region Map配置
     // 地图怪物生成间隔（秒）
-    public const float MapSpawnInterval = 5f;
+    public const float MapSpawnInterval = 30f;
 
     // 默认怪物生成位置
     public static readonly Vector3 MapDefaultSpawnPosition = Vector3.zero;

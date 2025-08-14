@@ -33,10 +33,10 @@ RectTransform:
   m_Father: {fileID: 5279744134557766633}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 102.9261, y: 515.4584}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5279744134047802131
 CanvasRenderer:
@@ -59,11 +59,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.0754717, g: 0.0754717, b: 0.0754717, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: f431a2ca05f06a84da209947f88d75fc, type: 3}
   m_CustomUV: 0
   m_UVRect:
     serializedVersion: 2
@@ -74,8 +74,8 @@ MonoBehaviour:
   m_Round: 0
   m_RoundCorners: 0
   m_RoundRadius: 0
-  m_RoundTriangles: 0
-  m_Type: 0
+  m_RoundTriangles: 1
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -83,7 +83,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 3.07
 --- !u!1 &5279744134557766634
 GameObject:
   m_ObjectHideFlags: 0
@@ -120,8 +120,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -889.6, y: 24.221481}
-  m_SizeDelta: {x: 100, y: 582.1542}
+  m_AnchoredPosition: {x: -880.6542, y: 51.618088}
+  m_SizeDelta: {x: 117.8916, y: 660}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &5279744134557766639
 MonoBehaviour:
@@ -211,7 +211,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 4278190335
-  m_fontColor: {r: 1, g: 0, b: 0, a: 1}
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -255,7 +255,7 @@ MonoBehaviour:
   m_enableKerning: 1
   m_enableExtraPadding: 0
   checkPaddingRequired: 0
-  isInit: 0
+  isInit: 1
   isASimpleJumpWord: 0
   m_useSpriteOnly: 0
   m_disableCharacterSpacingInThai: 0
@@ -318,8 +318,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -39.686, y: 248.78}
-  m_SizeDelta: {x: 79.3728, y: 506.5098}
+  m_AnchoredPosition: {x: -39.686, y: 312.05}
+  m_SizeDelta: {x: 79.3728, y: 624.0991}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &5279744135481551810
 CanvasRenderer:
@@ -344,7 +344,7 @@ MonoBehaviour:
   TemplateItem: {fileID: 5279744135918801348}
   arrangement: 1
   SpaceWidth: 5
-  SpaceHeight: 5
+  SpaceHeight: 10
   listItem: []
 --- !u!114 &5279744135481551808
 MonoBehaviour:
@@ -424,7 +424,7 @@ MonoBehaviour:
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: a690886e108ea034192355d5b904083c, type: 3}
   m_CustomUV: 0
   m_UVRect:
     serializedVersion: 2
@@ -436,7 +436,7 @@ MonoBehaviour:
   m_RoundCorners: 0
   m_RoundRadius: 0
   m_RoundTriangles: 0
-  m_Type: 0
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
