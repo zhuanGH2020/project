@@ -10,6 +10,17 @@ public partial class Player : CombatEntity
 
     private Vector3 _moveDirection;     // 移动方向
     private bool _inBuildingPlacementMode = false; // 是否在建筑放置模式（阻止移动）
+    
+    // 攻击系统相关
+    private Transform _attackTarget;           // 当前攻击目标
+    private bool _isContinuousAttack = false;  // 是否连续攻击模式
+    private float _lastAttackTime;             // 上次攻击时间
+    
+    // 对话ID分组常量 - 每个类型包含多条随机消息
+    private readonly int[] _noWeaponDialogIds = { 100, 101, 102, 103 };        // 没有武器
+    private readonly int[] _weaponDamagedDialogIds = { 110, 111, 112 };        // 武器损坏
+    private readonly int[] _weaponCooldownDialogIds = { 120, 121, 122 };       // 武器冷却
+    private readonly int[] _distanceTooFarDialogIds = { 130, 131, 132, 133 };  // 距离太远
 
     protected override void Awake()
     {
@@ -49,6 +60,7 @@ public partial class Player : CombatEntity
     {
         base.Update();
         HandleMovement();
+        HandleContinuousAttack();
     }
 
     // 订阅输入事件
@@ -60,6 +72,8 @@ public partial class Player : CombatEntity
             InputManager.Instance.OnMouseClickMove += OnMouseClickMove;
             InputManager.Instance.OnUseEquipInput += OnUseEquipInput;
             InputManager.Instance.OnEquipShortcutInput += OnEquipShortcutInput;
+            InputManager.Instance.OnAttackClick += OnAttackClick;
+            InputManager.Instance.OnAttackHold += OnAttackHold;
         }
         
         // 订阅建筑放置模式状态变化事件
@@ -76,10 +90,15 @@ public partial class Player : CombatEntity
             InputManager.Instance.OnMouseClickMove -= OnMouseClickMove;
             InputManager.Instance.OnUseEquipInput -= OnUseEquipInput;
             InputManager.Instance.OnEquipShortcutInput -= OnEquipShortcutInput;
+            InputManager.Instance.OnAttackClick -= OnAttackClick;
+            InputManager.Instance.OnAttackHold -= OnAttackHold;
         }
         
         // 取消订阅建筑放置模式状态变化事件
         EventManager.Instance.Unsubscribe<BuildingPlacementModeEvent>(OnBuildingPlacementModeChanged);
+        
+        // 清理对话框
+        ClearDialog();
     }
 
     // 处理移动输入
@@ -175,7 +194,7 @@ public partial class Player : CombatEntity
         
         // 调用基类的统一移动接口
         return base.MoveToPosition(targetPosition);
-    }
+        }
 
     /// <summary>
     /// 重写移动接口，增加建筑放置模式检查
@@ -247,4 +266,180 @@ public partial class Player : CombatEntity
         // 显示死亡菜单界面
         UIManager.Instance.Show<MenuView>(UILayer.System);
     }
+
+    // ========== 攻击系统方法 ==========
+    
+    /// <summary>
+    /// 处理攻击点击事件
+    /// </summary>
+    private void OnAttackClick(Vector3 clickPosition)
+    {
+        // 检测点击位置的怪物
+        if (InputUtils.GetMouseWorldHit(out RaycastHit hit))
+        {
+            var monster = hit.collider.GetComponent<Monster>();
+            if (monster != null && monster.CurrentHealth > 0)
+            {
+                SetAttackTarget(monster.transform, clickPosition);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 处理长按攻击事件
+    /// </summary>
+    private void OnAttackHold(bool isHolding)
+    {
+        _isContinuousAttack = isHolding;
+        if (isHolding)
+        {
+            Debug.Log("[Player] 开始连续攻击模式");
+        }
+        else
+        {
+            Debug.Log("[Player] 结束连续攻击模式");
+        }
+    }
+    
+    /// <summary>
+    /// 设置攻击目标
+    /// </summary>
+    private void SetAttackTarget(Transform target, Vector3 clickPosition)
+    {
+        _attackTarget = target;
+        
+        // 首先检查是否有武器
+        var handEquip = GetCurrentHandEquip();
+        if (handEquip == null)
+        {
+            ShowRandomDialogMessage(_noWeaponDialogIds);
+            return;
+        }
+        
+        // 检查武器状态
+        if (!handEquip.CanUse)
+        {
+            // 武器正在冷却中或耐久为0
+            if (handEquip.CurrentDurability <= 0)
+            {
+                ShowRandomDialogMessage(_weaponDamagedDialogIds);
+            }
+            else
+            {
+                ShowRandomDialogMessage(_weaponCooldownDialogIds);
+            }
+            return;
+        }
+        
+        // 检查攻击范围
+        if (CheckAttackRange(target))
+        {
+            // 在攻击范围内，直接攻击
+            TryAttackTarget();
+        }
+        else
+        {
+            // 不在攻击范围内，显示提示
+            ShowDistanceWarning();
+        }
+    }
+    
+    /// <summary>
+    /// 检查攻击范围
+    /// </summary>
+    private bool CheckAttackRange(Transform target)
+    {
+        if (target == null) return false;
+        
+        // 获取当前手部装备的攻击范围
+        var handEquip = GetCurrentHandEquip();
+        float attackRange = handEquip != null ? handEquip.Range : 2f; // 默认范围2米
+        
+        float distance = Vector3.Distance(transform.position, target.position);
+        return distance <= attackRange;
+    }
+    
+    /// <summary>
+    /// 获取当前手部装备
+    /// </summary>
+    private EquipBase GetCurrentHandEquip()
+    {
+        return _equips.Find(equip => equip.EquipPart == EquipPart.Hand);
+    }
+    
+    /// <summary>
+    /// 尝试攻击目标
+    /// </summary>
+    private void TryAttackTarget()
+    {
+        if (_attackTarget == null) return;
+        
+        var handEquip = GetCurrentHandEquip();
+        if (handEquip == null || !handEquip.CanUse) return; // 武器检查已在SetAttackTarget中完成
+        
+        // 面向目标
+        Vector3 direction = (_attackTarget.position - transform.position).normalized;
+        transform.rotation = Quaternion.LookRotation(direction);
+        
+        // 使用装备攻击
+        handEquip.Use();
+        _lastAttackTime = Time.time;
+        
+        Debug.Log($"[Player] 攻击目标: {_attackTarget.name}");
+    }
+    
+    /// <summary>
+    /// 处理连续攻击
+    /// </summary>
+    private void HandleContinuousAttack()
+    {
+        if (!_isContinuousAttack || _attackTarget == null) return;
+        
+        // 检查目标是否还活着
+        var monster = _attackTarget.GetComponent<Monster>();
+        if (monster == null || monster.CurrentHealth <= 0)
+        {
+            _attackTarget = null;
+            _isContinuousAttack = false;
+            return;
+        }
+        
+        // 检查武器状态（优先级最高）
+        var handEquip = GetCurrentHandEquip();
+        if (handEquip == null)
+        {
+            ShowRandomDialogMessage(_noWeaponDialogIds);
+            _isContinuousAttack = false;
+            return;
+        }
+        
+        if (!handEquip.CanUse)
+        {
+            // 武器不可用时不显示提示，只是暂停连续攻击等待冷却
+            return;
+        }
+        
+        // 检查攻击范围
+        if (CheckAttackRange(_attackTarget))
+        {
+            TryAttackTarget();
+        }
+        else
+        {
+            // 目标超出范围，停止连续攻击并提示
+            ShowDistanceWarning();
+            _isContinuousAttack = false;
+        }
+    }
+    
+    /// <summary>
+    /// 显示距离警告
+    /// </summary>
+    private void ShowDistanceWarning()
+    {
+        Debug.Log("[Player] 距离太远了，需要靠近目标！");
+        ShowRandomDialogMessage(_distanceTooFarDialogIds);
+    }
+
+
 } 

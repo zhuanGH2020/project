@@ -23,6 +23,13 @@ public abstract class CombatEntity : DamageableObject, IAttacker
     [Header("装备")]
     [SerializeField] protected List<EquipBase> _equips = new List<EquipBase>();  // 装备列表
 
+    // 对话系统相关
+    protected float _dialogRange;            // 对话范围
+    protected int[] _availableDialogIds;     // 可用对话ID列表
+    protected float _lastDialogTime;         // 上次对话时间
+    protected float _dialogCooldown = 5f;    // 对话冷却时间（秒）
+    protected int _currentDialogId = -1;     // 当前对话框ID
+
     protected CooldownTimer _attackTimer;
     protected NavMeshAgent _navMeshAgent;
 
@@ -419,6 +426,100 @@ public abstract class CombatEntity : DamageableObject, IAttacker
         if (_navMeshAgent != null)
         {
             _navMeshAgent.enabled = enabled;
+        }
+    }
+
+    #endregion
+
+    #region 对话系统
+
+    /// <summary>
+    /// 显示实体消息（在头顶显示对话框）
+    /// </summary>
+    /// <param name="message">要显示的消息</param>
+    /// <param name="duration">显示时长（秒），默认2秒</param>
+    protected virtual void ShowEntityMessage(string message, float duration = 2f)
+    {
+        if (DialogManager.Instance == null) return;
+        
+        // 销毁之前的消息对话框（如果存在）
+        if (_currentDialogId != -1)
+        {
+            DialogManager.Instance.DestroyDialog(_currentDialogId);
+            _currentDialogId = -1;
+        }
+        
+        Vector3 dialogOffset = new Vector3(0, 2.5f, 0); // 在实体头顶显示
+        _currentDialogId = DialogManager.Instance.CreateDialog(
+            transform,
+            message,
+            dialogOffset,
+            duration
+        );
+    }
+
+    /// <summary>
+    /// 根据对话ID显示随机消息
+    /// </summary>
+    /// <param name="dialogIds">对话ID数组</param>
+    /// <param name="duration">显示时长（秒），默认2秒</param>
+    protected virtual void ShowRandomDialogMessage(int[] dialogIds, float duration = 2f)
+    {
+        if (dialogIds == null || dialogIds.Length == 0)
+        {
+            Debug.LogWarning($"[{GetType().Name}] 没有可用的对话ID");
+            return;
+        }
+
+        // 销毁之前的消息对话框（如果存在）
+        if (_currentDialogId != -1)
+        {
+            DialogManager.Instance.DestroyDialog(_currentDialogId);
+            _currentDialogId = -1;
+        }
+
+        // 创建随机对话
+        Vector3 dialogOffset = new Vector3(0, 2.5f, 0); // 在实体头顶显示
+        _currentDialogId = DialogManager.Instance.CreateRandomDialog(
+            transform,
+            dialogIds,
+            dialogOffset,
+            duration
+        );
+    }
+
+    /// <summary>
+    /// 触发随机对话（供子类重写）
+    /// </summary>
+    protected virtual void TriggerRandomDialog()
+    {
+        if (_availableDialogIds == null || _availableDialogIds.Length == 0)
+        {
+            Debug.LogWarning($"[{GetType().Name}] {gameObject.name} 没有可用的对话ID");
+            return;
+        }
+
+        ShowRandomDialogMessage(_availableDialogIds, 3f);
+        _lastDialogTime = Time.time;
+    }
+
+    /// <summary>
+    /// 检查对话冷却时间
+    /// </summary>
+    protected virtual bool CanTriggerDialog()
+    {
+        return Time.time - _lastDialogTime >= _dialogCooldown;
+    }
+
+    /// <summary>
+    /// 清理对话框
+    /// </summary>
+    protected virtual void ClearDialog()
+    {
+        if (_currentDialogId != -1 && DialogManager.Instance != null)
+        {
+            DialogManager.Instance.DestroyDialog(_currentDialogId);
+            _currentDialogId = -1;
         }
     }
 

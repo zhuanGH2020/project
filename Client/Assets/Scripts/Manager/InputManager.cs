@@ -18,9 +18,18 @@ public class InputManager
     public event Action OnRightClick;                          // 右键点击
     public event Action<Vector3> OnMouseClickMove;             // 低优先级移动（Player使用）
     
+    // 攻击输入事件
+    public event Action<Vector3> OnAttackClick;                // 攻击点击事件（点击怪物攻击）
+    public event Action<bool> OnAttackHold;                    // 攻击长按事件（开始/结束连续攻击）
+    
     // 按键输入事件
     public event Action OnUseEquipInput;
     public event Action<int> OnEquipShortcutInput;
+
+    // 长按攻击检测相关
+    private bool _isHoldingAttack = false;
+    private float _holdStartTime = 0f;
+    private const float _holdThreshold = 0.3f; // 长按阈值（秒）
 
     private InputManager() { }
 
@@ -32,6 +41,7 @@ public class InputManager
         HandleMovementInput();
         HandleMouseInput();
         HandleKeyboardInput();
+        HandleAttackHold();
     }
 
     // 处理移动输入（WASD键）
@@ -51,6 +61,21 @@ public class InputManager
         if (Input.GetMouseButtonDown(0))
         {
             HandleLeftClick();
+            
+            // 开始长按检测
+            _isHoldingAttack = true;
+            _holdStartTime = Time.time;
+        }
+        
+        // 鼠标左键抬起
+        if (Input.GetMouseButtonUp(0))
+        {
+            // 结束长按检测
+            if (_isHoldingAttack)
+            {
+                _isHoldingAttack = false;
+                OnAttackHold?.Invoke(false); // 结束连续攻击
+            }
         }
         
         // 鼠标右键点击处理
@@ -107,8 +132,16 @@ public class InputManager
         // 2. 只有高优先级事件未被消费时，才处理低优先级事件（Player移动等）
         if (!eventConsumed)
         {
+            // 检查是否点击了怪物进行攻击
+            if (CheckForAttackTarget(mouseWorldPos))
+            {
+                OnAttackClick?.Invoke(mouseWorldPos); // 攻击事件
+            }
+            else
+        {
             OnLeftClickLowPriority?.Invoke(mouseWorldPos);
             OnMouseClickMove?.Invoke(mouseWorldPos); // Player移动事件
+            }
         }
 
         // 发布点击非UI区域事件
@@ -154,6 +187,32 @@ public class InputManager
 
     // 获取当前输入状态
     public bool IsInputEnabled => _enableInput;
+    
+    // 处理长按攻击检测
+    private void HandleAttackHold()
+    {
+        if (_isHoldingAttack && Time.time - _holdStartTime >= _holdThreshold)
+        {
+            // 达到长按阈值，开始连续攻击
+            OnAttackHold?.Invoke(true);
+            _isHoldingAttack = false; // 避免重复触发
+        }
+    }
+    
+    // 检查点击位置是否有可攻击目标（怪物）
+    private bool CheckForAttackTarget(Vector3 clickPosition)
+    {
+        if (InputUtils.GetMouseWorldHit(out RaycastHit hit))
+        {
+            // 检查是否点击了怪物
+            var monster = hit.collider.GetComponent<Monster>();
+            if (monster != null && monster.CurrentHealth > 0)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
     
     // 处理鼠标悬停检测
     private void HandleMouseHover()
