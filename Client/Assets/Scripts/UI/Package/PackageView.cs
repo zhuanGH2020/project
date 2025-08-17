@@ -76,8 +76,18 @@ public class PackageView : BaseView
         
         if (slotItem != null)
         {
-            // 格子有道具，选中该道具
-            bool success = PackageModel.Instance.SelectItemByIndex(slotIndex);
+            // 格子有道具，检查道具类型
+            var itemInfo = ItemManager.Instance.GetItem(slotItem.itemId);
+            if (itemInfo != null && itemInfo.IsEquip())
+            {
+                // 装备类型，直接穿戴
+                OnEquipItem(slotItem);
+            }
+            else
+            {
+                // 其他类型，按原有逻辑处理（选中道具）
+                bool success = PackageModel.Instance.SelectItemByIndex(slotIndex);
+            }
         }
         else
         {
@@ -86,6 +96,39 @@ public class PackageView : BaseView
             {
                 bool success = PackageModel.Instance.PlaceSelectedItemToSlot(slotIndex);
             }
+        }
+    }
+
+    /// <summary>
+    /// 处理装备穿戴
+    /// </summary>
+    private void OnEquipItem(PackageItem packageItem)
+    {
+        if (packageItem == null) return;
+
+        // 获取Player实例
+        Player player = Player.Instance;
+        if (player == null)
+        {
+            Debug.LogWarning("[PackageView] Player instance not found");
+            return;
+        }
+
+        // 调用Player的装备方法
+        player.Equip(packageItem.itemId);
+        
+        // 装备成功后从背包移除该道具
+        bool removed = PackageModel.Instance.RemoveItem(packageItem.itemId, 1);
+        if (removed)
+        {
+            Debug.Log($"[PackageView] 成功装备道具: {packageItem.itemId}");
+            
+            // 刷新背包UI
+            InitializePackageList();
+        }
+        else
+        {
+            Debug.LogError($"[PackageView] 装备道具失败: {packageItem.itemId}");
         }
     }
 
