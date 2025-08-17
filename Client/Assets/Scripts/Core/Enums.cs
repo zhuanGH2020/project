@@ -86,3 +86,13 @@ public enum TimeOfDay
     Dusk = 1,       // 黄昏 (0.5-0.75)
     Night = 2,      // 夜晚 (0.75-1.0)
 }
+
+// 点击交互类型
+public enum ClickType
+{
+    None = 0,
+    Talk = 1,        // 对话
+    Use = 2,         // 使用
+    Harvest = 3,     // 采集
+    Attack = 4,      // 攻击
+}

@@ -21,7 +21,7 @@ public class MapManager
 
     // 私有字段
     private float _monsterSpawnInterval = GameSettings.MapSpawnInterval;  // 怪物生成间隔（秒）
-    private Vector3 _spawnPosition = GameSettings.MapDefaultSpawnPosition;  // 生成位置
+    private Vector2 _spawnPosition = GameSettings.MapDefaultSpawnPosition;  // 生成位置（XZ坐标）
     private bool _enableSpawn = true;  // 是否启用生成
     private bool _randomSpawn = true;  // 是否随机生成怪物类型
     private int[] _spawnableMonsterIds = GameSettings.MapDefaultMonsterIds;  // 可生成的怪物ID列表
@@ -30,7 +30,7 @@ public class MapManager
 
     // 公共属性
     public float SpawnInterval => _monsterSpawnInterval;
-    public Vector3 SpawnPosition => _spawnPosition;
+    public Vector2 SpawnPosition => _spawnPosition;
     public bool IsSpawnEnabled => _enableSpawn;
     public bool IsRandomSpawn => _randomSpawn;
     public int[] SpawnableMonsterIds => _spawnableMonsterIds;
@@ -89,7 +89,6 @@ public class MapManager
         var monsterConfig = ConfigManager.Instance.GetReader("Monster");
         if (monsterConfig == null || !monsterConfig.HasKey(selectedMonsterId))
         {
-            CreatePlaceholderMonster(selectedMonsterId);
             return;
         }
 
@@ -97,7 +96,6 @@ public class MapManager
         string prefabPath = monsterConfig.GetValue<string>(selectedMonsterId, "PrefabPath", "");
         if (string.IsNullOrEmpty(prefabPath))
         {
-            CreatePlaceholderMonster(selectedMonsterId);
             return;
         }
 
@@ -105,12 +103,14 @@ public class MapManager
         GameObject monsterPrefab = ResourceManager.Instance.Load<GameObject>(prefabPath);
         if (monsterPrefab == null)
         {
-            CreatePlaceholderMonster(selectedMonsterId);
             return;
         }
 
+        // 获取安全的生成位置（自动避开已有物体，使用GameSettings配置）
+        Vector3 actualSpawnPosition = MapUtils.GetSafeSpawnPosition(_spawnPosition);
+        
         // 在指定位置实例化怪物
-        GameObject monsterInstance = Object.Instantiate(monsterPrefab, _spawnPosition, Quaternion.identity);
+        GameObject monsterInstance = Object.Instantiate(monsterPrefab, actualSpawnPosition, Quaternion.identity);
         
         // 获取Monster组件并初始化
         var monsterComponent = monsterInstance.GetComponent<Monster>();
@@ -120,7 +120,7 @@ public class MapManager
         }
 
         // 发布怪物生成事件
-        EventManager.Instance.Publish(new MonsterSpawnedEvent(monsterInstance, _spawnPosition));
+        EventManager.Instance.Publish(new MonsterSpawnedEvent(monsterInstance, actualSpawnPosition));
     }
 
     /// <summary>
@@ -146,28 +146,6 @@ public class MapManager
     }
 
     /// <summary>
-    /// 创建占位符怪物（当预制体不存在时）
-    /// </summary>
-    private void CreatePlaceholderMonster(int monsterId)
-    {
-        // 创建一个简单的立方体作为占位符怪物
-        GameObject placeholder = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        placeholder.name = $"PlaceholderMonster_{monsterId}";
-        placeholder.transform.position = _spawnPosition;
-        placeholder.transform.localScale = Vector3.one * 0.5f;
-        
-        // 添加一个简单的颜色来区分
-        var renderer = placeholder.GetComponent<Renderer>();
-        if (renderer != null)
-        {
-            renderer.material.color = Color.red;
-        }
-        
-        // 发布怪物生成事件
-        EventManager.Instance.Publish(new MonsterSpawnedEvent(placeholder, _spawnPosition));
-    }
-
-    /// <summary>
     /// 设置怪物生成间隔
     /// </summary>
     public void SetSpawnInterval(float interval)
@@ -176,9 +154,9 @@ public class MapManager
     }
 
     /// <summary>
-    /// 设置怪物生成位置
+    /// 设置怪物生成位置（XZ坐标，Y坐标将通过射线检测地面计算）
     /// </summary>
-    public void SetSpawnPosition(Vector3 position)
+    public void SetSpawnPosition(Vector2 position)
     {
         _spawnPosition = position;
     }
@@ -231,6 +209,14 @@ public class MapManager
     }
 
     /// <summary>
+    /// 手动生成一个怪物 - 用于调试目的
+    /// </summary>
+    public void ManualSpawnMonster()
+    {
+        SpawnMonster();
+    }
+
+    /// <summary>
     /// 清理资源
     /// </summary>
     public void Cleanup()
@@ -255,4 +241,6 @@ public class MapManager
             _spawnableMonsterIds = GameSettings.MapDefaultMonsterIds;
         }
     }
+    
+
 } 

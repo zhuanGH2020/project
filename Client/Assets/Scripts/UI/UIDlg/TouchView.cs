@@ -141,7 +141,7 @@ public class TouchView : BaseView
             HarvestableObject harvestable = e.HoveredObject.GetComponent<HarvestableObject>();
             if (harvestable != null && harvestable.CanInteract)
             {
-                touchText = harvestable.GetActionDisplayName();
+                touchText = "采集";
             }
         }
         

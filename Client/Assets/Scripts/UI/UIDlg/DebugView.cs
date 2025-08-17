@@ -14,6 +14,8 @@ public class DebugView : BaseView
     private Button _btnSave;
     private Button _btnGetMat; // 获取材料按钮
     private Button _btnGetCustomItem; // 获取自定义物品按钮
+    private Button _btnGetMonster; // 生成怪物按钮
+    private Button _btnGetObject; // 生成可采集物体按钮
     
     private Toggle _toggleUIPath; // UI路径打印开关
     private Toggle _toggleUITime; // 时间系统开关
@@ -58,6 +60,8 @@ public class DebugView : BaseView
         _btnSave = transform.Find("btn_save")?.GetComponent<Button>();
         _btnGetMat = transform.Find("btn_get_mat")?.GetComponent<Button>();
         _btnGetCustomItem = transform.Find("ui_group_get_item/btn_get_custom_item")?.GetComponent<Button>();
+        _btnGetMonster = transform.Find("btn_get_monster")?.GetComponent<Button>();
+        _btnGetObject = transform.Find("btn_get_object")?.GetComponent<Button>();
         _toggleUIPath = transform.Find("toggle_ui_path")?.GetComponent<Toggle>();
         _toggleUITime = transform.Find("toggle_ui_time")?.GetComponent<Toggle>();
         _inputItemId = transform.Find("ui_group_get_item/input_item_id")?.GetComponent<TMP_InputField>();
@@ -67,6 +71,8 @@ public class DebugView : BaseView
         _btnSave?.onClick.AddListener(OnSaveButtonClick);
         _btnGetMat?.onClick.AddListener(OnGetMatButtonClick);
         _btnGetCustomItem?.onClick.AddListener(OnGetCustomItemButtonClick);
+        _btnGetMonster?.onClick.AddListener(OnGetMonsterButtonClick);
+        _btnGetObject?.onClick.AddListener(OnGetObjectButtonClick);
         _toggleUIPath?.onValueChanged.AddListener(OnUIPathToggleChanged);
         _toggleUITime?.onValueChanged.AddListener(OnUITimeToggleChanged);
         
@@ -126,6 +132,18 @@ public class DebugView : BaseView
     private void OnGetCustomItemButtonClick()
     {
         GetCustomItem();
+    }
+    
+    // 生成怪物按钮点击事件
+    private void OnGetMonsterButtonClick()
+    {
+        GetMonster();
+    }
+    
+    // 生成可采集物体按钮点击事件
+    private void OnGetObjectButtonClick()
+    {
+        GetHarvestableObject();
     }
     
     /// <summary>
@@ -212,6 +230,88 @@ public class DebugView : BaseView
         else
         {
             Debug.LogWarning($"[DebugView] Invalid item ID format: {inputText}");
+        }
+    }
+    
+    /// <summary>
+    /// 生成怪物 - 手动生成一个怪物
+    /// </summary>
+    private void GetMonster()
+    {
+        MapManager.Instance.ManualSpawnMonster();
+    }
+    
+    /// <summary>
+    /// 生成可采集物体 - 手动生成一个灌木丛
+    /// </summary>
+    private void GetHarvestableObject()
+    {
+        int itemId = GameSettings.DebugDefaultHarvestableObjectId; // 从GameSettings读取默认ID
+        
+        // 从Item配置表获取物品信息
+        var itemConfig = ConfigManager.Instance.GetReader("Item");
+        if (itemConfig == null || !itemConfig.HasKey(itemId))
+        {
+            Debug.LogError($"[DebugView] Item config not found for ID: {itemId}");
+            return;
+        }
+
+        // 从配置表读取预制体路径
+        string prefabPath = itemConfig.GetValue<string>(itemId, "PrefabPath", "");
+        if (string.IsNullOrEmpty(prefabPath))
+        {
+            Debug.LogWarning($"[DebugView] No prefab path found for item {itemId}, creating default object");
+            return;
+        }
+
+        // 使用ResourceManager加载预制体
+        GameObject prefab = ResourceManager.Instance.Load<GameObject>(prefabPath);
+        if (prefab == null)
+        {
+            Debug.LogWarning($"[DebugView] Prefab not found at path: {prefabPath}, creating default object");
+            return;
+        }
+
+        // 获取安全的生成位置（在玩家附近）
+        Vector3 spawnPosition = GetPlayerNearbyPosition();
+        
+        // 实例化对象
+        GameObject objectInstance = Object.Instantiate(prefab, spawnPosition, Quaternion.identity);
+        
+        // 获取HarvestableObject组件并初始化
+        var harvestableComponent = objectInstance.GetComponent<HarvestableObject>();
+        if (harvestableComponent != null)
+        {
+            harvestableComponent.Init(itemId);
+            Debug.Log($"[DebugView] Successfully spawned harvestable object {itemId} at {spawnPosition}");
+        }
+        else
+        {
+            Debug.LogWarning($"[DebugView] HarvestableObject component not found on prefab, adding it");
+            harvestableComponent = objectInstance.AddComponent<HarvestableObject>();
+            harvestableComponent.Init(itemId);
+        }
+    }
+    
+    /// <summary>
+    /// 获取玩家附近的安全位置
+    /// </summary>
+    private Vector3 GetPlayerNearbyPosition()
+    {
+        var player = Player.Instance;
+        if (player != null)
+        {
+            // 在玩家前方2-4米的随机位置生成
+            Vector3 playerPos = player.transform.position;
+            Vector3 playerForward = player.transform.forward;
+            float distance = Random.Range(2f, 4f);
+            Vector3 randomOffset = new Vector3(Random.Range(-2f, 2f), 0, Random.Range(-2f, 2f));
+            return playerPos + playerForward * distance + randomOffset;
+        }
+        else
+        {
+            // 如果没有玩家，在默认位置生成
+            return new Vector3(0, 0, 0);
         }
     }
     

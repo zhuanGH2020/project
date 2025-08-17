@@ -7,10 +7,9 @@ using UnityEngine;
 /// </summary>
 public abstract class ObjectBase : MonoBehaviour
 {
-    [Header("Object Identity")]
-    [SerializeField] private int _uid = 0;                 // Unique identifier
-    [SerializeField] private int _configId = 0;            // 配置表ID
-    [SerializeField] private ObjectType _objectType = ObjectType.Other; // Object category
+    private int _uid = 0;                 // Unique identifier
+    private int _configId = 0;            // 配置表ID
+    private ObjectType _objectType = ObjectType.Other; // Object category
 
     public int Uid => _uid;
     public int ConfigId => _configId;
