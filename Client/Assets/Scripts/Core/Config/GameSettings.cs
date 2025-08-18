@@ -41,7 +41,7 @@ public static class GameSettings
     public const int ClockMaxDays = 60;
 
     // 是否启用灯光效果（为false时关闭所有灯光变化，包括初始化和状态改变效果）
-    public const bool ClockEnableLightingEffects = false;
+    public static readonly bool ClockEnableLightingEffects = false;
 
     // 时间段比例配置
     public const float ClockDayTimeRatio = 0.5f;        // 白天时间占比

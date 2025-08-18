@@ -17,6 +17,10 @@ public class InteractionManager
     private bool _isMovingToTarget;                 // 是否正在移动到目标
     private float _lastInteractionCheck;            // 上次交互检测时间
     private bool _initialized;
+    
+    // 范围追踪相关
+    private IClickable _nearbyTarget;               // 当前范围内的目标
+    private bool _wasInRange;                       // 上一帧是否在范围内
 
     private InteractionManager() { }
 
@@ -34,6 +38,11 @@ public class InteractionManager
     {
         UnsubscribeFromEvents();
         CancelCurrentInteraction();
+        
+        // 清理范围追踪状态
+        _nearbyTarget = null;
+        _wasInRange = false;
+        
         _initialized = false;
         
         Debug.Log("[InteractionManager] Cleaned up");
@@ -43,6 +52,7 @@ public class InteractionManager
     {
         if (!_initialized) return;
         UpdateTargetInteraction();
+        UpdateNearbyInteraction();
     }
 
     private void SubscribeToEvents()
@@ -157,7 +167,15 @@ public class InteractionManager
         var player = Player.Instance;
         if (player == null) return;
 
-        if (_currentTarget is IClickable clickable)
+        // 如果是Building类型，直接调用OnInteract执行交互逻辑
+        if (_currentTarget is Building building)
+        {
+            if (building.CanInteract) // 确保仍可交互
+            {
+                building.OnInteract(_targetPosition);
+            }
+        }
+        else if (_currentTarget is IClickable clickable)
         {
             clickable.OnClick(_targetPosition);
         }
@@ -170,6 +188,62 @@ public class InteractionManager
         _currentTarget = null;
         _isMovingToTarget = false;
         _targetPosition = Vector3.zero;
+    }
+
+    /// <summary>
+    /// 检查玩家附近的交互对象，处理进入/离开交互范围的逻辑
+    /// </summary>
+    private void UpdateNearbyInteraction()
+    {
+        var player = Player.Instance;
+        if (player == null) return;
+
+        IClickable nearestTarget = null;
+        float nearestDistance = float.MaxValue;
+
+        // 查找附近需要范围提示的Building对象
+        var colliders = Physics.OverlapSphere(player.transform.position, 5f); // 5米检测范围
+        foreach (var collider in colliders)
+        {
+            var clickable = collider.GetComponent<IClickable>();
+            if (clickable != null && clickable != _currentTarget) // 不检查正在交互的目标
+            {
+                // 只处理Building类型的范围提示
+                if (clickable is Building building)
+                {
+                    float distance = Vector3.Distance(player.transform.position, collider.transform.position);
+                    float interactionRange = clickable.GetInteractionRange();
+                    
+                    if (distance <= interactionRange && distance < nearestDistance)
+                    {
+                        nearestTarget = clickable;
+                        nearestDistance = distance;
+                    }
+                }
+            }
+        }
+
+        // 检查范围状态变化
+        bool currentInRange = nearestTarget != null;
+        bool targetChanged = nearestTarget != _nearbyTarget;
+
+        if (currentInRange != _wasInRange || targetChanged)
+        {
+            // 处理离开之前目标的范围
+            if (_nearbyTarget is Building oldBuilding && (!currentInRange || targetChanged))
+            {
+                oldBuilding.OnLeaveInteractionRange();
+            }
+
+            // 处理进入新目标的范围
+            if (nearestTarget is Building newBuilding && currentInRange)
+            {
+                newBuilding.OnEnterInteractionRange();
+            }
+
+            _nearbyTarget = nearestTarget;
+            _wasInRange = currentInRange;
+        }
     }
 
     public bool IsInteracting => _isMovingToTarget && _currentTarget != null;

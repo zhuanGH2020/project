@@ -172,18 +172,15 @@ public static class MapUtils
     /// </summary>
     private static bool IsGroundCollider(Collider collider)
     {
-        // 通过标签判断
-        if (collider.CompareTag("Ground") || collider.CompareTag("Terrain"))
-        {
-            return true;
-        }
-        
         // 通过GameObject名称判断（可根据项目需要调整）
         string objName = collider.gameObject.name.ToLower();
         if (objName.Contains("ground") || objName.Contains("terrain") || objName.Contains("floor"))
         {
             return true;
         }
+        
+        // 可以根据需要添加其他判断条件
+        // 例如：检查Layer、检查组件类型等
         
         return false;
     }

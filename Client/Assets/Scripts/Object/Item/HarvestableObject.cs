@@ -28,6 +28,16 @@ public class HarvestableObject : Building
         SetHealth(1f); // 可采集物体固定血量为1
     }
 
+    /// <summary>
+    /// 重写建筑物配置加载 - 可采集物品不需要从Item表查询MaxHealth
+    /// </summary>
+    protected override void LoadBuildingConfig()
+    {
+        // 可采集物品不从Item表加载MaxHealth，固定使用默认值
+        // 血量会在Init方法中设置为1
+        _maxHealthValue = 100f; // 设置默认值，但实际不会用到
+    }
+
     private void LoadDropConfig()
     {
         var dropConfig = ConfigManager.Instance.GetReader("Drop");
@@ -59,7 +69,7 @@ public class HarvestableObject : Building
     /// <summary>
     /// 重写Building的交互逻辑 - 实现采集功能
     /// </summary>
-    protected override void OnInteract(Vector3 clickPosition)
+    public override void OnInteract(Vector3 clickPosition)
     {
         if (!CanInteract) return;
 

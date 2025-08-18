@@ -14,7 +14,7 @@ public class Building : DamageableObject
     private float _constructTime;           // 建造时间
     private bool _isConstructed = true;     // 是否建造完成
     
-    private float _maxHealthValue = 100f;   // 最大生命值
+    protected float _maxHealthValue = 100f;   // 最大生命值
 
     // 实现DamageableObject的抽象属性
     public override float MaxHealth => _maxHealthValue;
@@ -59,12 +59,17 @@ public class Building : DamageableObject
         UpdateGameObjectName();
     }
     
-    private void LoadBuildingConfig()
+    protected virtual void LoadBuildingConfig()
     {
         var reader = ConfigManager.Instance.GetReader("Item");
-        if (reader != null)
+        if (reader != null && reader.HasKey(_itemId))
         {
             _maxHealthValue = reader.GetValue<float>(_itemId, "MaxHealth", 100f);
+        }
+        else
+        {
+            // 如果配置不存在或没有该ID，使用默认值
+            _maxHealthValue = 100f;
         }
     }
     
@@ -139,96 +144,32 @@ public class Building : DamageableObject
     {
         if (!CanInteract) return;
 
-        var player = Player.Instance;
-        if (player != null)
-        {
-            // 计算玩家到建筑物的距离
-            float distanceToPlayer = Vector3.Distance(transform.position, player.transform.position);
-            float interactionRange = GetInteractionRange();
-
-            // 如果玩家已经在交互范围内，直接触发交互
-            if (distanceToPlayer <= interactionRange)
-            {
-                OnInteract(clickPosition);
-            }
-            else
-            {
-                // 计算寻路目标位置（在建筑物附近停下）
-                Vector3 targetPosition = GetInteractionPosition(player.transform.position);
-                
-                // 让玩家寻路过去
-                bool moveStarted = player.MoveToPlayerPosition(targetPosition);
-                if (moveStarted)
-                {
-                    // 移动成功启动后，延迟触发交互事件
-                    StartCoroutine(WaitForPlayerAndInteract(clickPosition));
-                }
-                else
-                {
-                    // 移动失败，直接触发交互
-                    OnInteract(clickPosition);
-                }
-            }
-        }
+        // 触发交互事件，让InteractionManager处理寻路
+        EventManager.Instance.Publish(new ObjectInteractionEvent(this, clickPosition));
     }
 
     /// <summary>
-    /// 计算合适的交互位置
+    /// 执行交互逻辑 - 由InteractionManager在玩家到达后调用，或直接调用
+    /// 子类可重写实现自定义交互行为
     /// </summary>
-    private Vector3 GetInteractionPosition(Vector3 playerPosition)
+    public virtual void OnInteract(Vector3 clickPosition)
     {
-        Vector3 directionToPlayer = (playerPosition - transform.position).normalized;
-        float interactionRange = GetInteractionRange();
-        
-        // 在交互范围内，但保持一定距离避免重叠
-        float stopDistance = Mathf.Max(0.5f, interactionRange - 0.5f);
-        return transform.position + directionToPlayer * stopDistance;
+        // 子类重写实现具体交互逻辑
     }
 
     /// <summary>
-    /// 等待玩家到达并触发交互
+    /// 玩家进入交互范围时调用 - 子类可重写实现自定义逻辑
     /// </summary>
-    private System.Collections.IEnumerator WaitForPlayerAndInteract(Vector3 clickPosition)
+    public virtual void OnEnterInteractionRange()
     {
-        var player = Player.Instance;
-        if (player == null) yield break;
-
-        float interactionRange = GetInteractionRange();
-        float timeoutTime = 10f; // 最大等待时间
-        float elapsedTime = 0f;
-
-        // 等待玩家到达交互范围或超时
-        while (elapsedTime < timeoutTime)
-        {
-            if (player == null || this == null) yield break;
-
-            float distance = Vector3.Distance(transform.position, player.transform.position);
-            
-            // 玩家到达交互范围内
-            if (distance <= interactionRange)
-            {
-                OnInteract(clickPosition);
-                yield break;
-            }
-
-            // 玩家停止移动且不在范围内（可能遇到障碍物）
-            if (!player.IsMoving && distance > interactionRange)
-            {
-                // 尝试重新寻路到更近的位置
-                Vector3 newTargetPosition = GetInteractionPosition(player.transform.position);
-                player.MoveToPlayerPosition(newTargetPosition);
-            }
-
-            elapsedTime += Time.deltaTime;
-            yield return null;
-        }
+        // 子类重写实现进入范围的逻辑
     }
 
     /// <summary>
-    /// 交互逻辑 - 子类可重写实现自定义交互行为
+    /// 玩家离开交互范围时调用 - 子类可重写实现自定义逻辑
     /// </summary>
-    protected virtual void OnInteract(Vector3 clickPosition)
+    public virtual void OnLeaveInteractionRange()
     {
-        
+        // 子类重写实现离开范围的逻辑
     }
 } 

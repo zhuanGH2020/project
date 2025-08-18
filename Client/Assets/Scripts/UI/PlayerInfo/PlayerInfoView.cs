@@ -9,8 +9,6 @@ public class PlayerInfoView : BaseView
 {
     private Slider slider_health;
     private TextMeshProUGUI txt_num;
-    
-    private bool _isViewInitialized = false;
 
     void Start()
     {
@@ -36,7 +34,6 @@ public class PlayerInfoView : BaseView
         
         // 初始化血量显示
         UpdateHealthDisplay();
-        _isViewInitialized = true;
     }
 
     private void SubscribeEvents()

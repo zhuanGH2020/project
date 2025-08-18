@@ -87,7 +87,6 @@ public partial class Player : CombatEntity
         if (InputManager.Instance != null)
         {
             InputManager.Instance.OnMoveInput += OnMoveInput;
-            InputManager.Instance.OnMouseClickMove += OnMouseClickMove;
             InputManager.Instance.OnUseEquipInput += OnUseEquipInput;
             InputManager.Instance.OnEquipShortcutInput += OnEquipShortcutInput;
             InputManager.Instance.OnAttackClick += OnAttackClick;
@@ -105,7 +104,6 @@ public partial class Player : CombatEntity
         if (InputManager.Instance != null)
         {
             InputManager.Instance.OnMoveInput -= OnMoveInput;
-            InputManager.Instance.OnMouseClickMove -= OnMouseClickMove;
             InputManager.Instance.OnUseEquipInput -= OnUseEquipInput;
             InputManager.Instance.OnEquipShortcutInput -= OnEquipShortcutInput;
             InputManager.Instance.OnAttackClick -= OnAttackClick;
@@ -125,45 +123,9 @@ public partial class Player : CombatEntity
         _moveDirection = moveDirection;
     }
 
-    // 处理鼠标点击移动
-    private void OnMouseClickMove(Vector3 targetPosition)
-    {
-        // Check if there's an interactable object at the click position first
-        if (CheckForInteractableAtPosition(targetPosition))
-        {
-            // Let InteractionManager handle the interaction
-            return;
-        }
-        
-        // No interactable found, use unified movement method from base class
-        MoveToPlayerPosition(targetPosition);
-    }
 
-    /// <summary>
-    /// Check if there's an interactable object at the clicked position and trigger interaction
-    /// </summary>
-    private bool CheckForInteractableAtPosition(Vector3 targetPosition)
-    {
-        // Use a small sphere to detect nearby interactables
-        Collider[] colliders = Physics.OverlapSphere(targetPosition, 1f);
-        
-        foreach (var collider in colliders)
-        {
-            var clickable = collider.GetComponent<IClickable>();
-            if (clickable != null)
-            {
-                Debug.Log($"[Player] Found clickable: {collider.name}, CanInteract: {clickable.CanInteract}");
-                if (clickable.CanInteract)
-                {
-                    // Found an interactable, trigger its click event
-                    clickable.OnClick(targetPosition);
-                    return true;
-                }
-            }
-        }
-        
-        return false;
-    }
+
+
 
     // 处理使用装备输入
     private void OnUseEquipInput()

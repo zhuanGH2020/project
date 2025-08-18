@@ -35,8 +35,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -31.794586, y: 0}
+  m_SizeDelta: {x: 63.5892, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5279744134047802131
 CanvasRenderer:
@@ -59,11 +59,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.7372549}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
-  m_Sprite: {fileID: 21300000, guid: f431a2ca05f06a84da209947f88d75fc, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d51446bc32140449906ebe9d6406e47, type: 3}
   m_CustomUV: 0
   m_UVRect:
     serializedVersion: 2
@@ -75,7 +75,7 @@ MonoBehaviour:
   m_RoundCorners: 0
   m_RoundRadius: 0
   m_RoundTriangles: 1
-  m_Type: 1
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -424,7 +424,7 @@ MonoBehaviour:
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
-  m_Sprite: {fileID: 21300000, guid: a690886e108ea034192355d5b904083c, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 8b5abe0cc874def46bba3973f6b8d568, type: 3}
   m_CustomUV: 0
   m_UVRect:
     serializedVersion: 2
@@ -436,7 +436,7 @@ MonoBehaviour:
   m_RoundCorners: 0
   m_RoundRadius: 0
   m_RoundTriangles: 0
-  m_Type: 1
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4

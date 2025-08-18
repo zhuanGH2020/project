@@ -5,17 +5,10 @@ using System.Collections;
 /// 烹饪锅组件 - 处理玩家与锅的交互
 /// 需要挂载到锅的GameObject上
 /// </summary>
-public class CookingPot : Building, IClickable
+public class CookingPot : Building
 {
-    [Header("Cooking Settings")]
-    [SerializeField] private float _interactionRange = 3f;  // 交互范围
-    
-    private bool _playerInRange = false;
-    private Player _player;
-    
-    // 重写CanInteract属性，允许远距离点击触发寻路
-    // 只要基础交互条件满足就可以点击，具体的范围检查在OnClick中处理
-    public new bool CanInteract => base.CanInteract;
+    private float _interactionRange = 3f;  // 交互范围    
+
 
     protected override void Awake()
     {
@@ -26,8 +19,6 @@ public class CookingPot : Building, IClickable
 
     private void Start()
     {
-        _player = Player.Instance;
-        
         // 订阅输入事件
         if (InputManager.Instance != null)
         {
@@ -43,155 +34,81 @@ public class CookingPot : Building, IClickable
         }
     }
 
-    private void Update()
-    {
-        CheckPlayerRange();
-    }
+    // 范围检查由InteractionManager统一处理，CookingPot不需要自己检查
 
     /// <summary>
-    /// 检查玩家是否在交互范围内
+    /// 重写点击处理 - 触发交互事件让InteractionManager处理寻路
     /// </summary>
-    private void CheckPlayerRange()
+    public override void OnClick(Vector3 clickPosition)
     {
-        if (_player == null) return;
+        if (!CanInteract) return;
 
-        float distance = Vector3.Distance(transform.position, _player.transform.position);
-        bool wasInRange = _playerInRange;
-        _playerInRange = distance <= _interactionRange;
-
-        // 范围状态改变时的处理
-        if (_playerInRange != wasInRange)
-        {
-            if (_playerInRange)
-            {
-                // 发布进入交互范围事件
-                EventManager.Instance.Publish(new CookingInteractionEvent(true, this));
-            }
-            else
-            {
-                // 发布离开交互范围事件
-                EventManager.Instance.Publish(new CookingInteractionEvent(false, this));
-                
-                // 关闭烹饪界面
-                CookingModel.Instance.CloseCookingUI();
-            }
-        }
+        // 触发交互事件，让InteractionManager处理寻路
+        EventManager.Instance.Publish(new ObjectInteractionEvent(this, clickPosition));
     }
 
     /// <summary>
     /// 处理按键输入（E键对应30002装备ID）
+    /// 由InteractionManager处理范围检查，这里检查玩家是否在交互范围内
     /// </summary>
     private void OnEquipShortcutInput(int equipId)
     {
-        if (equipId == 30002 && _playerInRange) // E键对应30002
+        if (equipId == 30002) // E键对应30002
         {
-            // 如果烹饪UI已经打开，则关闭它；否则打开
-            if (CookingModel.Instance.IsUIOpen)
+            // 检查玩家是否在交互范围内
+            var player = Player.Instance;
+            if (player != null)
             {
-                CookingModel.Instance.CloseCookingUI();
-            }
-            else
-            {
-                OpenCookingUI();
-            }
-        }
-    }
-
-    /// <summary>
-    /// 点击锅时的处理逻辑
-    /// - 如果玩家在范围内：直接打开烹饪界面
-    /// - 如果玩家不在范围内：触发寻路，走到锅附近再打开烹饪界面
-    /// </summary>
-    public void OnClick(Vector3 clickPosition)
-    {
-        if (_playerInRange)
-        {
-            // 玩家在范围内，直接打开UI
-            OpenCookingUI();
-        }
-        else
-        {
-            // 玩家不在范围内，触发寻路
-            StartMoveToInteract(clickPosition);
-        }
-    }
-
-    /// <summary>
-    /// 开始移动到锅并交互
-    /// </summary>
-    private void StartMoveToInteract(Vector3 clickPosition)
-    {
-        var player = Player.Instance;
-        if (player == null) return;
-
-        // 计算交互位置（在锅的交互范围边缘）
-        Vector3 interactionPosition = GetOptimalInteractionPosition(player.transform.position);
-        
-        // 使用Player的移动方法
-        player.MoveToPosition(interactionPosition);
-        
-        // 开始监听到达事件
-        StartCoroutine(MonitorPlayerArrival(interactionPosition));
-        
-        Debug.Log($"[CookingPot] 开始寻路到烹饪锅，目标位置: {interactionPosition}");
-    }
-
-    /// <summary>
-    /// 计算最佳交互位置
-    /// </summary>
-    private Vector3 GetOptimalInteractionPosition(Vector3 playerPosition)
-    {
-        Vector3 potPosition = transform.position;
-        Vector3 direction = (playerPosition - potPosition).normalized;
-        
-        // 在交互范围边缘放置目标点（留一点缓冲）
-        float targetDistance = Mathf.Max(1f, _interactionRange - 0.5f);
-        return potPosition + direction * targetDistance;
-    }
-
-    /// <summary>
-    /// 监控玩家是否到达目标位置
-    /// </summary>
-    private System.Collections.IEnumerator MonitorPlayerArrival(Vector3 targetPosition)
-    {
-        var player = Player.Instance;
-        if (player == null) yield break;
-
-        var navAgent = player.GetComponent<UnityEngine.AI.NavMeshAgent>();
-        
-        // 监控玩家移动，直到到达目标或停止移动
-        while (player != null)
-        {
-            float distanceToTarget = Vector3.Distance(player.transform.position, transform.position);
-            
-            // 检查是否已经在交互范围内
-            if (distanceToTarget <= _interactionRange)
-            {
-                // 玩家到达交互范围，打开烹饪界面
-                OpenCookingUI();
-                Debug.Log("[CookingPot] 玩家到达目标位置，打开烹饪界面");
-                yield break;
-            }
-            
-            // 检查玩家是否停止移动（路径被阻挡或到达了NavMesh能到达的最近位置）
-            if (navAgent != null && !navAgent.pathPending && navAgent.remainingDistance < 0.1f)
-            {
-                // 如果玩家停止移动且距离较近，也尝试打开UI
-                if (distanceToTarget <= _interactionRange * 2f)
+                float distance = Vector3.Distance(transform.position, player.transform.position);
+                if (distance <= _interactionRange)
                 {
-                    OpenCookingUI();
-                    Debug.Log("[CookingPot] 玩家停止移动但较接近目标，打开烹饪界面");
-                    yield break;
-                }
-                else
-                {
-                    Debug.Log("[CookingPot] 玩家无法到达目标位置，取消交互");
-                    yield break;
+                    // 如果烹饪UI已经打开，则关闭它；否则打开
+                    if (CookingModel.Instance.IsUIOpen)
+                    {
+                        CookingModel.Instance.CloseCookingUI();
+                    }
+                    else
+                    {
+                        OpenCookingUI();
+                    }
                 }
             }
-            
-            yield return new WaitForSeconds(0.1f); // 每0.1秒检查一次
         }
+    }
+
+    /// <summary>
+    /// 重写交互逻辑 - 打开烹饪界面
+    /// 此方法由InteractionManager在玩家到达后调用，或玩家在范围内时直接调用
+    /// </summary>
+    public override void OnInteract(Vector3 clickPosition)
+    {
+        base.OnInteract(clickPosition);
+        OpenCookingUI();
+    }
+
+    /// <summary>
+    /// 玩家进入烹饪锅交互范围时调用
+    /// </summary>
+    public override void OnEnterInteractionRange()
+    {
+        base.OnEnterInteractionRange();
+        
+        // 发布进入交互范围事件，用于显示UI提示
+        EventManager.Instance.Publish(new CookingInteractionEvent(true, this));
+    }
+
+    /// <summary>
+    /// 玩家离开烹饪锅交互范围时调用
+    /// </summary>
+    public override void OnLeaveInteractionRange()
+    {
+        base.OnLeaveInteractionRange();
+        
+        // 发布离开交互范围事件，用于隐藏UI提示
+        EventManager.Instance.Publish(new CookingInteractionEvent(false, this));
+        
+        // 关闭烹饪界面
+        CookingModel.Instance.CloseCookingUI();
     }
 
     /// <summary>
@@ -202,7 +119,7 @@ public class CookingPot : Building, IClickable
         CookingModel.Instance.OpenCookingUI(transform.position);
     }
 
-    public float GetInteractionRange()
+    public override float GetInteractionRange()
     {
         return _interactionRange;
     }

@@ -71,15 +71,16 @@ public static class ConfigExample
             }
         }
 
-        // 2. 使用字符串作为key
+        // 2. 使用字符串作为key - 示例已注释避免查询不存在的数据
         var itemReader = ConfigManager.Instance.GetReader("Item");
         if (itemReader != null)
         {
-            var itemKey = "WOOD";
-            var itemName = itemReader.GetValue<string>(itemKey, "Name");
-            Debug.Log($"物品 {itemKey}: {itemName}");
+            // 注释掉可能不存在的测试key
+            // var itemKey = "WOOD";
+            // var itemName = itemReader.GetValue<string>(itemKey, "Name");
+            // Debug.Log($"物品 {itemKey}: {itemName}");
 
-            // 遍历所有字符串key
+            // 遍历实际存在的字符串key
             foreach (var key in itemReader.GetAllKeysOfType<string>())
             {
                 var name = itemReader.GetValue<string>(key, "Name");
@@ -91,19 +92,16 @@ public static class ConfigExample
     }
 
     /// <summary>
-    /// 数据验证和错误处理示例
+    /// 数据验证和错误处理示例 - 已禁用避免产生警告日志
     /// </summary>
     public static void ValidationExample()
     {
-        Debug.Log("=== 验证示例 ===");
+        Debug.Log("=== 验证示例 (已禁用) ===");
 
-        // // 尝试加载不存在的配置（已注释，避免错误日志）
-        // var reader = ConfigManager.Instance.GetReader("NonExistent");
-        // if (reader == null)
-        // {
-        //     Debug.Log("预期结果：未加载配置的读取器为null");
-        // }
-
+        // 注释掉测试代码以避免产生警告日志
+        // 如需测试配置系统错误处理，可以取消注释以下代码：
+        
+        /*
         // 加载有效配置并测试数据验证
         var reader = ConfigManager.Instance.GetReader("Tool");
         if (reader != null)
@@ -118,12 +116,9 @@ public static class ConfigExample
             var invalidColumn = reader.GetValue<string>(validKey, "InvalidColumn", "默认值");
             Debug.Log($"无效列结果: {invalidColumn}");
 
-            // // 测试枚举解析
-            // var invalidType = reader.GetValue<ToolType>(validKey, "InvalidType", ToolType.None);
-            // Debug.Log($"无效枚举结果: {invalidType}");
-
             ConfigManager.Instance.ClearConfig("Tool");
         }
+        */
 
         Debug.Log("=== 验证示例完成 ===");
     }

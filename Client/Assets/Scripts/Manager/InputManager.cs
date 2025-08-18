@@ -19,7 +19,6 @@ public class InputManager
     public event Func<Vector3, bool> OnLeftClickHighPriority;  // 高优先级（UI、建筑放置）- 返回true消费事件
     public event Action<Vector3> OnLeftClickLowPriority;       // 低优先级（普通交互）
     public event Action OnRightClick;                          // 右键点击
-    public event Action<Vector3> OnMouseClickMove;             // 低优先级移动（Player使用）
     
     // 攻击输入事件
     public event Action<Vector3> OnAttackClick;                // 攻击点击事件（点击怪物攻击）
@@ -105,38 +104,62 @@ public class InputManager
             return;
         }
 
-        // 点击了非UI区域，获取世界坐标
+        // 点击了非UI区域，获取世界坐标和碰撞对象
         Vector3 mouseWorldPos = Vector3.zero;
+        bool eventConsumed = false;
+        
         if (InputUtils.GetMouseWorldHit(out RaycastHit hit))
         {
             mouseWorldPos = hit.point;
+            
+            // 1. 先处理高优先级事件（TouchView建筑放置、UI交互等）
+            if (OnLeftClickHighPriority != null)
+            {
+                foreach (Func<Vector3, bool> handler in OnLeftClickHighPriority.GetInvocationList())
+                {
+                    if (handler(mouseWorldPos))
+                    {
+                        eventConsumed = true;
+                        break; // 高优先级事件被消费，停止所有后续处理
+                    }
+                }
+            }
+            
+            // 2. 如果高优先级事件未消费，检查是否点击了可交互对象
+            if (!eventConsumed)
+            {
+                var clickable = hit.collider.GetComponent<IClickable>();
+                if (clickable != null && clickable.CanInteract)
+                {
+                    // 直接让被点击的对象处理交互
+                    clickable.OnClick(hit.point);
+                    eventConsumed = true; // 交互事件被消费，不再传递给移动
+                }
+            }
         }
         else
         {
-            // 即使没有碰撞到物体，也计算世界坐标
+            // 即使没有碰撞到物体，也计算世界坐标用于移动
             mouseWorldPos = Camera.main ? Camera.main.ScreenToWorldPoint(Input.mousePosition) : Vector3.zero;
-        }
-
-        // 优先级事件处理系统 - 从源头控制时序问题
-        // 1. 先处理高优先级事件（TouchView建筑放置、UI交互等）
-        bool eventConsumed = false;
-        if (OnLeftClickHighPriority != null)
-        {
-            foreach (Func<Vector3, bool> handler in OnLeftClickHighPriority.GetInvocationList())
+            
+            // 处理高优先级事件
+            if (OnLeftClickHighPriority != null)
             {
-                if (handler(mouseWorldPos))
+                foreach (Func<Vector3, bool> handler in OnLeftClickHighPriority.GetInvocationList())
                 {
-                    eventConsumed = true;
-                    break; // 高优先级事件被消费，停止所有后续处理
+                    if (handler(mouseWorldPos))
+                    {
+                        eventConsumed = true;
+                        break;
+                    }
                 }
             }
         }
         
-        // 2. 只有高优先级事件未被消费时，才处理低优先级事件（普通交互、移动等）
+        // 3. 只有在事件未被消费时，才处理低优先级事件（攻击等）
         if (!eventConsumed)
         {
             OnLeftClickLowPriority?.Invoke(mouseWorldPos);
-            OnMouseClickMove?.Invoke(mouseWorldPos); // Player移动事件
             OnAttackClick?.Invoke(mouseWorldPos); // 攻击事件（由具体系统判断是否为攻击）
         }
 
