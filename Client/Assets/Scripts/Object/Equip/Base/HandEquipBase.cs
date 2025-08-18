@@ -16,11 +16,11 @@ public abstract class HandEquipBase : EquipBase
         base.ApplyEquipEffect();
 
         // 获取装备配置
-        var equipConfig = EquipManager.Instance.GetEquip(_configId);
-        if (equipConfig == null) return;
+        var equipReader = ConfigManager.Instance.GetReader("Equip");
+        if (equipReader == null || !equipReader.HasKey(_configId)) return;
 
         // 获取模型预制体路径
-        string modelPath = equipConfig.Csv.GetValue<string>(_configId, "ModelPath");
+        string modelPath = equipReader.GetValue<string>(_configId, "ModelPath", "");
         if (string.IsNullOrEmpty(modelPath)) return;
         
         // 加载并实例化模型

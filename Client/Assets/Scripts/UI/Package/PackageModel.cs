@@ -63,9 +63,13 @@ public class PackageModel
     private List<PackageItem> _packageItems = new List<PackageItem>();
     private PackageItem _selectedItem; // 当前选中的物品
 
+    // 装备管理已移至EquipManager
+
     // 公共属性
     public List<PackageItem> PackageItems => _packageItems;
     public PackageItem SelectedItem => _selectedItem;
+    
+    // 装备相关属性已移至EquipManager
 
     // 公共方法
     /// <summary>
@@ -341,6 +345,8 @@ public class PackageModel
         EventManager.Instance.Publish(new PackageRefreshEvent(_packageItems.Count));
     }
     
+    // 装备管理已移至EquipManager
+    
     /// <summary>
     /// 清除选中状态（不放回背包）- 用于物品被完全消耗的情况
     /// </summary>
@@ -354,4 +360,10 @@ public class PackageModel
             _selectedItem = null;
         }
     }
+
+    // 装备管理已移至EquipManager
+    
+    // 装备管理已移至EquipManager
+    
+    // 装备管理已移至EquipManager
 }

@@ -444,7 +444,17 @@ public class SaveModel
         {
             saveData.currentHealth = player.CurrentHealth;
             saveData.playerPosition = player.transform.position;
-            saveData.equippedItems = player.GetEquippedItemIds();
+        }
+        
+        // 保存装备数据（从EquipManager获取）
+        saveData.equippedItems.Clear();
+        var equippedItemIds = EquipManager.Instance.GetAllEquippedItemIds();
+        foreach (var kvp in equippedItemIds)
+        {
+            if (kvp.Value > 0)
+            {
+                saveData.equippedItems.Add(kvp.Value);
+            }
         }
         
         // 保存建筑数据
@@ -478,13 +488,10 @@ public class SaveModel
         {
             player.SetHealth(saveData.currentHealth);
             player.transform.position = saveData.playerPosition;
-            
-            // 重新装备道具
-            foreach (int equipId in saveData.equippedItems)
-            {
-                player.Equip(equipId);
-            }
         }
+            
+        // 加载装备数据
+        EquipManager.Instance.LoadEquippedItemsFromSave(saveData.equippedItems);
         
         // 应用建筑数据
         var mapModel = MapModel.Instance;

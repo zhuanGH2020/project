@@ -165,19 +165,21 @@ public abstract class CombatEntity : DamageableObject, IAttacker
     /// <summary>
     /// 通过装备ID装备物品
     /// </summary>
-    public virtual void Equip(int equipId)
+    /// <param name="equipId">装备ID</param>
+    /// <returns>是否装备成功</returns>
+    public virtual bool Equip(int equipId)
     {
         // 获取装备配置
-        var equipConfig = EquipManager.Instance.GetEquip(equipId);
-        if (equipConfig == null)
+        var equipReader = ConfigManager.Instance.GetReader("Equip");
+        if (equipReader == null || !equipReader.HasKey(equipId))
         {
             Debug.LogError($"[CombatEntity] Equipment config not found: {equipId}");
-            return;
+            return false;
         }
 
         // 根据配置类型创建对应的装备组件
         EquipBase equip = null;
-        EquipType equipType = equipConfig.Csv.GetValue<EquipType>(equipId, "EquipType");
+        EquipType equipType = equipReader.GetValue<EquipType>(equipId, "EquipType", EquipType.None);
         
         switch (equipType)
         {
@@ -202,7 +204,7 @@ public abstract class CombatEntity : DamageableObject, IAttacker
                 break;
             default:
                 Debug.LogError($"[CombatEntity] Unknown equipment type: {equipType}");
-                return;
+                return false;
         }
 
         if (equip != null)
@@ -212,7 +214,10 @@ public abstract class CombatEntity : DamageableObject, IAttacker
             
             // 调用原有装备方法
             EquipInternal(equip);
+            return true;
         }
+        
+        return false;
     }
 
     /// <summary>

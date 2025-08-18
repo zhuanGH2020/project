@@ -12,11 +12,11 @@ public abstract class BodyEquipBase : EquipBase
         base.ApplyEquipEffect();
 
         // 获取装备配置
-        var equipConfig = EquipManager.Instance.GetEquip(_configId);
-        if (equipConfig == null) return;
+        var equipReader = ConfigManager.Instance.GetReader("Equip");
+        if (equipReader == null || !equipReader.HasKey(_configId)) return;
 
         // 获取材质路径
-        string materialPath = equipConfig.Csv.GetValue<string>(_configId, "MaterialPath");
+        string materialPath = equipReader.GetValue<string>(_configId, "MaterialPath", "");
         if (string.IsNullOrEmpty(materialPath)) return;
         /*
         // 加载材质

@@ -53,22 +53,22 @@ public abstract class EquipBase : MonoBehaviour, IEquipable
         _configId = configId;
         
         // 从配置表读取装备属性
-        var equipConfig = EquipManager.Instance.GetEquip(configId);
-        if (equipConfig == null)
+        var equipReader = ConfigManager.Instance.GetReader("Equip");
+        if (equipReader == null || !equipReader.HasKey(configId))
         {
             Debug.LogError($"[EquipBase] Equipment config not found: {configId}");
             return;
         }
 
         // 初始化基础属性
-        _equipPart = equipConfig.Csv.GetValue<EquipPart>(_configId, "Type");
+        _equipPart = equipReader.GetValue<EquipPart>(_configId, "Type", EquipPart.None);
 
-        _damage = equipConfig.Csv.GetValue<float>(_configId, "Damage");
-        _defense = equipConfig.Csv.GetValue<float>(_configId, "Defense");
-        _maxDurability = equipConfig.Csv.GetValue<float>(_configId, "Durability");
-        _durabilityLoss = equipConfig.Csv.GetValue<float>(_configId, "DurabilityLoss");
-        _useCooldown = equipConfig.Csv.GetValue<float>(_configId, "UseCooldown");
-        _range = equipConfig.Csv.GetValue<float>(_configId, "Range");
+        _damage = equipReader.GetValue<float>(_configId, "Damage", 0f);
+        _defense = equipReader.GetValue<float>(_configId, "Defense", 0f);
+        _maxDurability = equipReader.GetValue<float>(_configId, "Durability", 100f);
+        _durabilityLoss = equipReader.GetValue<float>(_configId, "DurabilityLoss", 1f);
+        _useCooldown = equipReader.GetValue<float>(_configId, "UseCooldown", 0.5f);
+        _range = equipReader.GetValue<float>(_configId, "Range", 0f);
 
         // 用配置表的值初始化运行时数据
         _currentDurability = _maxDurability;
