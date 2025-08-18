@@ -249,28 +249,7 @@ public class MapModel
         // 数据变化时的通用处理
     }
     
-    /// <summary>
-    /// 获取指定XZ坐标的地面位置（自动检测地形高度）
-    /// </summary>
-    private Vector3 GetGroundPosition(float posX, float posZ)
-    {
-        // 从较高位置向下发射射线检测地面
-        Vector3 rayStart = new Vector3(posX, 100f, posZ);
-        Vector3 rayDirection = Vector3.down;
-        
-        // 射线检测地面
-        if (Physics.Raycast(rayStart, rayDirection, out RaycastHit hit, 200f))
-        {
-            // 检测到地面，使用检测到的高度
-            return hit.point;
-        }
-        else
-        {
-            // 未检测到地面，使用默认高度
-            Debug.LogWarning($"[MapModel] 在位置 ({posX}, {posZ}) 未检测到地面，使用默认高度 0");
-            return new Vector3(posX, 0f, posZ);
-        }
-    }
+
     
     /// <summary>
     /// 加载并实例化建筑物预制体
@@ -301,7 +280,7 @@ public class MapModel
         }
         
         // 检测地形高度并实例化预制体到世界位置
-        Vector3 worldPosition = GetGroundPosition(posX, posY);
+        Vector3 worldPosition = MapUtils.GetGroundPosition(posX, posY);
         GameObject buildingInstance = GameObject.Instantiate(prefab, worldPosition, Quaternion.identity);
         
         // 将创建的GameObject添加到跟踪列表

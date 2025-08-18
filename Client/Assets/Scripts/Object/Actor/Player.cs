@@ -22,6 +22,18 @@ public partial class Player : CombatEntity
     private readonly int[] _weaponCooldownDialogIds = { 120, 121, 122 };       // 武器冷却
     private readonly int[] _distanceTooFarDialogIds = { 130, 131, 132, 133 };  // 距离太远
 
+    // 重写DamageableObject的抽象属性
+    public override float MaxHealth => GameSettings.PlayerMaxHealth;
+    public override float Defense => base.Defense;
+    public override bool CanInteract => _currentHealth > 0;
+    public override float GetInteractionRange() => 2f;
+
+    // 重写OnClick方法实现玩家点击逻辑
+    public override void OnClick(Vector3 clickPosition)
+    {
+        Debug.Log("player click");
+    }
+
     protected override void Awake()
     {
         base.Awake();
@@ -32,12 +44,18 @@ public partial class Player : CombatEntity
         }
         _instance = this;
         
-        // 设置玩家移动速度
-        _moveSpeed = 5f;
+        // 从NavMeshAgent获取移动速度（如果存在的话）
+        if (_navMeshAgent != null)
+        {
+            _moveSpeed = _navMeshAgent.speed;
+        }
+        else
+        {
+            // 如果没有NavMeshAgent，使用默认速度
+            _moveSpeed = 5f;
+        }
         
-        // 设置玩家最大血量
-        _maxHealth = GameSettings.PlayerMaxHealth;
-        _currentHealth = _maxHealth;
+        // 玩家血量通过MaxHealth属性管理，_currentHealth在基类Awake中初始化
         
         // 订阅输入事件
         SubscribeToInputEvents();
@@ -176,8 +194,12 @@ public partial class Player : CombatEntity
             
             // 直接设置朝向
             transform.rotation = Quaternion.LookRotation(_moveDirection);
+            
+            // 获取当前速度（优先使用NavMeshAgent的speed，否则使用_moveSpeed）
+            float currentSpeed = (_navMeshAgent != null) ? _navMeshAgent.speed : _moveSpeed;
+            
             // 移动
-            transform.position += _moveDirection * _moveSpeed * Time.deltaTime;
+            transform.position += _moveDirection * currentSpeed * Time.deltaTime;
         }
     }
 
@@ -290,13 +312,16 @@ public partial class Player : CombatEntity
     /// </summary>
     private void OnAttackHold(bool isHolding)
     {
+        bool wasInContinuousAttack = _isContinuousAttack;
         _isContinuousAttack = isHolding;
+        
         if (isHolding)
         {
             Debug.Log("[Player] 开始连续攻击模式");
         }
-        else
+        else if (wasInContinuousAttack)
         {
+            // 只有在确实处于连续攻击状态时才输出结束日志
             Debug.Log("[Player] 结束连续攻击模式");
         }
     }

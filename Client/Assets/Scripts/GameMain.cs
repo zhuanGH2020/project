@@ -4,109 +4,102 @@ using UnityEngine;
 
 public class GameMain : MonoBehaviour
 {
-    private static GameMain _instance;
-    public static GameMain Instance => _instance;
-
     void Awake()
     {
-        // 单例模式：确保只有一个GameMain实例
-        if (_instance != null && _instance != this)
-        {
-            Debug.LogWarning("[GameMain] Multiple GameMain instances detected. Destroying duplicate.");
-            Destroy(gameObject);
-            return;
-        }
-        
-        _instance = this;
-        DontDestroyOnLoad(gameObject);  // 可选：跨场景保持
-        
-        Debug.Log("[GameMain] GameMain instance initialized");
+        DontDestroyOnLoad(gameObject);
     }
 
-    // Start is called before the first frame update
     void Start()
     {
+        // 临时：配置系统示例代码
         ConfigExample.Example();
         ConfigExample.AdvancedExample();
         ConfigExample.ValidationExample();
 
-        // 初始化对象管理器 - 确保在其他系统之前
-        _ = ObjectManager.Instance; // Trigger lazy initialization
-        Debug.Log("[GameMain] ObjectManager initialized");
-
-        // 初始化各个Model - 按依赖顺序初始化
-        var inputManager = InputManager.Instance;
-        var clockModel = ClockModel.Instance;
-        var packageModel = PackageModel.Instance;
-        var mapModel = MapModel.Instance;
-        
-        // 初始化交互管理器 - 确保交互系统可用
-        if (InteractionManager.Instance == null)
-        {
-            var interactionManagerGO = new GameObject("InteractionManager");
-            interactionManagerGO.AddComponent<InteractionManager>();
-        }
-        
-        // 初始化地图管理器 - 确保地图生成系统可用
-        var mapManager = MapManager.Instance;
-        
-        // 初始化对话管理器 - 确保对话系统可用
-        var dialogManager = DialogManager.Instance;
-        
-        // 初始化存档模型 - 确保在所有数据Model之后
-        var saveModel = SaveModel.Instance;
-        saveModel.Initialize();
-        
-        // 初始化UI管理器 - 确保UI系统可用
-        var uiManager = UIManager.Instance;
-        
-        Debug.Log("[GameMain] All systems initialized");
+        InitializeSystems();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        // 驱动需要更新的Model
+        UpdateSystems();
+        PeriodicCleanup();
+    }
+    
+    void OnDestroy()
+    {
+        CleanupSystems();
+    }
+
+    /// <summary>
+    /// 初始化所有系统 - 按依赖顺序执行
+    /// </summary>
+    private void InitializeSystems()
+    {
+        // === 基础系统初始化（无依赖） ===
+        _ = ObjectManager.Instance;
+        _ = InputManager.Instance;
+        _ = ClockModel.Instance;
+        _ = PackageModel.Instance;
+        _ = MapModel.Instance;
+        _ = MapManager.Instance;
+        _ = DialogManager.Instance;
+        _ = UIManager.Instance;
+        
+        // === 依赖系统初始化（需要其他系统支持） ===
+        InteractionManager.Instance.Initialize();
+        CombatInputManager.Instance.Initialize();
+        SaveModel.Instance.Initialize();
+    }
+
+    /// <summary>
+    /// 更新所有系统 - 按优先级顺序执行
+    /// </summary>
+    private void UpdateSystems()
+    {
+        // 输入系统 - 最高优先级
         InputManager.Instance.Update();
+        
+        // 游戏逻辑系统
         ClockModel.Instance.UpdateTime();
         MapManager.Instance.UpdateSpawning();
+        InteractionManager.Instance.Update();
         
-        // 驱动存档模型（处理自动保存）
+        // 数据持久化系统
         SaveModel.Instance.Update();
         
-        // 驱动对话管理器
+        // UI系统 - 最后更新
         DialogManager.Instance.Update();
-        
-        // 驱动UI管理器
         UIManager.Instance.Update();
-        
-        // 定期清理ObjectManager中的空引用（每10秒一次）
+    }
+
+    /// <summary>
+    /// 定期清理任务
+    /// </summary>
+    private void PeriodicCleanup()
+    {
+        // 每10秒清理一次空引用
         if (Time.time % 10f < Time.deltaTime)
         {
             ObjectManager.Instance.CleanupNullReferences();
         }
     }
-    
-    void OnDestroy()
+
+    /// <summary>
+    /// 清理所有系统 - 按反向依赖顺序执行
+    /// </summary>
+    private void CleanupSystems()
     {
-        // 清理单例引用
-        if (_instance == this)
-        {
-            _instance = null;
-        }
-        
+        // 先清理依赖系统
         SaveModel.Instance.Cleanup();
+        CombatInputManager.Instance.Cleanup();
+        InteractionManager.Instance.Cleanup();
         
-        // 清理地图管理器
+        // 再清理基础系统
         MapManager.Instance.Cleanup();
-        
-        // 清理对话管理器
         DialogManager.Instance.Cleanup();
-        
-        // 清理UI管理器
         UIManager.Instance.Cleanup();
         
-        // 清理对象管理器
+        // 最后清理对象管理器
         if (ObjectManager.HasInstance)
         {
             ObjectManager.Instance.ClearAll();

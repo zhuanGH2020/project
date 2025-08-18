@@ -68,8 +68,13 @@ public class ClockModel
             UpdateTimeProgress();
             UpdateTimeOfDay();
         }
-        UpdateMainLightRotation();
-        UpdateAmbientIntensity();
+        
+        // 仅当启用灯光效果时更新灯光相关
+        if (GameSettings.ClockEnableLightingEffects)
+        {
+            UpdateMainLightRotation();
+            UpdateAmbientIntensity();
+        }
     }
 
     // 私有方法
@@ -78,11 +83,14 @@ public class ClockModel
         _dayProgress = 0f;
         _currentTimeOfDay = TimeOfDay.Day;
         
-        // 设置主光源初始旋转
-        Light mainLight = RenderSettings.sun;
-        if (mainLight != null)
+        // 设置主光源初始旋转（仅当启用灯光效果时）
+        if (GameSettings.ClockEnableLightingEffects)
         {
-            mainLight.transform.rotation = Quaternion.Euler(GameSettings.ClockDayMainLightRotation);
+            Light mainLight = RenderSettings.sun;
+            if (mainLight != null)
+            {
+                mainLight.transform.rotation = Quaternion.Euler(GameSettings.ClockDayMainLightRotation);
+            }
         }
     }
 
@@ -112,7 +120,11 @@ public class ClockModel
             TimeOfDay previousTime = _currentTimeOfDay;
             _currentTimeOfDay = newTimeOfDay;
             
-            UpdateMainLight(previousTime);
+            // 仅当启用灯光效果时更新主光源
+            if (GameSettings.ClockEnableLightingEffects)
+            {
+                UpdateMainLight(previousTime);
+            }
             EventManager.Instance.Publish(new TimeOfDayChangeEvent(previousTime, _currentTimeOfDay));
         }
     }
@@ -126,6 +138,10 @@ public class ClockModel
 
     private void UpdateMainLight(TimeOfDay previousTime)
     {
+        // 如果未启用灯光效果，直接返回
+        if (!GameSettings.ClockEnableLightingEffects)
+            return;
+            
         Light mainLight = RenderSettings.sun;
         if (mainLight != null)
         {
@@ -207,7 +223,7 @@ public class ClockModel
     /// </summary>
     private void UpdateMainLightRotation()
     {
-        if (!_isRotating) return;
+        if (!_isRotating || !GameSettings.ClockEnableLightingEffects) return;
 
         Light mainLight = RenderSettings.sun;
         if (mainLight == null) return;
@@ -229,6 +245,8 @@ public class ClockModel
     /// </summary>
     private void StartMainLightRotation(Vector3 targetRotation, float duration)
     {
+        if (!GameSettings.ClockEnableLightingEffects) return;
+        
         Light mainLight = RenderSettings.sun;
         if (mainLight == null) return;
 
@@ -244,7 +262,7 @@ public class ClockModel
     /// </summary>
     private void UpdateAmbientIntensity()
     {
-        if (!_isAmbientTransitioning) return;
+        if (!_isAmbientTransitioning || !GameSettings.ClockEnableLightingEffects) return;
 
         _ambientTimer += Time.deltaTime;
         float progress = Mathf.Clamp01(_ambientTimer / _ambientDuration);
@@ -263,6 +281,8 @@ public class ClockModel
     /// </summary>
     private void StartAmbientIntensityTransition(float targetIntensity, float duration)
     {
+        if (!GameSettings.ClockEnableLightingEffects) return;
+        
         _startAmbientIntensity = RenderSettings.ambientIntensity;
         _targetAmbientIntensity = targetIntensity;
         _ambientTimer = 0f;
@@ -275,7 +295,12 @@ public class ClockModel
         _clockDay = Mathf.Clamp(day, 1, _maxDays);
         _dayProgress = Mathf.Clamp01(progress);
         _currentTimeOfDay = timeOfDay;
-        UpdateMainLight(_currentTimeOfDay);
+        
+        // 仅当启用灯光效果时更新主光源
+        if (GameSettings.ClockEnableLightingEffects)
+        {
+            UpdateMainLight(_currentTimeOfDay);
+        }
     }
 
     /// <summary>
@@ -296,6 +321,11 @@ public class ClockModel
         if (!_isTimePaused) return;
 
         _isTimePaused = false;
-        UpdateMainLight(_currentTimeOfDay);
+        
+        // 仅当启用灯光效果时更新主光源
+        if (GameSettings.ClockEnableLightingEffects)
+        {
+            UpdateMainLight(_currentTimeOfDay);
+        }
     }
 }

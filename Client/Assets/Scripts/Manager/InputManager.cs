@@ -1,7 +1,10 @@
 using UnityEngine;
 using System;
 
-// 输入管理器 - 统一处理玩家键盘和鼠标输入
+/// <summary>
+/// 输入管理器 - 统一处理玩家键盘和鼠标输入，专注于输入捕获和事件分发
+/// 职责：检测输入、UI碰撞检测、优先级事件分发，不包含具体业务逻辑
+/// </summary>
 public class InputManager
 {
     private static InputManager _instance;
@@ -129,19 +132,12 @@ public class InputManager
             }
         }
         
-        // 2. 只有高优先级事件未被消费时，才处理低优先级事件（Player移动等）
+        // 2. 只有高优先级事件未被消费时，才处理低优先级事件（普通交互、移动等）
         if (!eventConsumed)
-        {
-            // 检查是否点击了怪物进行攻击
-            if (CheckForAttackTarget(mouseWorldPos))
-            {
-                OnAttackClick?.Invoke(mouseWorldPos); // 攻击事件
-            }
-            else
         {
             OnLeftClickLowPriority?.Invoke(mouseWorldPos);
             OnMouseClickMove?.Invoke(mouseWorldPos); // Player移动事件
-            }
+            OnAttackClick?.Invoke(mouseWorldPos); // 攻击事件（由具体系统判断是否为攻击）
         }
 
         // 发布点击非UI区域事件
@@ -199,20 +195,7 @@ public class InputManager
         }
     }
     
-    // 检查点击位置是否有可攻击目标（怪物）
-    private bool CheckForAttackTarget(Vector3 clickPosition)
-    {
-        if (InputUtils.GetMouseWorldHit(out RaycastHit hit))
-        {
-            // 检查是否点击了怪物
-            var monster = hit.collider.GetComponent<Monster>();
-            if (monster != null && monster.CurrentHealth > 0)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
+
     
     // 处理鼠标悬停检测
     private void HandleMouseHover()

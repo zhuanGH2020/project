@@ -123,17 +123,32 @@ public class CombatEntity : DamageableObject, IAttacker
 }
 ```
 
-#### HarvestableObject - 采集物基类
+#### HarvestableObject - 可采集物体
+**位置**: `Assets/Scripts/Object/Item/HarvestableObject.cs`
 ```csharp
-// 继承 DamageableObject，实现 IHarvestable + IClickable
-public class HarvestableObject : DamageableObject, IHarvestable, IClickable
+// 继承 Building，可采集物体基类
+public class HarvestableObject : Building
 {
-    public virtual void OnHarvest(IAttacker harvester)
-    public virtual void OnClick(Vector3 clickPosition)
-    protected virtual void OnHarvestComplete(IAttacker harvester)
-    protected virtual void ProcessDrops(IAttacker harvester)
+    public void Init(int itemId)           // 初始化采集物
+    
+    // 重写Building的交互逻辑 - 实现采集功能
+    protected override void OnInteract(Vector3 clickPosition)
+    
+    // 采集逻辑
+    private bool CanHarvest()              // 检查是否可采集
+    private void PerformHarvest()          // 执行采集
+    
+    // 配置支持
+    public bool IsHarvested { get; }       // 是否已被采集
 }
 ```
+
+**核心特性**：
+- **继承Building寻路**：使用Building的OnClick寻路逻辑
+- **背包友好**：采集后直接添加到玩家背包，不掉落地面
+- **配置驱动**：从Drop.csv读取武器要求和掉落配置
+- **工具支持**：支持专用工具、任意武器或直接采集模式
+- **UI反馈**：提供获得物品提示和背包满提示
 
 ### 角色类
 
@@ -246,15 +261,31 @@ public class Partner : CombatEntity
 ```
 
 #### Building - 建筑基类
-**位置**: `Assets/Scripts/Object/Building/Building.cs`
+**位置**: `Assets/Scripts/Object/Base/Building.cs`
 ```csharp
 // 继承 DamageableObject，建筑物基类
-public class Building : DamageableObject, IClickable
+public class Building : DamageableObject
 {
-    public void Init(int configId)      // 配置驱动初始化
-    public virtual void OnClick(Vector3 clickPosition)
+    public void Initialize(int itemId, Vector2 mapPos, int uid = 0)  // 初始化建筑
+    
+    // 点击处理 - 包含寻路逻辑
+    public override void OnClick(Vector3 clickPosition)
+    
+    // 交互逻辑 - 子类可重写实现自定义交互行为
+    protected virtual void OnInteract(Vector3 clickPosition)
+    
+    // 建筑管理
+    public string GetBuildingName()      // 获取建筑名称
+    public bool UpgradeLevel()           // 升级建筑
+    public void Demolish()               // 拆除建筑
 }
 ```
+
+**核心特性**：
+- **智能寻路**：点击建筑时玩家自动寻路到交互范围内
+- **虚方法重写**：子类通过重写OnInteract实现自定义交互逻辑
+- **配置驱动**：从Item.csv读取建筑属性和血量
+- **地图集成**：与MapModel完全集成，支持保存和加载
 
 #### CookingPot - 烹饪锅
 **位置**: `Assets/Scripts/Object/Building/CookingPot.cs`
@@ -296,26 +327,59 @@ public class HandEquipBase : EquipBase
 }
 ```
 
-### 采集系统
+### 建筑交互系统
 
-#### DirectHarvestable - 直接采集物
+#### 智能寻路机制
+Building.OnClick提供统一的交互体验：
+1. **距离检测**：自动检测玩家与建筑距离
+2. **智能寻路**：距离超出范围时自动寻路到附近
+3. **交互触发**：到达范围后自动调用OnInteract
+4. **容错处理**：移动失败或超时后仍可远程交互
+
+#### 虚方法重写模式
 ```csharp
-// 继承 HarvestableObject，一次性采集物（如草、花、掉落物）
-public class DirectHarvestable : HarvestableObject
+// 基类提供寻路框架
+public class Building : DamageableObject
 {
-    public void SetItemId(int itemId)      // 设置物品ID
-    public void SetDropCount(int count)    // 设置掉落数量
+    protected virtual void OnInteract(Vector3 clickPosition)
+    {
+        // 默认发布通用交互事件
+        var interactionEvent = new ObjectInteractionEvent(this, clickPosition);
+        EventManager.Instance.Publish(interactionEvent);
+    }
+}
+
+// 子类重写实现具体交互逻辑
+public class HarvestableObject : Building
+{
+    protected override void OnInteract(Vector3 clickPosition)
+    {
+        // 实现采集逻辑
+        if (CanHarvest()) PerformHarvest();
+    }
 }
 ```
 
-#### RepeatableHarvestable - 重复采集物
+### 采集系统
+
+#### 配置驱动采集
+HarvestableObject使用Drop.csv配置采集需求：
+- **RequiredWeaponId**: 专用工具ID（如斧头砍树）
+- **AnyWeapon**: 是否需要任意武器（如攻击怪物）
+- **DropItemId1-5**: 最多5种掉落物品
+- **DropCount/Chance**: 每种物品的数量和概率
+
+#### 背包集成
+采集后物品直接进入背包：
 ```csharp
-// 继承 HarvestableObject，可多次收获的采集物（如浆果丛、果树）
-public class RepeatableHarvestable : HarvestableObject
+var success = PackageModel.Instance.AddItem(ItemId, 1);
+if (success)
 {
-    public int CurrentHarvestCount { get; }     // 当前可采集数量
-    public int MaxHarvestCount { get; }         // 最大采集数量
-    public bool IsRegrowing { get; }            // 是否正在重新生长
+    EventManager.Instance.Publish(new NoticeEvent($"获得了 {GetBuildingName()}"));
+}
+else
+{
+    EventManager.Instance.Publish(new NoticeEvent("背包已满！"));
 }
 ```
 

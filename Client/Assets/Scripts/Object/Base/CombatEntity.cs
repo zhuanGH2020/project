@@ -8,20 +8,14 @@ using System.Reflection;
 /// </summary>
 public abstract class CombatEntity : DamageableObject, IAttacker
 {
-    [Header("战斗设置")]
-    [SerializeField] protected float _baseAttack = 10f;
-    [SerializeField] protected float _attackCooldown = 1f;
-
-    [Header("移动设置")]
-    [SerializeField] protected float _moveSpeed = 5f;
-
-    [Header("装备挂载点")]
-    [SerializeField] protected Transform _handPoint;           // 手部挂载点
-    [SerializeField] protected SkinnedMeshRenderer _headMesh; // 头部渲染器
-    [SerializeField] protected SkinnedMeshRenderer _bodyMesh; // 身体渲染器
-
-    [Header("装备")]
-    [SerializeField] protected List<EquipBase> _equips = new List<EquipBase>();  // 装备列表
+    protected float _baseAttack = 10f;
+    protected float _baseDefense = 0f;    // 基础防御值
+    protected float _attackCooldown = 1f;
+    protected float _moveSpeed = 5f;
+    protected Transform _handPoint;           // 手部挂载点
+    protected SkinnedMeshRenderer _headMesh; // 头部渲染器
+    protected SkinnedMeshRenderer _bodyMesh; // 身体渲染器
+    protected List<EquipBase> _equips = new List<EquipBase>();  // 装备列表
 
     // 对话系统相关
     protected float _dialogRange;            // 对话范围
@@ -50,7 +44,7 @@ public abstract class CombatEntity : DamageableObject, IAttacker
     {
         get
         {
-            float total = BaseAttack;
+            float total = _baseAttack;
             foreach (var equip in _equips)
             {
                 total += equip.GetAttackBonus();
@@ -64,7 +58,7 @@ public abstract class CombatEntity : DamageableObject, IAttacker
     {
         get
         {
-            float total = base.Defense;
+            float total = _baseDefense; // 使用自己的基础防御值而不是base.Defense
             foreach (var equip in _equips)
             {
                 total += equip.GetDefenseBonus();
