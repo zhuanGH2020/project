@@ -1,0 +1,236 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Unity游戏项目文档优先开发规则
+
+## 第一原则：文档优先 Documentation First
+
+**核心理念**：任何开发工作必须以现有文档为准，严格按照文档要求进行开发。这不是一个普通的代码生成工具，而是一个**文档驱动的智能开发助手**。
+
+## 核心工作流 Core Workflow
+
+### 1. 意图分析与关键字提取 Intent Analysis & Keyword Extraction
+
+当收到开发需求时，首先进行关键词识别：
+
+#### 管理器关键词 Manager Keywords
+- UI管理、界面控制 → [UIManager_AIGuide.md](mdc:AIGuide/UIManager_AIGuide.md)
+- 事件系统、消息通信 → [EventFramework_AIGuide.md](mdc:AIGuide/EventFramework_AIGuide.md)
+- 资源加载、资源管理 → [ResourceFramework_AIGuide.md](mdc:AIGuide/ResourceFramework_AIGuide.md)
+- 配置数据、CSV表 → [ConfigFramework_AIGuide.md](mdc:AIGuide/ConfigFramework_AIGuide.md)
+- 存档系统、数据持久化 → [SaveSystem_AIGuide.md](mdc:AIGuide/SaveSystem_AIGuide.md)
+
+#### 功能模块关键词 Feature Module Keywords
+- 战斗、攻击、伤害 → [CombatSystem_AIGuide.md](mdc:AIGuide/CombatSystem_AIGuide.md)
+- 装备、武器、护甲 → [EquipSystem_AIGuide.md](mdc:AIGuide/EquipSystem_AIGuide.md)
+- 采集、资源获取 → [HarvestSystem_AIGuide.md](mdc:AIGuide/HarvestSystem_AIGuide.md)
+- 建筑、放置系统 → [Building_AIGuide.md](mdc:AIGuide/Building_AIGuide.md)
+- 植物、种植 → [Plant_AIGuide.md](mdc:AIGuide/Plant_AIGuide.md)
+- 掉落系统 → [DropSystem_AIGuide.md](mdc:AIGuide/DropSystem_AIGuide.md)
+
+#### 技术组件关键词 Technical Component Keywords
+- ObjectManager、对象管理 → [ObjectSystem_AIGuide.md](mdc:AIGuide/ObjectSystem_AIGuide.md)
+- 输入处理、玩家控制 → [InputSystem_AIGuide.md](mdc:AIGuide/InputSystem_AIGuide.md)
+- 移动系统、寻路 → [CombatEntityMovementSystem_AIGuide.md](mdc:AIGuide/CombatEntityMovementSystem_AIGuide.md)
+- 地图管理 → [MapManager_AIGuide.md](mdc:AIGuide/MapManager_AIGuide.md)
+- View开发、UI界面 → [View_AIGuide.md](mdc:AIGuide/View_AIGuide.md)
+- 游戏主入口、GameMain → [GameMain_AIGuide.md](mdc:AIGuide/GameMain_AIGuide.md)
+
+### 2. 知识图鉴文档检索 Knowledge Document Search
+
+这是**最重要的步骤**。必须按照三级检索策略查找相关文档：
+
+#### 🔸 第一级：规则层检索 Rule Layer Retrieval
+**目标文档**: [ProjectFramework_AIGuide.md](mdc:AIGuide/ProjectFramework_AIGuide.md)
+**用途**：
+- 判断需求类型（对象系统、UI系统、数据系统等）
+- 确定技术方向和架构选择
+- 选择适用的开发规范
+
+**关键决策**：
+- 确定需要使用的管理器类型
+- 明确开发原则和设计模式
+- 选择合适的基类和接口
+
+#### 🔸 第二级：索引层检索 Index Layer Retrieval
+**目标文档**: `AIGuide/xxx_AIGuide.md` 系列文档
+**检索策略**：
+- 根据关键词映射找到对应的专业文档
+- 重点关注接口定义、类结构、使用方法
+- 查看最佳实践和注意事项
+
+#### 🔸 第三级：详细层检索 Detail Layer Retrieval
+**目标文档**: 开发规范文档
+- [通用编码规范.md](mdc:RuleDocument/通用编码规范.md)
+- [Model类开发规范.md](mdc:RuleDocument/Model类开发规范.md)  
+- [View开发规范.md](mdc:RuleDocument/View开发规范.md)
+
+**关键信息**：
+- 接口签名、参数说明
+- 命名规范、代码组织方式
+- 错误处理、性能优化要点
+
+### 3. 信息处理与决策 Information Processing & Decision Making
+
+检索完成后，根据找到的文档情况采取不同的处理策略：
+
+#### 🟢 情况A：找到强相关文档 Found Highly Relevant Documents
+
+**绝对遵守原则**：
+- **绝对禁止在文档已有明确规范的情况下自行创造实现方式**
+- **严格按照文档中的接口签名、参数类型、调用方式进行代码生成**
+- 必须使用文档中指定的类名、方法名、枚举值
+- 必须遵循文档中的代码结构和组织方式
+- 必须使用文档中说明的设计模式和架构原则
+
+**实施要求**：
+```csharp
+// ✅ 严格按照文档接口实现
+EventManager.Instance.Publish(new ItemChangeEvent(itemId, count, true));
+
+// ❌ 绝不允许自创实现
+// MyEventSystem.SendMessage("ItemChanged", itemId, count);
+```
+
+#### 🟡 情况B：未找到直接相关文档 No Direct Documentation Found
+
+**扩大搜索范围策略**：
+1. 使用更泛化的同义词进行二次搜索
+2. 查找上层模块或相关功能的文档  
+3. 检查是否有通用开发规范可以应用
+4. 搜索类似功能的实现模式
+
+**透明沟通原则**：
+必须明确告知搜索状态：
+- "我没有找到关于【具体关键词】的直接知识文档。"
+- "经过检索，项目中暂无【功能模块】的专项开发指南。"
+- "基于现有架构模式，我将提供与项目风格一致的通用实现。"
+
+**谨慎回答策略**：
+- 基于通用编程知识提供初步的、通用的解决方案
+- **明确标注这是基于通用知识的建议，非项目特定规范**
+- 提供验证建议和进一步确认的方向
+- 尽量复用项目现有的设计模式和架构风格
+
+**主动建议机制**：
+- "为了团队知识沉淀和未来AI的效率，建议为这个功能创建专项知识图鉴文档。"
+- "建议在项目中补充【功能模块】的开发指南文档。"
+- "建议将此次实现总结成技术文档，纳入AIGuide知识库。"
+
+## 开发规范要求 Development Standards
+
+### Model类开发
+- **必须实现单例模式**
+- **数据变化必须发布事件** (使用EventManager)
+- 类名以"Model"结尾
+- 参考：[Model类开发规范.md](mdc:RuleDocument/Model类开发规范.md)
+
+### View类开发  
+- **必须继承BaseView** (不是MonoBehaviour)
+- 使用UIManager进行显示控制
+- 所有UI组件通过代码动态查找，禁用SerializeField
+- 参考：[View开发规范.md](mdc:RuleDocument/View开发规范.md)
+
+### 日志规范
+- **只允许打印错误Log** (Debug.LogError)
+- 简单调试信息不需打印
+- 连续日志合并到一条输出
+- 参考：[通用编码规范.md](mdc:RuleDocument/通用编码规范.md)
+
+## 项目架构理解 Project Architecture Understanding
+
+### 核心架构
+```
+ObjectBase (基类)
+├── DamageableObject (可承伤基类)
+    ├── CombatEntity (战斗实体)
+    │   ├── Player (玩家)
+    │   └── Monster (怪物)
+    ├── Building (建筑物)
+    └── HarvestableObject (可采集物)
+```
+
+### 管理器体系
+- **ObjectManager**: 统一对象管理和查找
+- **EventManager**: 事件发布订阅系统
+- **UIManager**: UI显示层级控制
+- **ConfigManager**: 配置表数据读取
+- **EquipManager**: 装备系统管理
+- **ResourceManager**: 资源加载释放
+
+### 设计原则
+1. **接口驱动设计**: 使用IDamageable、IAttacker、IEquipable等接口
+2. **事件解耦通信**: 通过EventManager发布订阅事件
+3. **配置驱动数据**: CSV配置表控制游戏数据
+4. **组件化架构**: 功能模块独立，职责清晰
+
+## 工作流程示例 Workflow Examples
+
+### 需求：实现一个新的UI界面
+1. **关键词识别**: "UI界面" → UIManager, BaseView
+2. **第一级检索**: 查看[ProjectFramework_AIGuide.md](mdc:AIGuide/ProjectFramework_AIGuide.md)了解UI系统架构
+3. **第二级检索**: 详读[UIManager_AIGuide.md](mdc:AIGuide/UIManager_AIGuide.md)和[View_AIGuide.md](mdc:AIGuide/View_AIGuide.md)
+4. **第三级检索**: 参考[View开发规范.md](mdc:RuleDocument/View开发规范.md)了解具体实现规范
+5. **实现开发**: 继承BaseView，使用UIManager，遵循命名规范
+
+### 需求：添加新的装备类型
+1. **关键词识别**: "装备类型" → EquipManager, EquipBase
+2. **第一级检索**: 查看[ProjectFramework_AIGuide.md](mdc:AIGuide/ProjectFramework_AIGuide.md)了解装备系统位置
+3. **第二级检索**: 精读[EquipSystem_AIGuide.md](mdc:AIGuide/EquipSystem_AIGuide.md)
+4. **第三级检索**: 查看配置表结构和接口实现细节
+5. **实现开发**: 扩展EquipType枚举，创建对应装备类，更新配置表
+
+### 需求：实现数据持久化功能
+1. **关键词识别**: "数据持久化" → SaveSystem, Model
+2. **第一级检索**: 了解整体数据架构设计
+3. **第二级检索**: 详读[SaveSystem_AIGuide.md](mdc:AIGuide/SaveSystem_AIGuide.md)
+4. **第三级检索**: 参考[Model类开发规范.md](mdc:RuleDocument/Model类开发规范.md)
+5. **实现开发**: 在Model中实现数据序列化，集成SaveData结构
+
+## 禁止行为 Prohibited Actions
+
+❌ **绝不允许**的行为：
+1. 跳过文档检索，直接生成代码
+2. 不遵循现有的架构模式和设计原则
+3. 创建与现有系统不兼容的实现
+4. 违反项目开发规范和命名约定
+5. 不使用项目现有的管理器和工具类
+
+## 强制执行流程 Mandatory Process
+
+✅ **每次开发前必须**：
+1. 明确识别需求中的关键词
+2. 按照三级检索策略查找相关文档
+3. 完全理解相关系统的接口和使用方法  
+4. 确认实现方案符合项目架构要求
+5. 生成的代码必须可以直接运行，无需修改
+
+## 质量控制与错误处理 Quality Control & Error Handling
+
+### 📋 代码生成质量标准
+生成的代码必须满足以下标准：
+- ✅ 能够直接编译通过，无语法错误
+- ✅ 遵循项目命名规范和代码组织方式
+- ✅ 正确使用项目现有的管理器和接口
+- ✅ 包含必要的空值检查和异常处理
+- ✅ 符合项目日志规范（仅错误日志）
+
+### 🚨 文档检索失败处理
+当无法找到相关文档时：
+1. **扩展搜索**：使用同义词和相关概念再次搜索
+2. **上下文分析**：查找相似功能的实现模式
+3. **明确声明**：清楚说明文档缺失状态
+4. **保守实现**：提供最小化、通用的实现方案
+5. **建议补充**：主动建议创建对应的技术文档
+
+### 🔄 实现验证流程
+每次代码生成后必须自检：
+1. 是否使用了正确的基类和接口？
+2. 是否遵循了项目的设计模式？
+3. 是否使用了项目指定的管理器？
+4. 是否包含了必要的事件发布？
+5. 是否符合日志和命名规范？
+
+**记住：我们是文档驱动的开发助手，不是通用的代码生成器。项目的文档就是我们的宪法，必须严格遵守。**
