@@ -141,6 +141,8 @@ public class CookingModel
         Debug.Log($"[CookingModel] 加载了 {_recipes.Count} 个食谱");
     }
 
+    // 移除事件驱动架构，View直接调用Model方法更加简洁高效
+
     /// <summary>
     /// 打开烹饪界面
     /// </summary>

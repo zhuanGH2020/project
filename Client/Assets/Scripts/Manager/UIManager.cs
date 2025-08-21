@@ -15,36 +15,21 @@ public enum UILayer
 
 /// <summary>
 /// UI管理器 - 统一管理所有UI界面的显示隐藏和生命周期
-/// 与BaseView架构集成，提供简洁的UI管理能力
+/// 专注于UI管理，View直接调用各种Manager更加简洁高效
 /// </summary>
 public class UIManager
 {
     private static UIManager _instance;
     public static UIManager Instance => _instance ??= new UIManager();
     
+    // UI管理核心数据
     private Dictionary<Type, BaseView> _views = new Dictionary<Type, BaseView>();
     private Canvas _uiCanvas;
     private CanvasGroup _canvasGroup;
     
     private UIManager()
     {
-        Initialize();
-    }
-    
-    /// <summary>
-    /// 初始化UI管理器
-    /// </summary>
-    private void Initialize()
-    {
-        var uiCanvasObj = GameObject.Find("UICanvas");
-        _uiCanvas = uiCanvasObj?.GetComponent<Canvas>();
-        
-        // 确保UICanvas有CanvasGroup用于全局控制
-        _canvasGroup = _uiCanvas.GetComponent<CanvasGroup>();
-        if (_canvasGroup == null)
-        {
-            _canvasGroup = _uiCanvas.gameObject.AddComponent<CanvasGroup>();
-        }
+        InitializeUICanvas();
     }
     
     #region UI生命周期管理
@@ -52,9 +37,6 @@ public class UIManager
     /// <summary>
     /// 显示UI界面
     /// </summary>
-    /// <typeparam name="T">UI界面类型，必须继承BaseView</typeparam>
-    /// <param name="layer">UI显示层级</param>
-    /// <returns>是否成功显示</returns>
     public bool Show<T>(UILayer layer = UILayer.Normal) where T : BaseView
     {
         Type viewType = typeof(T);
@@ -79,7 +61,7 @@ public class UIManager
         // 显示界面
         view.gameObject.SetActive(true);
         
-        // 发布事件
+        // 发布UI显示事件（一对多通知，适合用事件）
         EventManager.Instance.Publish(new UIShowEvent { ViewType = viewType });
         
         return true;
@@ -101,7 +83,7 @@ public class UIManager
         // 隐藏界面
         view.gameObject.SetActive(false);
         
-        // 发布事件
+        // 发布UI隐藏事件（一对多通知，适合用事件）
         EventManager.Instance.Publish(new UIHideEvent { ViewType = viewType });
         
         return true;
@@ -129,44 +111,70 @@ public class UIManager
     /// </summary>
     public void HideAll()
     {
-        _canvasGroup.alpha = 0f;
-        _canvasGroup.interactable = false;
-        _canvasGroup.blocksRaycasts = false;
+        if (_canvasGroup != null)
+        {
+            _canvasGroup.alpha = 0f;
+            _canvasGroup.interactable = false;
+            _canvasGroup.blocksRaycasts = false;
+        }
     }
     
     /// <summary>
-    /// 显示所有UI界面 - 恢复整个UI系统的显示和交互
+    /// 显示所有UI界面 - 通过UICanvas的CanvasGroup控制整个UI系统
     /// </summary>
     public void ShowAll()
     {
-        _canvasGroup.alpha = 1f;
-        _canvasGroup.interactable = true;
-        _canvasGroup.blocksRaycasts = true;
+        if (_canvasGroup != null)
+        {
+            _canvasGroup.alpha = 1f;
+            _canvasGroup.interactable = true;
+            _canvasGroup.blocksRaycasts = true;
+        }
     }
     
     /// <summary>
-    /// 检查UI界面是否可见
+    /// 更新方法 - 由GameMain调用
     /// </summary>
-    public bool IsVisible<T>() where T : BaseView
+    public void Update()
     {
-        Type viewType = typeof(T);
-        return _views.TryGetValue(viewType, out BaseView view) && 
-               view != null && view.gameObject.activeInHierarchy;
-    }
-    
-    /// <summary>
-    /// 获取UI界面实例
-    /// </summary>
-    public T Get<T>() where T : BaseView
-    {
-        Type viewType = typeof(T);
-        _views.TryGetValue(viewType, out BaseView view);
-        return view as T;
+        // 简单更新，无复杂逻辑
     }
     
     #endregion
     
-    #region View实例管理
+    #region UI层级和组件管理
+    
+    /// <summary>
+    /// 初始化UI Canvas
+    /// </summary>
+    private void InitializeUICanvas()
+    {
+        // 查找或创建UI Canvas
+        GameObject canvasObj = GameObject.Find("UICanvas");
+        if (canvasObj == null)
+        {
+            canvasObj = new GameObject("UICanvas");
+            _uiCanvas = canvasObj.AddComponent<Canvas>();
+            canvasObj.AddComponent<UnityEngine.UI.CanvasScaler>();
+            canvasObj.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+            
+            _uiCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            _uiCanvas.sortingOrder = 0;
+        }
+        else
+        {
+            _uiCanvas = canvasObj.GetComponent<Canvas>();
+        }
+        
+        // 添加CanvasGroup用于全局UI控制
+        _canvasGroup = _uiCanvas.GetComponent<CanvasGroup>();
+        if (_canvasGroup == null)
+        {
+            _canvasGroup = _uiCanvas.gameObject.AddComponent<CanvasGroup>();
+        }
+        
+        GameObject.DontDestroyOnLoad(_uiCanvas.gameObject);
+    }
     
     /// <summary>
     /// 获取或创建View实例
@@ -175,106 +183,61 @@ public class UIManager
     {
         Type viewType = typeof(T);
         
-        // 检查缓存
-        if (_views.TryGetValue(viewType, out BaseView cachedView) && cachedView != null)
+        // 尝试从已有View中获取
+        if (_views.TryGetValue(viewType, out BaseView existingView) && existingView != null)
         {
-            return cachedView;
+            return existingView;
         }
         
-        // 从场景查找
-        BaseView sceneView = GameObject.FindObjectOfType<T>();
-        if (sceneView != null)
+        // 尝试从Prefab加载
+        string prefabPath = $"Prefabs/UI/{viewType.Name}";
+        GameObject prefab = ResourceManager.Instance.Load<GameObject>(prefabPath);
+        
+        if (prefab == null)
         {
-            return sceneView;
+            Debug.LogError($"[UIManager] 找不到UI预制体: {prefabPath}");
+            return null;
         }
         
-        // 获取预制体路径 - 支持自定义路径
-        string prefabPath = GetViewPrefabPath(viewType);
-        GameObject prefab = Resources.Load<GameObject>(prefabPath);
+        // 实例化并获取组件
+        GameObject viewObj = GameObject.Instantiate(prefab, _uiCanvas.transform);
+        BaseView view = viewObj.GetComponent<T>();
         
-        if (prefab != null)
+        if (view == null)
         {
-            GameObject instance = GameObject.Instantiate(prefab, _uiCanvas.transform);
-            return instance.GetComponent<T>();
+            Debug.LogError($"[UIManager] 预制体上没有找到{viewType.Name}组件");
+            GameObject.Destroy(viewObj);
+            return null;
         }
         
-        return null;
+        return view;
     }
     
     /// <summary>
-    /// 获取View的预制体路径 - 支持自定义路径
-    /// </summary>
-    private string GetViewPrefabPath(Type viewType)
-    {
-        // 检查View类是否有自定义PrefabPath属性
-        var prefabPathProperty = viewType.GetProperty("PrefabPath", 
-            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-            
-        if (prefabPathProperty != null && prefabPathProperty.PropertyType == typeof(string))
-        {
-            string customPath = (string)prefabPathProperty.GetValue(null);
-            if (!string.IsNullOrEmpty(customPath))
-            {
-                return customPath;
-            }
-        }
-        
-        // 使用默认路径
-        return $"Prefabs/UI/{viewType.Name}";
-    }
-    
-    /// <summary>
-    /// 设置View显示层级
+    /// 设置View层级
     /// </summary>
     private void SetViewLayer(BaseView view, UILayer layer)
     {
-        Canvas canvas = view.GetComponent<Canvas>();
-        if (canvas != null)
+        if (view != null)
         {
-            canvas.overrideSorting = true;
-            canvas.sortingOrder = (int)layer;
-        }
-    }
-    
-    #endregion
-    
-    #region GameMain集成
-    
-    /// <summary>
-    /// 更新方法 - 供GameMain调用
-    /// </summary>
-    public void Update()
-    {
-        // 处理ESC键
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            EventManager.Instance.Publish(new BackKeyEvent());
-        }
-    }
-    
-    /// <summary>
-    /// 清理方法 - 供GameMain调用
-    /// </summary>
-    public void Cleanup()
-    {
-        // 销毁所有UI
-        foreach (var view in _views.Values)
-        {
-            if (view != null)
+            view.transform.SetAsLastSibling(); // 设置为最后，确保显示在最前面
+            
+            // 可以根据UILayer设置具体的Canvas层级
+            Canvas viewCanvas = view.GetComponent<Canvas>();
+            if (viewCanvas != null)
             {
-                GameObject.Destroy(view.gameObject);
+                viewCanvas.sortingOrder = (int)layer;
             }
         }
-        _views.Clear();
     }
     
     #endregion
 }
 
-#region 事件定义
+#region UI事件定义
 
 /// <summary>
-/// UI显示事件
+/// UI显示事件 - 一对多通知，适合用事件系统
 /// </summary>
 public class UIShowEvent : IEvent
 {
@@ -282,18 +245,11 @@ public class UIShowEvent : IEvent
 }
 
 /// <summary>
-/// UI隐藏事件
+/// UI隐藏事件 - 一对多通知，适合用事件系统
 /// </summary>
 public class UIHideEvent : IEvent
 {
     public Type ViewType { get; set; }
-}
-
-/// <summary>
-/// 返回键事件
-/// </summary>
-public class BackKeyEvent : IEvent
-{
 }
 
 #endregion 
