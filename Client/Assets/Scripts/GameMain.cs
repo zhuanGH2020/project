@@ -47,7 +47,6 @@ public class GameMain : MonoBehaviour
         
         // === 依赖系统初始化（需要其他系统支持） ===
         InteractionManager.Instance.Initialize();
-        CombatInputManager.Instance.Initialize();
         SaveModel.Instance.Initialize();
     }
 
@@ -98,7 +97,6 @@ public class GameMain : MonoBehaviour
     {
         // 先清理依赖系统
         SaveModel.Instance.Cleanup();
-        CombatInputManager.Instance.Cleanup();
         InteractionManager.Instance.Cleanup();
         
         // 再清理基础系统

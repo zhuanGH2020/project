@@ -13,7 +13,6 @@ public partial class Player : CombatEntity
     
     // 攻击系统相关
     private Transform _attackTarget;           // 当前攻击目标
-    private bool _isContinuousAttack = false;  // 是否连续攻击模式
     private float _lastAttackTime;             // 上次攻击时间
     
     // 玩家状态属性
@@ -26,11 +25,8 @@ public partial class Player : CombatEntity
     private float _hungerDecreaseTimer = 0f;            // 饥饿值下降计时器
     private float _sanityDecreaseTimer = 0f;            // 理智值下降计时器
     
-    // 对话ID分组常量 - 每个类型包含多条随机消息
-    private readonly int[] _noWeaponDialogIds = { 100, 101, 102, 103 };        // 没有武器
-    private readonly int[] _weaponDamagedDialogIds = { 110, 111, 112 };        // 武器损坏
-    private readonly int[] _weaponCooldownDialogIds = { 120, 121, 122 };       // 武器冷却
-    private readonly int[] _distanceTooFarDialogIds = { 130, 131, 132, 133 };  // 距离太远
+    // 长按攻击相关
+    private bool _isContinuousAttack = false;  // 是否处于连续攻击状态
 
     // 重写DamageableObject的抽象属性
     public override float MaxHealth => GameSettings.PlayerMaxHealth;
@@ -90,7 +86,7 @@ public partial class Player : CombatEntity
 
     private void OnDestroy()
     {
-        if (_instance == this)
+        if (_instance != null && _instance == this)
         {
             _instance = null;
             // 取消订阅输入事件
@@ -101,6 +97,7 @@ public partial class Player : CombatEntity
     protected override void Update()
     {
         base.Update();
+        HandleMouseRotation();
         HandleMovement();
         HandleContinuousAttack();
     }
@@ -136,9 +133,6 @@ public partial class Player : CombatEntity
         
         // 取消订阅建筑放置模式状态变化事件
         EventManager.Instance.Unsubscribe<BuildingPlacementModeEvent>(OnBuildingPlacementModeChanged);
-        
-        // 清理对话框
-        ClearDialog();
     }
 
     // 处理移动输入
@@ -146,10 +140,6 @@ public partial class Player : CombatEntity
     {
         _moveDirection = moveDirection;
     }
-
-
-
-
 
     // 处理使用装备输入
     private void OnUseEquipInput()
@@ -170,6 +160,66 @@ public partial class Player : CombatEntity
 
     }
 
+    // ========== 鼠标朝向系统 ==========
+
+    /// <summary>
+    /// 处理鼠标朝向 - 确保Player始终面向鼠标位置
+    /// </summary>
+    private void HandleMouseRotation()
+    {
+        if (Camera.main == null) return;
+        
+        // 获取鼠标屏幕位置
+        Vector3 mousePosition = Input.mousePosition;
+        
+        // 创建从相机到鼠标的射线
+        Ray ray = Camera.main.ScreenPointToRay(mousePosition);
+        
+        // 计算射线与玩家所在水平面的交点（Y轴固定）
+        float playerY = transform.position.y;
+        float rayDirectionY = ray.direction.y;
+        
+        // 如果射线方向与水平面平行，使用距离计算
+        if (Mathf.Abs(rayDirectionY) < 0.001f)
+        {
+            float distanceToPlayer = Vector3.Distance(Camera.main.transform.position, transform.position);
+            Vector3 mouseWorldPos = ray.GetPoint(distanceToPlayer);
+            mouseWorldPos.y = playerY;
+            HandleRotationToPosition(mouseWorldPos);
+        }
+        else
+        {
+            // 计算射线与水平面的交点
+            float t = (playerY - ray.origin.y) / rayDirectionY;
+            if (t > 0) // 确保交点在相机前方
+            {
+                Vector3 mouseWorldPos = ray.GetPoint(t);
+                HandleRotationToPosition(mouseWorldPos);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 处理朝向指定位置的旋转逻辑
+    /// </summary>
+    private void HandleRotationToPosition(Vector3 targetPosition)
+    {
+        // 计算朝向目标的方向（忽略Y轴）
+        Vector3 directionToTarget = (targetPosition - transform.position).normalized;
+        directionToTarget.y = 0;
+        
+        // 只有当方向不为零时才进行旋转
+        if (directionToTarget != Vector3.zero)
+        {
+            // 计算目标旋转
+            Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
+            
+            // 平滑旋转朝向目标（提高旋转速度确保响应及时）
+            float rotationSpeed = 20f; // 进一步提高旋转速度
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+        }
+    }
+
     // 处理移动
     private void HandleMovement()
     {
@@ -177,9 +227,6 @@ public partial class Player : CombatEntity
         {
             // 停止NavMesh移动，使用键盘移动
             StopMovement();
-            
-            // 直接设置朝向
-            transform.rotation = Quaternion.LookRotation(_moveDirection);
             
             // 获取当前速度（优先使用NavMeshAgent的speed，否则使用_moveSpeed）
             float currentSpeed = (_navMeshAgent != null) ? _navMeshAgent.speed : _moveSpeed;
@@ -319,6 +366,7 @@ public partial class Player : CombatEntity
         // 暂停时间系统
         DebugModel.Instance.SetTimeEnabled(false);
         DebugModel.Instance.ManualSave();
+        
         // 显示死亡菜单界面
         UIManager.Instance.Show<MenuView>(UILayer.System);
     }
@@ -354,97 +402,40 @@ public partial class Player : CombatEntity
 
     // ========== 攻击系统方法 ==========
     
+    // ========== 攻击系统重构 ==========
+
     /// <summary>
-    /// 处理攻击点击事件
+    /// 处理攻击点击事件 - 重构为基于鼠标方向的攻击
     /// </summary>
     private void OnAttackClick(Vector3 clickPosition)
     {
-        // 检测点击位置的怪物
-        if (InputUtils.GetMouseWorldHit(out RaycastHit hit))
-        {
-            var monster = hit.collider.GetComponent<Monster>();
-            if (monster != null && monster.CurrentHealth > 0)
-            {
-                SetAttackTarget(monster.transform, clickPosition);
-            }
-        }
+        // 直接向鼠标方向攻击
+        TryAttackInMouseDirection(clickPosition);
     }
     
     /// <summary>
-    /// 处理长按攻击事件
+    /// 向鼠标方向攻击 - 新的攻击方法
     /// </summary>
-    private void OnAttackHold(bool isHolding)
+    private void TryAttackInMouseDirection(Vector3 mousePosition)
     {
-        bool wasInContinuousAttack = _isContinuousAttack;
-        _isContinuousAttack = isHolding;
-        
-        if (isHolding)
-        {
-            Debug.Log("[Player] 开始连续攻击模式");
-        }
-        else if (wasInContinuousAttack)
-        {
-            // 只有在确实处于连续攻击状态时才输出结束日志
-            Debug.Log("[Player] 结束连续攻击模式");
-        }
-    }
-    
-    /// <summary>
-    /// 设置攻击目标
-    /// </summary>
-    private void SetAttackTarget(Transform target, Vector3 clickPosition)
-    {
-        _attackTarget = target;
-        
-        // 首先检查是否有武器
+        // 检查是否有武器
         var handEquip = GetCurrentHandEquip();
         if (handEquip == null)
         {
-            ShowRandomDialogMessage(_noWeaponDialogIds);
             return;
         }
         
         // 检查武器状态
         if (!handEquip.CanUse)
         {
-            // 武器正在冷却中或耐久为0
-            if (handEquip.CurrentDurability <= 0)
-            {
-                ShowRandomDialogMessage(_weaponDamagedDialogIds);
-            }
-            else
-            {
-                ShowRandomDialogMessage(_weaponCooldownDialogIds);
-            }
             return;
         }
         
-        // 检查攻击范围
-        if (CheckAttackRange(target))
-        {
-            // 在攻击范围内，直接攻击
-            TryAttackTarget();
-        }
-        else
-        {
-            // 不在攻击范围内，显示提示
-            ShowDistanceWarning();
-        }
-    }
-    
-    /// <summary>
-    /// 检查攻击范围
-    /// </summary>
-    private bool CheckAttackRange(Transform target)
-    {
-        if (target == null) return false;
+        // 使用装备攻击（朝向已经在HandleMouseRotation中处理）
+        handEquip.Use();
+        _lastAttackTime = Time.time;
         
-        // 获取当前手部装备的攻击范围
-        var handEquip = GetCurrentHandEquip();
-        float attackRange = handEquip != null ? handEquip.Range : 2f; // 默认范围2米
-        
-        float distance = Vector3.Distance(transform.position, target.position);
-        return distance <= attackRange;
+        Debug.Log($"[Player] 向鼠标方向攻击: {mousePosition}");
     }
     
     /// <summary>
@@ -455,79 +446,34 @@ public partial class Player : CombatEntity
         return _equips.Find(equip => equip.EquipPart == EquipPart.Hand);
     }
     
-    /// <summary>
-    /// 尝试攻击目标
-    /// </summary>
-    private void TryAttackTarget()
-    {
-        if (_attackTarget == null) return;
-        
-        var handEquip = GetCurrentHandEquip();
-        if (handEquip == null || !handEquip.CanUse) return; // 武器检查已在SetAttackTarget中完成
-        
-        // 面向目标
-        Vector3 direction = (_attackTarget.position - transform.position).normalized;
-        transform.rotation = Quaternion.LookRotation(direction);
-        
-        // 使用装备攻击
-        handEquip.Use();
-        _lastAttackTime = Time.time;
-        
-        Debug.Log($"[Player] 攻击目标: {_attackTarget.name}");
-    }
+    // ========== 长按连续攻击系统 ==========
     
     /// <summary>
-    /// 处理连续攻击
+    /// 处理长按攻击事件
     /// </summary>
-    private void HandleContinuousAttack()
+    private void OnAttackHold(bool isHolding)
     {
-        if (!_isContinuousAttack || _attackTarget == null) return;
-        
-        // 检查目标是否还活着
-        var monster = _attackTarget.GetComponent<Monster>();
-        if (monster == null || monster.CurrentHealth <= 0)
+        if (isHolding)
         {
-            _attackTarget = null;
-            _isContinuousAttack = false;
-            return;
-        }
-        
-        // 检查武器状态（优先级最高）
-        var handEquip = GetCurrentHandEquip();
-        if (handEquip == null)
-        {
-            ShowRandomDialogMessage(_noWeaponDialogIds);
-            _isContinuousAttack = false;
-            return;
-        }
-        
-        if (!handEquip.CanUse)
-        {
-            // 武器不可用时不显示提示，只是暂停连续攻击等待冷却
-            return;
-        }
-        
-        // 检查攻击范围
-        if (CheckAttackRange(_attackTarget))
-        {
-            TryAttackTarget();
+            // 检查是否有可用武器
+            var handEquip = GetCurrentHandEquip();
+            _isContinuousAttack = handEquip != null;
         }
         else
         {
-            // 目标超出范围，停止连续攻击并提示
-            ShowDistanceWarning();
             _isContinuousAttack = false;
         }
     }
     
     /// <summary>
-    /// 显示距离警告
+    /// 处理连续攻击逻辑
     /// </summary>
-    private void ShowDistanceWarning()
+    private void HandleContinuousAttack()
     {
-        Debug.Log("[Player] 距离太远了，需要靠近目标！");
-        ShowRandomDialogMessage(_distanceTooFarDialogIds);
+        if (!_isContinuousAttack) return;
+        
+        // 直接尝试攻击，装备CD会自动控制频率
+        TryAttackInMouseDirection(Input.mousePosition);
     }
-
 
 } 

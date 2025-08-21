@@ -1,6 +1,0 @@
-Id,Name,Type,BaseDamage,AttackSpeed,Range,MagazineSize,ReloadTime,BaseDurability,DurabilityLossPerUse,IconPath,PrefabPath,Description
-int,string,enum<ItemType>,float,float,float,int,float,float,float,string,string,string
-编号,名称,类型,基础伤害,攻击速度,攻击距离,弹夹容量,装弹时间,基础耐久度,每次使用损失耐久,图标路径,预制体路径,描述
-2001,冲锋枪,Weapon,15,10,20,30,1.5,200,0.5,Icons/Weapons/uzi,Prefabs/Weapons/uzi,自动武器，射速快
-2002,散弹枪,Weapon,50,1,15,6,2.0,150,1,Icons/Weapons/shotgun,Prefabs/Weapons/shotgun,短距离高伤害武器
-2003,铁剑,Weapon,25,2,2,0,0,100,0.5,Icons/Weapons/sword,Prefabs/Weapons/sword,基础近战武器 

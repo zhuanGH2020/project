@@ -22,16 +22,19 @@ public class InputManager
     
     // 攻击输入事件
     public event Action<Vector3> OnAttackClick;                // 攻击点击事件（点击怪物攻击）
-    public event Action<bool> OnAttackHold;                    // 攻击长按事件（开始/结束连续攻击）
+    
+    // 长按攻击事件
+    public event Action<bool> OnAttackHold;                    // 长按攻击事件（true=按下, false=抬起）
     
     // 按键输入事件
-    public event Action OnUseEquipInput;
-    public event Action<int> OnEquipShortcutInput;
-
-    // 长按攻击检测相关
+    public Action OnUseEquipInput;
+    public Action<int> OnEquipShortcutInput;
+    
+    // 长按检测相关
     private bool _isHoldingAttack = false;
     private float _holdStartTime = 0f;
-    private const float _holdThreshold = 0.3f; // 长按阈值（秒）
+    private bool _hasTriggeredHold = false; // 是否已经触发过长按事件
+    private const float HOLD_THRESHOLD = 0.15f; // 长按阈值：0.15秒
 
     private InputManager() { }
 
@@ -43,7 +46,6 @@ public class InputManager
         HandleMovementInput();
         HandleMouseInput();
         HandleKeyboardInput();
-        HandleAttackHold();
     }
 
     // 处理移动输入（WASD键）
@@ -62,21 +64,35 @@ public class InputManager
         // 鼠标左键点击
         if (Input.GetMouseButtonDown(0))
         {
-            HandleLeftClick();
-            
             // 开始长按检测
             _isHoldingAttack = true;
+            _hasTriggeredHold = false;
             _holdStartTime = Time.time;
+            
+            // 获取鼠标世界坐标
+            Vector3 mouseWorldPos = Camera.main ? Camera.main.ScreenToWorldPoint(Input.mousePosition) : Vector3.zero;
+            
+            // 处理点击事件（保持原有逻辑）
+            HandleLeftClick(mouseWorldPos);
         }
-        
-        // 鼠标左键抬起
-        if (Input.GetMouseButtonUp(0))
+        else if (Input.GetMouseButtonUp(0))
         {
             // 结束长按检测
-            if (_isHoldingAttack)
+            if (_isHoldingAttack || _hasTriggeredHold)
             {
                 _isHoldingAttack = false;
-                OnAttackHold?.Invoke(false); // 结束连续攻击
+                _hasTriggeredHold = false;
+                OnAttackHold?.Invoke(false); // 发布长按结束事件
+            }
+        }
+        else if (Input.GetMouseButton(0) && _isHoldingAttack && !_hasTriggeredHold)
+        {
+            // 检查是否达到长按阈值
+            if (Time.time - _holdStartTime >= HOLD_THRESHOLD)
+            {
+                // 发布长按开始事件（只发布一次）
+                OnAttackHold?.Invoke(true);
+                _hasTriggeredHold = true; // 标记已触发长按事件
             }
         }
         
@@ -91,7 +107,7 @@ public class InputManager
     }
 
     // 处理鼠标左键点击
-    private void HandleLeftClick()
+    private void HandleLeftClick(Vector3 mouseWorldPos)
     {
         // 使用 InputUtils 检测是否点击UI
         if (InputUtils.IsPointerOverUI())
@@ -105,13 +121,10 @@ public class InputManager
         }
 
         // 点击了非UI区域，获取世界坐标和碰撞对象
-        Vector3 mouseWorldPos = Vector3.zero;
         bool eventConsumed = false;
         
         if (InputUtils.GetMouseWorldHit(out RaycastHit hit))
         {
-            mouseWorldPos = hit.point;
-            
             // 1. 先处理高优先级事件（TouchView建筑放置、UI交互等）
             if (OnLeftClickHighPriority != null)
             {
@@ -140,7 +153,7 @@ public class InputManager
         else
         {
             // 即使没有碰撞到物体，也计算世界坐标用于移动
-            mouseWorldPos = Camera.main ? Camera.main.ScreenToWorldPoint(Input.mousePosition) : Vector3.zero;
+            // mouseWorldPos = Camera.main ? Camera.main.ScreenToWorldPoint(Input.mousePosition) : Vector3.zero; // This line is now redundant
             
             // 处理高优先级事件
             if (OnLeftClickHighPriority != null)
@@ -185,17 +198,6 @@ public class InputManager
         {
             OnUseEquipInput?.Invoke();
         }
-
-        // 装备快捷键 - Q键
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            OnEquipShortcutInput?.Invoke(30001);
-        }
-        // 装备快捷键 - E键
-        else if (Input.GetKeyDown(KeyCode.E))
-        {
-            OnEquipShortcutInput?.Invoke(30002);
-        }
     }
 
     // 启用或禁用输入
@@ -206,19 +208,6 @@ public class InputManager
 
     // 获取当前输入状态
     public bool IsInputEnabled => _enableInput;
-    
-    // 处理长按攻击检测
-    private void HandleAttackHold()
-    {
-        if (_isHoldingAttack && Time.time - _holdStartTime >= _holdThreshold)
-        {
-            // 达到长按阈值，开始连续攻击
-            OnAttackHold?.Invoke(true);
-            _isHoldingAttack = false; // 避免重复触发
-        }
-    }
-    
-
     
     // 处理鼠标悬停检测
     private void HandleMouseHover()

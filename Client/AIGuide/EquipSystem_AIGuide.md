@@ -62,6 +62,12 @@ private void UpdateEquipSlot(EquipPart equipPart)
 
 // 处理装备槽位点击
 private void OnEquipSlotClicked(EquipPart equipPart)
+
+// 初始化装备槽位（动态查找节点）
+private void InitializeEquipSlots()
+
+// 更新所有装备槽位
+private void UpdateAllEquipSlots()
 ```
 
 ### 3. ConfigManager - 配置管理

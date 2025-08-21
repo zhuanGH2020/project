@@ -8,10 +8,9 @@ using TMPro;
 
 public class PackageView : BaseView
 {
-    [Header("装备槽位")]
-    [SerializeField] private Transform cellHead;    // 头部装备槽
-    [SerializeField] private Transform cellBody;    // 身体装备槽
-    [SerializeField] private Transform cellHand;    // 手部装备槽
+    private Transform cellHead;    // 头部装备槽
+    private Transform cellBody;    // 身体装备槽
+    private Transform cellHand;    // 手部装备槽
     
     protected override void Start()
     {
@@ -19,24 +18,6 @@ public class PackageView : BaseView
         InitializePackageList();
         InitializeEquipSlots();
         SubscribeEvents();
-        
-        // 延迟一帧检查装备状态同步，确保Player已经完全初始化
-        StartCoroutine(CheckEquipmentSync());
-    }
-    
-    /// <summary>
-    /// 检查装备状态同步
-    /// </summary>
-    private IEnumerator CheckEquipmentSync()
-    {
-        // 等待一帧确保Player完全初始化
-        yield return null;
-        
-        // 检查装备状态一致性（用于调试）
-        EquipManager.Instance.SyncPlayerEquipmentState();
-        
-        // 更新装备槽位显示
-        UpdateAllEquipSlots();
     }
 
     protected override void OnDestroy()
@@ -58,15 +39,11 @@ public class PackageView : BaseView
     /// </summary>
     private void InitializeEquipSlots()
     {
-        // 查找装备槽位节点
-        if (cellHead == null) cellHead = transform.Find("cell_head");
-        if (cellBody == null) cellBody = transform.Find("cell_body");
-        if (cellHand == null) cellHand = transform.Find("cell_hand");
+        cellHead = transform.Find("cell_head");
+        cellBody = transform.Find("cell_body");
+        cellHand = transform.Find("cell_hand");
         
-        // 更新装备槽位显示
-        UpdateEquipSlot(EquipPart.Head, cellHead);
-        UpdateEquipSlot(EquipPart.Body, cellBody);
-        UpdateEquipSlot(EquipPart.Hand, cellHand);
+        UpdateAllEquipSlots();
     }
 
     private UIList GetUIList()

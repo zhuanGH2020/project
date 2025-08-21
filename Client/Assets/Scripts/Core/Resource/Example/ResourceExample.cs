@@ -10,10 +10,13 @@ public class ResourceExample : MonoBehaviour
     
     private void Start()
     {
-        LoadWeapons();
+        LoadEquips();
     }
 
-    private void LoadWeapons()
+    /// <summary>
+    /// 加载装备示例 - 已从LoadWeapons改为LoadEquips，统一使用装备系统
+    /// </summary>
+    private void LoadEquips()
     {
         // 加载斧头
         _axe = ResourceManager.Instance.Load<GameObject>("Prefabs/Equips/pbsc_equip_axe");

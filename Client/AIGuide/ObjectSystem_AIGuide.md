@@ -364,8 +364,8 @@ public class HarvestableObject : Building
 
 #### 配置驱动采集
 HarvestableObject使用Drop.csv配置采集需求：
-- **RequiredWeaponId**: 专用工具ID（如斧头砍树）
-- **AnyWeapon**: 是否需要任意武器（如攻击怪物）
+- **RequiredEquipId**: 专用装备ID（如斧头砍树）
+- **AnyEquip**: 是否需要任意装备（如攻击怪物）
 - **DropItemId1-5**: 最多5种掉落物品
 - **DropCount/Chance**: 每种物品的数量和概率
 
