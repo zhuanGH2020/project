@@ -408,3 +408,33 @@ public class PlayerHealthChangeEvent : IEvent
         CurrentHealth = currentHealth;
     }
 }
+
+/// <summary>
+/// 玩家饥饿值变化事件
+/// </summary>
+public class PlayerHungerChangeEvent : IEvent
+{
+    public float PreviousHunger { get; private set; }
+    public float CurrentHunger { get; private set; }
+    
+    public PlayerHungerChangeEvent(float previousHunger, float currentHunger)
+    {
+        PreviousHunger = previousHunger;
+        CurrentHunger = currentHunger;
+    }
+}
+
+/// <summary>
+/// 玩家理智值变化事件
+/// </summary>
+public class PlayerSanityChangeEvent : IEvent
+{
+    public float PreviousSanity { get; private set; }
+    public float CurrentSanity { get; private set; }
+    
+    public PlayerSanityChangeEvent(float previousSanity, float currentSanity)
+    {
+        PreviousSanity = previousSanity;
+        CurrentSanity = currentSanity;
+    }
+}

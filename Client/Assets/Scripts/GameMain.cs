@@ -61,6 +61,13 @@ public class GameMain : MonoBehaviour
         
         // 游戏逻辑系统
         ClockModel.Instance.UpdateTime();
+        
+        // 更新玩家状态（饥饿、理智自动下降）
+        if (Player.Instance != null)
+        {
+            Player.Instance.UpdateStatus();
+        }
+        
         MapManager.Instance.UpdateSpawning();
         InteractionManager.Instance.Update();
         
