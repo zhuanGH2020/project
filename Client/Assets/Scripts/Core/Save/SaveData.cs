@@ -18,6 +18,8 @@ public class SaveData
     
     [Header("玩家数据")]
     public float currentHealth = 100f;          // 当前血量
+    public float currentHunger = 100f;          // 当前饥饿值
+    public float currentSanity = 100f;          // 当前理智值
     public Vector3 playerPosition = Vector3.zero; // 玩家位置
     public List<int> equippedItems = new List<int>(); // 已装备的道具ID列表
     

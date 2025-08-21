@@ -16,6 +16,16 @@ public partial class Player : CombatEntity
     private bool _isContinuousAttack = false;  // 是否连续攻击模式
     private float _lastAttackTime;             // 上次攻击时间
     
+    // 玩家状态属性
+    private float _currentHunger;             // 当前饥饿值
+    private float _currentSanity;             // 当前理智值
+    
+    // 自动下降定时器
+    private const float STATUS_DECREASE_INTERVAL = 5f;  // 状态下降间隔（秒）
+    private const float STATUS_DECREASE_AMOUNT = 1f;    // 每次下降的数值
+    private float _hungerDecreaseTimer = 0f;            // 饥饿值下降计时器
+    private float _sanityDecreaseTimer = 0f;            // 理智值下降计时器
+    
     // 对话ID分组常量 - 每个类型包含多条随机消息
     private readonly int[] _noWeaponDialogIds = { 100, 101, 102, 103 };        // 没有武器
     private readonly int[] _weaponDamagedDialogIds = { 110, 111, 112 };        // 武器损坏
@@ -27,6 +37,12 @@ public partial class Player : CombatEntity
     public override float Defense => base.Defense;
     public override bool CanInteract => _currentHealth > 0;
     public override float GetInteractionRange() => 2f;
+    
+    // 玩家状态属性
+    public float MaxHunger => GameSettings.PlayerMaxHunger;
+    public float CurrentHunger => _currentHunger;
+    public float MaxSanity => GameSettings.PlayerMaxSanity;
+    public float CurrentSanity => _currentSanity;
 
     // 重写OnClick方法实现玩家点击逻辑
     public override void OnClick(Vector3 clickPosition)
@@ -56,6 +72,14 @@ public partial class Player : CombatEntity
         }
         
         // 玩家血量通过MaxHealth属性管理，_currentHealth在基类Awake中初始化
+        
+        // 初始化玩家状态属性
+        _currentHunger = MaxHunger;
+        _currentSanity = MaxSanity;
+        
+        // 初始化定时器
+        _hungerDecreaseTimer = 0f;
+        _sanityDecreaseTimer = 0f;
         
         // 订阅输入事件
         SubscribeToInputEvents();
@@ -238,6 +262,54 @@ public partial class Player : CombatEntity
     }
 
     /// <summary>
+    /// 设置饥饿值
+    /// </summary>
+    public void SetHunger(float hunger)
+    {
+        float previousHunger = _currentHunger;
+        _currentHunger = Mathf.Clamp(hunger, 0, MaxHunger);
+        
+        // 如果饥饿值发生了变化，触发饥饿变化事件
+        if (Mathf.Abs(_currentHunger - previousHunger) > 0.001f)
+        {
+            TriggerHungerChangeEvent(previousHunger, _currentHunger);
+        }
+    }
+
+    /// <summary>
+    /// 设置理智值
+    /// </summary>
+    public void SetSanity(float sanity)
+    {
+        float previousSanity = _currentSanity;
+        _currentSanity = Mathf.Clamp(sanity, 0, MaxSanity);
+        
+        // 如果理智值发生了变化，触发理智变化事件
+        if (Mathf.Abs(_currentSanity - previousSanity) > 0.001f)
+        {
+            TriggerSanityChangeEvent(previousSanity, _currentSanity);
+        }
+    }
+
+    /// <summary>
+    /// 触发饥饿值变化事件
+    /// </summary>
+    private void TriggerHungerChangeEvent(float previousHunger, float currentHunger)
+    {
+        var hungerChangeEvent = new PlayerHungerChangeEvent(previousHunger, currentHunger);
+        EventManager.Instance.Publish(hungerChangeEvent);
+    }
+
+    /// <summary>
+    /// 触发理智值变化事件
+    /// </summary>
+    private void TriggerSanityChangeEvent(float previousSanity, float currentSanity)
+    {
+        var sanityChangeEvent = new PlayerSanityChangeEvent(previousSanity, currentSanity);
+        EventManager.Instance.Publish(sanityChangeEvent);
+    }
+
+    /// <summary>
     /// 重写死亡方法，玩家死亡时显示MenuView
     /// </summary>
     protected override void OnDeath()
@@ -249,6 +321,35 @@ public partial class Player : CombatEntity
         DebugModel.Instance.ManualSave();
         // 显示死亡菜单界面
         UIManager.Instance.Show<MenuView>(UILayer.System);
+    }
+
+    /// <summary>
+    /// 更新玩家状态 - 处理饥饿和理智的自动下降
+    /// 需要外部定期调用（如GameMain.Update）
+    /// </summary>
+    public void UpdateStatus()
+    {
+        // 检查时间是否暂停或玩家已死亡
+        if (ClockModel.Instance.IsTimePaused || CurrentHealth <= 0)
+            return;
+
+        // 更新饥饿值计时器
+        _hungerDecreaseTimer += Time.deltaTime;
+        if (_hungerDecreaseTimer >= STATUS_DECREASE_INTERVAL)
+        {
+            _hungerDecreaseTimer = 0f;
+            float newHunger = Mathf.Max(0, _currentHunger - STATUS_DECREASE_AMOUNT);
+            SetHunger(newHunger);
+        }
+
+        // 更新理智值计时器
+        _sanityDecreaseTimer += Time.deltaTime;
+        if (_sanityDecreaseTimer >= STATUS_DECREASE_INTERVAL)
+        {
+            _sanityDecreaseTimer = 0f;
+            float newSanity = Mathf.Max(0, _currentSanity - STATUS_DECREASE_AMOUNT);
+            SetSanity(newSanity);
+        }
     }
 
     // ========== 攻击系统方法 ==========

@@ -31,6 +31,12 @@ public static class GameSettings
     #region Player配置
     // 玩家最大血量
     public const float PlayerMaxHealth = 100f;
+    
+    // 玩家最大饥饿值
+    public const float PlayerMaxHunger = 100f;
+    
+    // 玩家最大理智值
+    public const float PlayerMaxSanity = 100f;
     #endregion
 
     #region Clock配置

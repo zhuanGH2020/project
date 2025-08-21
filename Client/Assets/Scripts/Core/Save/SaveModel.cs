@@ -443,6 +443,8 @@ public class SaveModel
         if (player != null)
         {
             saveData.currentHealth = player.CurrentHealth;
+            saveData.currentHunger = player.CurrentHunger;
+            saveData.currentSanity = player.CurrentSanity;
             saveData.playerPosition = player.transform.position;
         }
         
@@ -487,6 +489,8 @@ public class SaveModel
         if (player != null)
         {
             player.SetHealth(saveData.currentHealth);
+            player.SetHunger(saveData.currentHunger);
+            player.SetSanity(saveData.currentSanity);
             player.transform.position = saveData.playerPosition;
         }
             
@@ -497,7 +501,7 @@ public class SaveModel
         var mapModel = MapModel.Instance;
         mapModel.LoadBuildingsFromSave(saveData.buildingData);
         
-        Debug.Log($"[SaveModel] Save data applied successfully - Day {saveData.clockDay}, Health {saveData.currentHealth}, Items {saveData.packageItems.Count}, Buildings {saveData.buildingData.Count}");
+        Debug.Log($"[SaveModel] Save data applied successfully - Day {saveData.clockDay}, Health {saveData.currentHealth}, Hunger {saveData.currentHunger}, Sanity {saveData.currentSanity}, Items {saveData.packageItems.Count}, Buildings {saveData.buildingData.Count}");
     }
     
     // === 辅助方法 ===
@@ -613,4 +617,5 @@ public class SaveModel
         
         Debug.Log("[SaveModel] Object pools cleared (if any)");
     }
+    
 } 
