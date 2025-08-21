@@ -14,14 +14,16 @@ public class NoticeView : BaseView
     private Coroutine _hideCoroutine;
     private const float HIDE_DELAY = 3.0f; // 3秒后隐藏
 
-    void Start()
+    protected override void Start()
     {
+        base.Start();
         InitializeView();
         SubscribeEvents();
     }
 
-    void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         UnsubscribeEvents();
         
         // 清理协程

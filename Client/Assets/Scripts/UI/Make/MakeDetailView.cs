@@ -22,14 +22,16 @@ public class MakeDetailView : BaseView
     // 公共属性：当前显示的物品ID
     public int CurrentItemId => _currentItemId;
     
-    void Start()
+    protected override void Start()
     {
+        base.Start();
         InitializeView();
         SubscribeEvents();
     }
 
-    void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         UnsubscribeEvents();
     }
 

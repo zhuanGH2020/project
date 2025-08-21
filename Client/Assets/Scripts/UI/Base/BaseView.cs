@@ -88,6 +88,18 @@ public abstract class BaseView : MonoBehaviour
         gameObject.SetActive(false);
     }
     
+    /// <summary>
+    /// 加载并设置图片到Image组件
+    /// </summary>
+    /// <param name="image">目标Image组件</param>
+    /// <param name="imagePath">图片路径（相对于Resources目录）</param>
+    /// <param name="isAtlas">是否为图集资源，true=直接加载Sprite，false=从Texture2D创建Sprite</param>
+    /// <returns>是否成功设置</returns>
+    protected bool LoadAndSetSprite(Image image, string imagePath, bool isAtlas = true)
+    {
+        return ResourceUtils.LoadAndSetSprite(image, imagePath, isAtlas);
+    }
+    
     #endregion
     
     #region Unity生命周期

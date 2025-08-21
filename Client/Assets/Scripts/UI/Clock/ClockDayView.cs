@@ -11,14 +11,16 @@ public class ClockDayView : BaseView
     private TextMeshProUGUI txt_day;  // 天数文本
     private TextMeshProUGUI txt_update; // 一天进度文本
 
-    void Start()
+    protected override void Start()
     {
+        base.Start();
         InitializeView();
         SubscribeEvents();
     }
 
-    void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         UnsubscribeEvents();
     }
 

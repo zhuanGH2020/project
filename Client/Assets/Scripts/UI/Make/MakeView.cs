@@ -8,14 +8,16 @@ public class MakeView : BaseView
 {
     private Toggle _currentSelectedToggle;
 
-    void Start()
+    protected override void Start()
     {
+        base.Start();
         InitializeMakeList();
         SubscribeEvents();
     }
 
-    void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         UnsubscribeEvents();
     }
     

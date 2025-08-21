@@ -13,8 +13,9 @@ public class PackageView : BaseView
     [SerializeField] private Transform cellBody;    // 身体装备槽
     [SerializeField] private Transform cellHand;    // 手部装备槽
     
-    private void Start()
+    protected override void Start()
     {
+        base.Start();
         InitializePackageList();
         InitializeEquipSlots();
         SubscribeEvents();
@@ -38,8 +39,9 @@ public class PackageView : BaseView
         UpdateAllEquipSlots();
     }
 
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         UnsubscribeEvents();
     }
 

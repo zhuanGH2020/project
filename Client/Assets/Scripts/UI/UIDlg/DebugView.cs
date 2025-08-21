@@ -36,15 +36,17 @@ public class DebugView : BaseView
         DebugModel.Instance.SetTimeEnabled(isOn);
     }
     
-    void Start()
+    protected override void Start()
     {
+        base.Start();
         InitializeButtons();
         SubscribeEvents();
         _lastSavedDay = ClockModel.Instance.ClockDay;
     }
     
-    void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         UnsubscribeEvents();
         
         // 取消UI组件监听器订阅

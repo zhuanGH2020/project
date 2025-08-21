@@ -15,14 +15,16 @@ public class MakeMenuView : BaseView
     private int _currentTypeId = -1; // 当前选中的制作类型ID
     private const string TITLE_PREFIX = "制作 - "; // 标题前缀常量，避免字符串重复分配
 
-    void Start()
+    protected override void Start()
     {
+        base.Start();
         InitializeView();
         SubscribeEvents();
     }
 
-    void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         UnsubscribeEvents();
     }
 

@@ -22,8 +22,9 @@ public class CookingView : BaseView, IDropHandler
     private CanvasGroup _canvasGroup;  // 用于控制透明度的组件
     private Coroutine _fadeCoroutine;  // 当前运行的动画协程
 
-    private void Start()
+    protected override void Start()
     {
+        base.Start();
         InitializeUI();
         SubscribeEvents();
         
@@ -31,8 +32,9 @@ public class CookingView : BaseView, IDropHandler
         gameObject.SetActive(false);
     }
 
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         UnsubscribeEvents();
     }
 

@@ -140,6 +140,28 @@ public class UIManager
         // 简单更新，无复杂逻辑
     }
     
+    /// <summary>
+    /// 清理所有UI资源 - 供GameMain在OnDestroy时调用
+    /// </summary>
+    public void Cleanup()
+    {
+        // 销毁所有View实例
+        foreach (var kvp in _views)
+        {
+            if (kvp.Value != null)
+            {
+                GameObject.Destroy(kvp.Value.gameObject);
+            }
+        }
+        _views.Clear();
+        
+        // 清理Canvas引用
+        _uiCanvas = null;
+        _canvasGroup = null;
+        
+        Debug.Log("[UIManager] UI资源清理完成");
+    }
+    
     #endregion
     
     #region UI层级和组件管理

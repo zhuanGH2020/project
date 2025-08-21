@@ -21,14 +21,16 @@ public class TouchView : BaseView
     private int _currentPendingBuildingId = -1; // 当前待放置的建筑物ID
     private bool _inBuildingPlacementMode = false; // TouchView自己管理建筑放置状态
     
-    void Start()
+    protected override void Start()
     {
+        base.Start();
         InitializeComponents();
         SubscribeEvents();
     }
     
-    void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         UnsubscribeEvents();
     }
     

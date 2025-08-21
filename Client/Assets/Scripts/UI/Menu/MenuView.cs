@@ -16,14 +16,16 @@ public class MenuView : BaseView
     private TextMeshProUGUI _txtTitle;
     private Button _btnRevert;
     
-    void Start()
+    protected override void Start()
     {
+        base.Start();
         InitializeUI();
         UpdateDeathMessage();
     }
     
-    void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         // 移除按钮监听器
         _btnRevert?.onClick.RemoveListener(OnRevertButtonClick);
     }

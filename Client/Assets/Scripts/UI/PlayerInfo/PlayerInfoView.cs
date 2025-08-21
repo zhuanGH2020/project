@@ -10,8 +10,9 @@ public class PlayerInfoView : BaseView
     private Slider slider_health;
     private TextMeshProUGUI txt_num;
 
-    void Start()
+    protected override void Start()
     {
+        base.Start();
         InitializeView();
         SubscribeEvents();
     }
@@ -41,8 +42,9 @@ public class PlayerInfoView : BaseView
         EventManager.Instance.Subscribe<PlayerHealthChangeEvent>(OnPlayerHealthChanged);
     }
 
-    protected override void OnViewDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         UnsubscribeEvents();
     }
 
