@@ -1,7 +1,15 @@
 # 事件框架技术文档
 
 ## 概述
-Unity项目中的**统一事件管理系统**，提供类型安全、松耦合的组件间通信机制。基于发布-订阅模式实现，支持事件的订阅、发布和取消订阅功能。
+Unity项目中的**精简事件管理系统**，专注于一对多通知场景，提供类型安全、松耦合的组件间通信机制。基于发布-订阅模式实现，支持事件的订阅、发布和取消订阅功能。
+
+## 设计理念
+**简洁高效** > 过度设计  
+**直接调用** > 复杂事件  
+**精准使用** > 滥用事件  
+
+- **90%的交互**：View直接调用Model，简洁高效
+- **10%的通知**：一对多场景使用事件系统
 
 ## 架构设计
 
@@ -371,6 +379,31 @@ EventManager.Instance.Publish(new MakeDetailCloseEvent());
 
 ## 最佳实践
 
+### 🎯 事件系统使用原则
+
+#### ✅ 适合用事件的场景（一对多通知）
+
+```csharp
+// 时间变化需要通知多个系统
+ClockModel → DayChangeEvent → {UI, 植物系统, 建筑系统, 存档系统}
+
+// 玩家血量变化需要通知多个UI
+Player → PlayerHealthChangeEvent → {血条UI, 死亡界面, 音效系统}
+
+// UI状态变化需要通知多个监听者
+UIManager → UIShowEvent → {输入系统, 暂停系统, 音效系统}
+```
+
+#### ❌ 不适合用事件的场景（一对一直接调用）
+
+```csharp
+// ✅ 直接调用更简洁
+btn_cook.onClick → CookingModel.Instance.Cook()
+
+// ❌ 没必要的事件复杂化
+btn_cook.onClick → Event → CookingModel.OnEvent()
+```
+
 ### ✅ 推荐做法
 
 #### 1. 事件命名规范
@@ -439,7 +472,22 @@ private void OnMakeDetailOpen(MakeDetailOpenEvent eventData)
 
 ### ❌ 避免的做法
 
-#### 1. 循环事件引用
+#### 1. 过度使用事件系统
+```csharp
+// ❌ 一对一交互不需要事件
+private void OnButtonClick()
+{
+    EventManager.Instance.Publish(new ButtonClickEvent());
+}
+
+// ✅ 直接调用更简洁
+private void OnButtonClick()
+{
+    SomeModel.Instance.DoSomething();
+}
+```
+
+#### 2. 循环事件引用
 ```csharp
 // ❌ 避免在事件处理器中发布相同类型的事件
 private void OnItemChanged(ItemChangeEvent eventData)
@@ -449,7 +497,7 @@ private void OnItemChanged(ItemChangeEvent eventData)
 }
 ```
 
-#### 2. 忘记取消订阅
+#### 3. 忘记取消订阅
 ```csharp
 // ❌ 没有在OnDestroy中取消订阅
 void Start()
@@ -459,7 +507,7 @@ void Start()
 }
 ```
 
-#### 3. 事件处理器中的重逻辑
+#### 4. 事件处理器中的重逻辑
 ```csharp
 // ❌ 在事件处理器中执行耗时操作
 private void OnDayChanged(DayChangeEvent eventData)
@@ -517,13 +565,56 @@ EventManager.Instance.Publish(new MakeDetailCloseEvent(false)); // 立即关闭
 EventManager.Instance.Publish(new MakeDetailCloseEvent(true));  // 延迟关闭
 ```
 
+## 当前项目架构
+
+### 简化版MV模式 + 直接调用
+
+```
+View (直接调用) → Model
+  ↓                ↓
+各种Manager ← ← ← 各种Manager
+  ↓
+真实业务逻辑
+```
+
+### 具体使用方式
+
+```csharp
+// ✅ View开发：直接调用Manager和Model
+public class CookingView : BaseView
+{
+    void Start()
+    {
+        // 直接调用Manager获取服务
+        var sprite = LoadResource<Sprite>("icon");
+        var config = GetConfig("Recipe");
+        
+        // 订阅事件（仅在需要时）
+        SubscribeEvent<DayChangeEvent>(OnDayChanged);
+    }
+    
+    private void OnCookButtonClick()
+    {
+        // 直接调用Model业务逻辑
+        CookingModel.Instance.Cook();
+    }
+    
+    private void OnDestroy()
+    {
+        // 手动清理事件订阅
+        UnsubscribeEvent<DayChangeEvent>(OnDayChanged);
+    }
+}
+```
+
 ## 版本历史
 - **v1.0**: 基础事件系统实现
-- **v1.1**: 新增MakeDetailCloseEvent延迟控制机制 🔥
+- **v1.1**: 新增MakeDetailCloseEvent延迟控制机制
 - **v1.2**: 完善建筑系统事件支持
+- **v2.0**: 架构简化，专注于一对多通知场景 🔥
 
 ---
 
 创建日期：2024-12-19  
 更新日期：2024-12-19  
-版本：1.2.0
+版本：2.0.0

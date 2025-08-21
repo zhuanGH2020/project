@@ -3,157 +3,109 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// View基类 - 统一管理资源生命周期
-/// 所有View继承此类，自动获得资源管理功能
+/// View基类 - 直接调用各种Manager，简洁高效
+/// 所有View继承此类，获得统一的基础功能
 /// </summary>
 public abstract class BaseView : MonoBehaviour
 {
-    private List<Object> _resources = new List<Object>();
-    
-    #region 图片加载
+    #region 便捷方法 - 直接调用Manager
     
     /// <summary>
-    /// 加载并设置图片到Image组件
+    /// 加载资源
     /// </summary>
-    /// <param name="image">目标Image组件</param>
-    /// <param name="imagePath">图片路径（相对于Resources目录）</param>
-    /// <param name="isAtlas">是否为图集资源，true=直接加载Sprite，false=从Texture2D创建Sprite</param>
-    /// <returns>是否成功设置</returns>
-    protected bool LoadAndSetSprite(Image image, string imagePath, bool isAtlas = true)
+    protected T LoadResource<T>(string path) where T : UnityEngine.Object
     {
-        if (image == null || string.IsNullOrEmpty(imagePath)) return false;
-        
-        // 移除扩展名，Unity Resources.Load不需要扩展名
-        string pathWithoutExtension = System.IO.Path.ChangeExtension(imagePath, null);
-        
-        if (isAtlas)
-        {
-            // 图集模式：直接加载Sprite
-            var sprite = LoadResource<Sprite>(pathWithoutExtension);
-            if (sprite != null)
-            {
-                image.sprite = sprite;
-                return true;
-            }
-        }
-        else
-        {
-            // 纹理模式：从Texture2D创建Sprite
-            var texture = LoadResource<Texture2D>(pathWithoutExtension);
-            if (texture != null)
-            {
-                var sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
-                image.sprite = sprite;
-                return true;
-            }
-        }
-        
-        return false;
+        return ResourceManager.Instance.Load<T>(path);
     }
     
     /// <summary>
-    /// 通过路径查找Image组件并设置图片
+    /// 获取配置读取器
     /// </summary>
-    /// <param name="imagePath">Image组件路径（相对于当前Transform）</param>
-    /// <param name="spritePath">图片路径（相对于Resources目录）</param>
-    /// <param name="isAtlas">是否为图集资源，true=直接加载Sprite，false=从Texture2D创建Sprite</param>
-    /// <returns>是否成功设置</returns>
-    protected bool LoadAndSetSprite(string imagePath, string spritePath, bool isAtlas = true)
+    protected ConfigReader GetConfig(string configName)
     {
-        var image = transform.Find(imagePath)?.GetComponent<Image>();
-        return LoadAndSetSprite(image, spritePath, isAtlas);
+        return ConfigManager.Instance.GetReader(configName);
     }
     
     /// <summary>
-    /// 从配置加载并设置物品图标
+    /// 订阅事件
     /// </summary>
-    /// <param name="imagePath">Image组件路径（相对于当前Transform）</param>
-    /// <param name="itemId">物品ID</param>
-    /// <param name="isAtlas">是否为图集资源，true=直接加载Sprite，false=从Texture2D创建Sprite</param>
-    /// <returns>是否成功设置</returns>
-    protected bool LoadAndSetItemIcon(string imagePath, int itemId, bool isAtlas = false)
+    protected void SubscribeEvent<T>(System.Action<T> handler) where T : IEvent
     {
-        var image = transform.Find(imagePath)?.GetComponent<Image>();
-        if (image == null) return false;
-        
-        // 获取物品图标路径
-        string iconPath = GetItemIconPath(itemId);
-        return LoadAndSetSprite(image, iconPath, isAtlas);
+        EventManager.Instance.Subscribe<T>(handler);
+    }
+    
+    /// <summary>
+    /// 发布事件
+    /// </summary>
+    protected void PublishEvent<T>(T eventData) where T : IEvent
+    {
+        EventManager.Instance.Publish(eventData);
+    }
+    
+    /// <summary>
+    /// 取消订阅事件（需要手动调用）
+    /// </summary>
+    protected void UnsubscribeEvent<T>(System.Action<T> handler) where T : IEvent
+    {
+        EventManager.Instance.Unsubscribe<T>(handler);
     }
     
     #endregion
     
-    #region 资源加载
+    #region UI便捷方法
     
     /// <summary>
-    /// 加载资源并自动管理生命周期
+    /// 根据名称查找子对象
     /// </summary>
-    protected T LoadResource<T>(string path) where T : Object
+    protected GameObject FindChildByName(string childName)
     {
-        if (string.IsNullOrEmpty(path)) return null;
-        
-        var resource = ResourceManager.Instance.Load<T>(path);
-        if (resource != null)
-        {
-            _resources.Add(resource);
-        }
-        return resource;
+        Transform childTransform = transform.Find(childName);
+        return childTransform?.gameObject;
     }
     
     /// <summary>
-    /// 获取物品图标路径
+    /// 根据名称查找子对象的组件
     /// </summary>
-    private string GetItemIconPath(int itemId)
+    protected T FindChildComponent<T>(string childName) where T : Component
     {
-        var reader = ConfigManager.Instance.GetReader("Item");
-        return reader?.GetValue<string>(itemId, "IconPath", "") ?? "";
+        GameObject childObj = FindChildByName(childName);
+        return childObj?.GetComponent<T>();
+    }
+    
+    /// <summary>
+    /// 显示这个View
+    /// </summary>
+    public void Show()
+    {
+        gameObject.SetActive(true);
+    }
+    
+    /// <summary>
+    /// 隐藏这个View
+    /// </summary>
+    public void Hide()
+    {
+        gameObject.SetActive(false);
     }
     
     #endregion
     
-    #region 资源管理
+    #region Unity生命周期
     
-    /// <summary>
-    /// 手动释放特定资源
-    /// </summary>
-    protected void ReleaseResource(Object resource)
+    protected virtual void Awake()
     {
-        if (resource != null && _resources.Remove(resource))
-        {
-            ResourceManager.Instance.Release(resource);
-        }
+        // 子类可重写
     }
     
-    /// <summary>
-    /// 获取已加载资源数量
-    /// </summary>
-    protected int LoadedResourceCount => _resources.Count;
-    
-    #endregion
-    
-    #region 生命周期管理
-    
-    private void OnDestroy()
+    protected virtual void Start()
     {
-        // 自动释放所有资源
-        foreach (var resource in _resources)
-        {
-            if (resource != null)
-            {
-                ResourceManager.Instance.Release(resource);
-            }
-        }
-        _resources.Clear();
-        
-        // 调用子类的清理方法
-        OnViewDestroy();
+        // 子类可重写
     }
     
-    /// <summary>
-    /// 子类重写此方法进行额外的清理工作
-    /// 注意：不要在此方法中释放资源，资源会自动释放
-    /// </summary>
-    protected virtual void OnViewDestroy() { }
+    protected virtual void OnDestroy()
+    {
+        // 子类可重写，用于清理事件订阅等
+    }
     
     #endregion
 } 

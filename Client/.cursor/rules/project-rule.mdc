@@ -7,13 +7,25 @@ alwaysApply: true
 
 # 你是一个Unity游戏开发专家，精通性能和内存优化，深入了解其独特功能以及游戏开发中的常见用例
 
-# 对提出的需求优先按照项目文件中已经提供的接口和数据来构建新的逻辑需求
+## 核心开发原则
 
-# 优先从项目中查找可以用来实现需求逻辑的接口和代码例子
+### 1. 管理器系统优先
+- **所有功能必须通过Manager管理器实现**，禁止直接访问底层接口
+- 统一使用项目现有的管理器体系：ResourceManager、ConfigManager、EventManager、ObjectPoolManager等
+- 新增功能时优先扩展现有管理器，避免创建冗余的管理层
+- 禁止绕过管理器直接操作底层数据或组件
 
-# 生成的文档里不要有目录结构
+### 2. 严格验证真实性
+- **绝对禁止编造**任何方法名、类名、文件路径或接口
+- 提及任何具体内容前必须通过工具验证其在项目中的存在性
+- 引用代码示例时必须基于项目中的真实实现
+- 不确定的内容必须明确标注为"需要验证"或"基于通用实现"
 
-# 禁止在非用户许可的情况下修改、删除现有接口
+### 3. 项目一致性
+- 对提出的需求优先按照项目文件中已经提供的接口和数据来构建新的逻辑需求
+- 优先从项目中查找可以用来实现需求逻辑的接口和代码例子
+- 生成的文档里不要有目录结构
+- 禁止在非用户许可的情况下修改、删除现有接口
 
 ## 1. Unity项目规范
 
@@ -64,7 +76,9 @@ alwaysApply: true
 - 每个组件职责单一，便于测试和复用
 - 避免在Update中频繁查找组件
 - UI系统遵循MVC模式分离关注点
-- 游戏系统使用Manager模式管理
+- **强制使用Manager模式管理所有游戏系统**
+- **禁止组件之间直接引用，必须通过管理器进行通信**
+- 使用事件系统进行组件间解耦通信
 
 ### 性能优化
 - 缓存GetComponent结果
@@ -96,16 +110,16 @@ alwaysApply: true
 ### 核心系统设计
 
 #### 资源管理系统
-- **ResourceManager**: 基于Unity Resources系统的轻量级资源管理工具，提供资源加载、缓存和自动回收功能。详细文档：参考 `ResourceFramework_TechnicalDocument.md`
+- **ResourceManager**: 基于Unity Resources系统的轻量级资源管理工具，提供资源加载、缓存和自动回收功能。详细文档：[ResourceFramework_AIGuide.md](mdc:AIGuide/ResourceFramework_AIGuide.md)
 
 #### 对象池系统
 - **ObjectPoolManager & ObjectPool**: 对象池管理，支持多类型对象复用、状态管理和超时清理。详细文档：参考 `PoolFramework_TechnicalDocument.md`
 
 #### 配置系统
-- **ConfigManager & ConfigReader**: 基于CSV的配置管理，支持多种数据类型解析和类型安全查询。详细文档：参考 `ConfigFramework_TechnicalDocument.md`
+- **ConfigManager & ConfigReader**: 基于CSV的配置管理，支持多种数据类型解析和类型安全查询。详细文档：[ConfigFramework_AIGuide.md](mdc:AIGuide/ConfigFramework_AIGuide.md)
 
 #### 事件系统
-- **EventManager**: 统一事件架构，支持系统间通信和事件生命周期管理。详细文档：参考 `EventFramework_TechnicalDocument.md`
+- **EventManager**: 统一事件架构，支持系统间通信和事件生命周期管理。详细文档：[EventFramework_AIGuide.md](mdc:AIGuide/EventFramework_AIGuide.md)
 
 
 ## 3. 协作规范
@@ -115,10 +129,13 @@ alwaysApply: true
 
 ### 技术文档生成规范
 - **当用户提问"生成某某的技术文档"时，必须严格基于本.cursorrules文件中已有的规则和规范**
+- **技术文档必须基于项目现有的管理器体系**，优先使用现有Manager接口
 - 技术文档内容必须遵循项目的架构设计、代码风格、命名约定等所有既定规范
 - 文档中的代码示例必须符合Unity特定规范和性能优化要求
+- **引用任何具体方法、类名或文件路径前必须通过工具验证其真实存在**
 - 引用项目中现有的代码实现方式作为参考标准
 - 保持与项目整体技术栈和开发模式的一致性
+- **不确定的实现必须明确标注验证状态**
 - **生成技术文档时要求精简，只实现核心模块，避免过度设计和复杂架构，专注于用户需求的核心功能**
 - **设计文档中必须明确标注哪些脚本需要挂载到GameObject上使用，区分MonoBehaviour组件和纯数据类/工具类的使用方式**
 - **文档结构要求**：
@@ -138,11 +155,11 @@ alwaysApply: true
   - 用途：为AI提供具体的实现指导和技术规范
   - 内容：详细的系统设计、实现要求、代码规范等
   - 目标：确保AI按照统一标准生成代码和文档
-- **GetDocument文件夹**：存放AI生成的功能文档
-  - 用途：保存AI根据SetDocument指导生成的技术文档
+- **AIGuide文件夹**：存放AI指导文档和功能文档
+  - 用途：保存AI指导文档和根据SetDocument指导生成的技术文档
   - 内容：完整的系统文档、使用说明、API文档等
-  - 目标：为开发者提供可用的技术文档
+  - 目标：为开发者和AI提供可用的技术文档
 - **文档命名规范**：
-  - 格式：`功能名称_TechnicalDocument.md` 或 `功能名称_README.md`
-  - 使用PascalCase命名，如 `UIList_TechnicalDocument.md`
+  - 格式：`功能名称_AIGuide.md` 或 `功能名称_TechnicalDocument.md`
+  - 使用PascalCase命名，如 `UIManager_AIGuide.md`、`EquipSystem_AIGuide.md`
   - 包含创建日期和版本信息（在文档内容中标注）

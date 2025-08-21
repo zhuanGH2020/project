@@ -365,14 +365,19 @@ public class CookingSlotUpdateEvent : IEvent
 public class CookingSuccessEvent : IEvent
 {
     public int ResultItemId { get; private set; }
-    public int Count { get; private set; }
+    public int ResultCount { get; private set; }
     
-    public CookingSuccessEvent(int resultItemId, int count)
+    public CookingSuccessEvent(int resultItemId, int resultCount)
     {
         ResultItemId = resultItemId;
-        Count = count;
+        ResultCount = resultCount;
     }
 }
+
+// 事件系统仅用于真正需要的一对多通知场景
+// View-Model的一对一交互直接使用方法调用，更加简洁高效
+
+
 
 /// <summary>
 /// 怪物生成事件
