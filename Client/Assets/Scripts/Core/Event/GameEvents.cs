@@ -438,3 +438,29 @@ public class PlayerSanityChangeEvent : IEvent
         CurrentSanity = currentSanity;
     }
 }
+
+// 装备变化事件 - 装备穿戴或卸下时触发
+public class EquipChangeEvent : IEvent
+{
+    public EquipPart EquipPart { get; }    // 装备部位
+    public int EquipId { get; }            // 装备物品ID
+    public bool IsEquipped { get; }        // 是否装备（true表示装备，false表示卸下）
+
+    public EquipChangeEvent(EquipPart equipPart, int equipId, bool isEquipped)
+    {
+        EquipPart = equipPart;
+        EquipId = equipId;
+        IsEquipped = isEquipped;
+    }
+}
+
+// 装备刷新事件 - 存档加载完成后触发，通知UI更新所有装备槽位
+public class EquipRefreshEvent : IEvent
+{
+    public int EquipCount { get; }         // 装备数量
+
+    public EquipRefreshEvent(int equipCount)
+    {
+        EquipCount = equipCount;
+    }
+}

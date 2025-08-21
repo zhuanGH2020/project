@@ -11,11 +11,6 @@ public class GameMain : MonoBehaviour
 
     void Start()
     {
-        // 临时：配置系统示例代码
-        ConfigExample.Example();
-        ConfigExample.AdvancedExample();
-        ConfigExample.ValidationExample();
-
         InitializeSystems();
     }
 
