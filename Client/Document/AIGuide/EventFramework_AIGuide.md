@@ -551,7 +551,7 @@ EventManager.Instance.Subscribe<ClickOutsideUIEvent>(OnClickOutsideUI);
 
 ### SaveSystem集成
 ```csharp
-// SaveModel发布保存完成事件
+// SaveManager发布保存完成事件
 EventManager.Instance.Publish(new GameSavedEvent(slot, saveTime));
 
 // SaveView订阅天数变化实现每日自动保存

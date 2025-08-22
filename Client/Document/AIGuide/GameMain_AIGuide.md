@@ -77,7 +77,7 @@ _ = UIManager.Instance;        // UI管理器
 
 // === 依赖系统（需要其他系统支持） ===
 InteractionManager.Instance.Initialize(); // 交互管理器（需要EventManager）
-SaveModel.Instance.Initialize();          // 存档模型（需要其他Model）
+SaveManager.Instance.Initialize();          // 存档管理器（需要其他Model）
 ```
 
 #### `private void UpdateSystems()`
@@ -94,7 +94,7 @@ MapManager.Instance.UpdateSpawning();
 InteractionManager.Instance.Update();
 
 // 数据持久化系统
-SaveModel.Instance.Update();
+SaveManager.Instance.Update();
 
 // UI系统 - 最后更新
 DialogManager.Instance.Update();
@@ -117,7 +117,7 @@ if (Time.time % 10f < Time.deltaTime)
 **清理顺序：**
 ```csharp
 // 先清理依赖系统
-SaveModel.Instance.Cleanup();
+SaveManager.Instance.Cleanup();
 InteractionManager.Instance.Cleanup();
 
 // 再清理基础系统
@@ -264,7 +264,7 @@ GameMain采用**Application Root模式**，作为整个应用程序的根组织�
 - **ConfigManager**：提供配置数据支持
 - **EventManager**：提供系统间通信
 - **ObjectManager**：提供对象注册和查询
-- **SaveModel**：提供数据持久化
+- **SaveManager**：提供数据持久化
 - **所有Manager类**：由GameMain统一管理生命周期
 
 这种设计确保了系统的有序启动、高效运行和完整清理，是整个项目架构的核心支柱。 

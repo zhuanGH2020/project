@@ -136,7 +136,7 @@ public class DebugModel
     /// </summary>
     public bool ManualSave()
     {
-        return SaveModel.Instance.SaveGame(0);
+        return SaveManager.Instance.SaveGame(0);
     }
 
     /// <summary>
@@ -144,18 +144,18 @@ public class DebugModel
     /// </summary>
     public bool DeleteCurrentSaveAndReset()
     {
-        bool hasData = SaveModel.Instance.HasSaveData(0);
+        bool hasData = SaveManager.Instance.HasSaveData(0);
         if (!hasData)
         {
             Debug.Log("[DebugModel] No save data to delete");
             return false;
         }
 
-        bool deleteSuccess = SaveModel.Instance.DeleteSaveData(0);
+        bool deleteSuccess = SaveManager.Instance.DeleteSaveData(0);
         if (deleteSuccess)
         {
             // 重置游戏状态
-            SaveModel.Instance.ClearCurrentGameData();
+            SaveManager.Instance.ClearCurrentGameData();
             Debug.Log("[DebugModel] Current save deleted and game state reset");
             return true;
         }
@@ -208,7 +208,7 @@ public class DebugModel
         }
 
         // 存档信息
-        var saveInfo = SaveModel.Instance.GetSaveInfo(0);
+        var saveInfo = SaveManager.Instance.GetSaveInfo(0);
         if (saveInfo != null && !saveInfo.IsEmpty)
         {
             logBuilder.AppendLine("存档信息:");

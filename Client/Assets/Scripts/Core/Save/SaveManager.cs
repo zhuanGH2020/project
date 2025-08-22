@@ -4,18 +4,18 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.AI;
 
-// 存档模型 - 负责存档系统的业务逻辑管理
+// 存档管理器 - 负责存档系统的业务逻辑管理
 // 提供存档数据的统一访问接口和自动保存机制
-// 遵循项目Model层设计模式，整合了存档管理的所有功能
-public class SaveModel
+// 遵循项目Manager层设计模式，整合了存档管理的所有功能
+public class SaveManager
 {
-    private static SaveModel _instance;
-    public static SaveModel Instance
+    private static SaveManager _instance;
+    public static SaveManager Instance
     {
         get
         {
             if (_instance == null)
-                _instance = new SaveModel();
+                _instance = new SaveManager();
             return _instance;
         }
     }
@@ -35,12 +35,12 @@ public class SaveModel
     private bool _initialized = false;
     
     // 私有构造函数，确保单例模式
-    private SaveModel() 
+    private SaveManager() 
     {
         _lastAutoSaveTime = Time.time;
     }
     
-    // 初始化存档模型
+    // 初始化存档管理器
     public void Initialize()
     {
         if (_initialized) return;
@@ -51,7 +51,7 @@ public class SaveModel
         if (_autoLoadOnStart && HasSaveData(0))
         {
             bool loadSuccess = LoadGame(0);
-            Debug.Log($"[SaveModel] Auto load on start: {(loadSuccess ? "Success" : "Failed")}");
+            Debug.Log($"[SaveManager] Auto load on start: {(loadSuccess ? "Success" : "Failed")}");
         }
         
         // 订阅存档事件
@@ -60,7 +60,7 @@ public class SaveModel
         EventManager.Instance.Subscribe<GameSaveDeletedEvent>(OnGameSaveDeleted);
         
         _initialized = true;
-        Debug.Log("[SaveModel] Initialized successfully");
+        Debug.Log("[SaveManager] Initialized successfully");
     }
     
     // 更新方法 - 处理自动保存逻辑
@@ -85,7 +85,7 @@ public class SaveModel
         if (_autoSaveOnQuit)
         {
             SaveGame(0);
-            //Debug.Log("[SaveModel] Auto save on quit");
+            //Debug.Log("[SaveManager] Auto save on quit");
         }
         
         // 取消订阅事件
@@ -104,7 +104,7 @@ public class SaveModel
         if (pauseStatus && _autoSaveOnQuit)
         {
             SaveGame(0);
-            Debug.Log("[SaveModel] Auto save on pause");
+            Debug.Log("[SaveManager] Auto save on pause");
         }
     }
     
@@ -121,7 +121,7 @@ public class SaveModel
             SetAutoSave(true, _autoSaveInterval);
         }
         
-        Debug.Log($"[SaveModel] Save config updated - AutoLoad: {autoLoadOnStart}, AutoSave: {autoSaveOnQuit}, Interval: {autoSaveInterval}s");
+        Debug.Log($"[SaveManager] Save config updated - AutoLoad: {autoLoadOnStart}, AutoSave: {autoSaveOnQuit}, Interval: {autoSaveInterval}s");
     }
     
     // ===== 核心存档方法 (从SaveManager迁移) =====
@@ -131,7 +131,7 @@ public class SaveModel
     {
         if (!IsValidSlot(slot))
         {
-            Debug.LogError($"[SaveModel] Invalid save slot: {slot}. Must be 0-{MAX_SAVE_SLOTS - 1}");
+            Debug.LogError($"[SaveManager] Invalid save slot: {slot}. Must be 0-{MAX_SAVE_SLOTS - 1}");
             return false;
         }
         
@@ -150,14 +150,14 @@ public class SaveModel
             // 立即写入磁盘
             PlayerPrefs.Save();
             
-            //Debug.Log($"[SaveModel] Game saved to slot {slot} at {saveData.saveTime}");
+            //Debug.Log($"[SaveManager] Game saved to slot {slot} at {saveData.saveTime}");
             
             EventManager.Instance.Publish(new GameSavedEvent(slot, saveData.saveTime));
             return true;
         }
         catch (Exception e)
         {
-            Debug.LogError($"[SaveModel] Failed to save game to slot {slot}: {e.Message}");
+            Debug.LogError($"[SaveManager] Failed to save game to slot {slot}: {e.Message}");
             return false;
         }
     }
@@ -167,13 +167,13 @@ public class SaveModel
     {
         if (!IsValidSlot(slot))
         {
-            Debug.LogError($"[SaveModel] Invalid save slot: {slot}");
+            Debug.LogError($"[SaveManager] Invalid save slot: {slot}");
             return false;
         }
         
         if (!HasSaveData(slot))
         {
-            Debug.LogWarning($"[SaveModel] No save data found in slot {slot}");
+            Debug.LogWarning($"[SaveManager] No save data found in slot {slot}");
             return false;
         }
         
@@ -184,14 +184,14 @@ public class SaveModel
             
             if (string.IsNullOrEmpty(jsonData))
             {
-                Debug.LogError($"[SaveModel] Save data is empty in slot {slot}");
+                Debug.LogError($"[SaveManager] Save data is empty in slot {slot}");
                 return false;
             }
             
             SaveData saveData = JsonUtility.FromJson<SaveData>(jsonData);
             if (saveData == null)
             {
-                Debug.LogError($"[SaveModel] Failed to parse save data in slot {slot}");
+                Debug.LogError($"[SaveManager] Failed to parse save data in slot {slot}");
                 return false;
             }
             
@@ -199,18 +199,18 @@ public class SaveModel
             int saveVersion = PlayerPrefs.GetInt(GetVersionKey(slot), 1);
             if (saveVersion > CURRENT_SAVE_VERSION)
             {
-                Debug.LogWarning($"[SaveModel] Save version {saveVersion} is newer than current {CURRENT_SAVE_VERSION}");
+                Debug.LogWarning($"[SaveManager] Save version {saveVersion} is newer than current {CURRENT_SAVE_VERSION}");
             }
             
             ApplySaveData(saveData);
-            Debug.Log($"[SaveModel] Game loaded from slot {slot} - {saveData.saveTime}");
+            Debug.Log($"[SaveManager] Game loaded from slot {slot} - {saveData.saveTime}");
             
             EventManager.Instance.Publish(new GameLoadedEvent(slot, saveData.saveTime));
             return true;
         }
         catch (Exception e)
         {
-            Debug.LogError($"[SaveModel] Failed to load game from slot {slot}: {e.Message}");
+            Debug.LogError($"[SaveManager] Failed to load game from slot {slot}: {e.Message}");
             return false;
         }
     }
@@ -247,7 +247,7 @@ public class SaveModel
         }
         catch (Exception e)
         {
-            Debug.LogError($"[SaveModel] Failed to get save info for slot {slot}: {e.Message}");
+            Debug.LogError($"[SaveManager] Failed to get save info for slot {slot}: {e.Message}");
             return null;
         }
     }
@@ -282,14 +282,14 @@ public class SaveModel
                 ClearCurrentGameData();
             }
             
-            Debug.Log($"[SaveModel] Save data deleted from slot {slot}");
+            Debug.Log($"[SaveManager] Save data deleted from slot {slot}");
             
             EventManager.Instance.Publish(new GameSaveDeletedEvent(slot));
             return true;
         }
         catch (Exception e)
         {
-            Debug.LogError($"[SaveModel] Failed to delete save data from slot {slot}: {e.Message}");
+            Debug.LogError($"[SaveManager] Failed to delete save data from slot {slot}: {e.Message}");
             return false;
         }
     }
@@ -305,7 +305,7 @@ public class SaveModel
         // 清空当前游戏中的建筑数据
         ClearCurrentGameData();
         
-        Debug.Log("[SaveModel] All save data cleared");
+        Debug.Log("[SaveManager] All save data cleared");
     }
     
     /// <summary>
@@ -345,7 +345,7 @@ public class SaveModel
             ObjectManager.Instance.CleanupNullReferences();
         }
         
-        Debug.Log("[SaveModel] Current game data cleared - Reset to Day 1, Full Health, No Items, No Buildings, No Equips, Pools Cleared");
+        Debug.Log("[SaveManager] Current game data cleared - Reset to Day 1, Full Health, No Items, No Buildings, No Equips, Pools Cleared");
     }
     
     /// <summary>
@@ -374,7 +374,7 @@ public class SaveModel
                 // 清空装备列表
                 equipsList.Clear();
                 
-                Debug.Log($"[SaveModel] Cleared {equippedIds.Count} equipped items");
+                Debug.Log($"[SaveManager] Cleared {equippedIds.Count} equipped items");
             }
         }
     }
@@ -399,7 +399,7 @@ public class SaveModel
             navAgent.Warp(resetPosition);
         }
         
-        Debug.Log($"[SaveModel] Player position reset to {resetPosition}");
+        Debug.Log($"[SaveManager] Player position reset to {resetPosition}");
     }
     
     // 设置自动保存，enabled: 是否启用自动保存，intervalSeconds: 自动保存间隔（秒）
@@ -407,14 +407,14 @@ public class SaveModel
     {
         _enableAutoSave = enabled;
         _autoSaveInterval = intervalSeconds;
-        Debug.Log($"[SaveModel] Auto save: {enabled}, Interval: {intervalSeconds}s");
+        Debug.Log($"[SaveManager] Auto save: {enabled}, Interval: {intervalSeconds}s");
     }
     
     private void AutoSave()
     {
         if (SaveGame(0)) // 自动保存到槽位0
         {
-            Debug.Log("[SaveModel] Auto save completed");
+            Debug.Log("[SaveManager] Auto save completed");
         }
         _lastAutoSaveTime = Time.time;
     }
@@ -501,7 +501,7 @@ public class SaveModel
         var mapModel = MapModel.Instance;
         mapModel.LoadBuildingsFromSave(saveData.buildingData);
         
-        Debug.Log($"[SaveModel] Save data applied successfully - Day {saveData.clockDay}, Health {saveData.currentHealth}, Hunger {saveData.currentHunger}, Sanity {saveData.currentSanity}, Items {saveData.packageItems.Count}, Buildings {saveData.buildingData.Count}");
+        Debug.Log($"[SaveManager] Save data applied successfully - Day {saveData.clockDay}, Health {saveData.currentHealth}, Hunger {saveData.currentHunger}, Sanity {saveData.currentSanity}, Items {saveData.packageItems.Count}, Buildings {saveData.buildingData.Count}");
     }
     
     // === 辅助方法 ===
@@ -534,35 +534,35 @@ public class SaveModel
     public void QuickSave()
     {
         bool saveSuccess = SaveGame(0);
-        Debug.Log($"[SaveModel] Quick save: {(saveSuccess ? "Success" : "Failed")}");
+        Debug.Log($"[SaveManager] Quick save: {(saveSuccess ? "Success" : "Failed")}");
     }
     
     // 快速从槽位0加载
     public void QuickLoad()
     {
         bool loadSuccess = LoadGame(0);
-        Debug.Log($"[SaveModel] Quick load: {(loadSuccess ? "Success" : "Failed")}");
+        Debug.Log($"[SaveManager] Quick load: {(loadSuccess ? "Success" : "Failed")}");
     }
     
     // 保存到指定槽位
     public void SaveToSlot(int slot)
     {
         bool saveSuccess = SaveGame(slot);
-        Debug.Log($"[SaveModel] Save to slot {slot}: {(saveSuccess ? "Success" : "Failed")}");
+        Debug.Log($"[SaveManager] Save to slot {slot}: {(saveSuccess ? "Success" : "Failed")}");
     }
     
     // 从指定槽位加载
     public void LoadFromSlot(int slot)
     {
         bool loadSuccess = LoadGame(slot);
-        Debug.Log($"[SaveModel] Load from slot {slot}: {(loadSuccess ? "Success" : "Failed")}");
+        Debug.Log($"[SaveManager] Load from slot {slot}: {(loadSuccess ? "Success" : "Failed")}");
     }
     
     // 删除指定槽位的存档
     public void DeleteSlot(int slot)
     {
         bool deleteSuccess = DeleteSaveData(slot);
-        Debug.Log($"[SaveModel] Delete slot {slot}: {(deleteSuccess ? "Success" : "Failed")}");
+        Debug.Log($"[SaveManager] Delete slot {slot}: {(deleteSuccess ? "Success" : "Failed")}");
     }
     
     // 显示所有存档信息（调试用）
@@ -588,21 +588,21 @@ public class SaveModel
     // 游戏保存完成事件处理
     private void OnGameSaved(GameSavedEvent eventData)
     {
-        Debug.Log($"[SaveModel] Game saved to slot {eventData.Slot} at {eventData.SaveTime}");
+        Debug.Log($"[SaveManager] Game saved to slot {eventData.Slot} at {eventData.SaveTime}");
         // 这里可以添加UI提示等逻辑
     }
     
     // 游戏加载完成事件处理  
     private void OnGameLoaded(GameLoadedEvent eventData)
     {
-        Debug.Log($"[SaveModel] Game loaded from slot {eventData.Slot} - {eventData.SaveTime}");
+        Debug.Log($"[SaveManager] Game loaded from slot {eventData.Slot} - {eventData.SaveTime}");
         // 这里可以添加UI提示等逻辑
     }
     
     // 存档删除事件处理
     private void OnGameSaveDeleted(GameSaveDeletedEvent eventData)
     {
-        Debug.Log($"[SaveModel] Save data deleted from slot {eventData.Slot}");
+        Debug.Log($"[SaveManager] Save data deleted from slot {eventData.Slot}");
         // 这里可以添加UI提示等逻辑
     }
 
@@ -615,7 +615,7 @@ public class SaveModel
         // 注意：ObjectPoolManager是泛型类，需要根据具体的枚举类型来清理
         // 这里作为预留接口，可以根据项目需要进行扩展
         
-        Debug.Log("[SaveModel] Object pools cleared (if any)");
+        Debug.Log("[SaveManager] Object pools cleared (if any)");
     }
     
 } 

@@ -833,7 +833,7 @@ private void OnLevelWasLoaded(int level)
 ## 参考的项目代码
 - **EventManager.cs** (Assets/Scripts/Core/Event/EventManager.cs) - 单例模式设计
 - **GameEvents.cs** (Assets/Scripts/Core/Event/GameEvents.cs) - 事件定义
-- **ClockModel.cs, SaveModel.cs** - Model类设计模式
+- **ClockModel.cs, SaveManager.cs** - Model类/Manager类设计模式
 - **GameMain.cs** (Assets/Scripts/GameMain.cs) - 统一系统管理
 
 ## 系统优势 (v4.0更新)

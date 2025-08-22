@@ -1,76 +1,113 @@
 # View开发规范
 
 ## 简介
-View是Unity UI系统中的视图层组件，负责UI界面的显示、交互处理和用户输入响应。本规范基于项目现有的MakeMenuView、MakeView、PackageView等实现总结而来，并采用BaseView统一资源管理架构。
+View是Unity UI系统中的视图层组件，负责UI界面的显示、交互处理和用户输入响应。本规范基于项目现有的BaseView架构和实际View实现总结而来，采用标准Unity生命周期和Manager便捷调用模式。
 
 ## 基础结构规范
 
 ### 类声明和继承
-**所有View必须继承BaseView，获得统一的资源管理能力：**
+**所有View必须继承BaseView，获得统一的Manager便捷调用能力：**
 ```csharp
 /// <summary>
 /// 视图功能描述 - 详细说明视图职责和交互逻辑
 /// </summary>
-public class ExampleView : BaseView  // ✅ 继承BaseView，不是MonoBehaviour
+public class ExampleView : BaseView  // ✅ 继承BaseView (MonoBehaviour)
 {
     // 类实现
 }
 ```
 
 ### 生命周期方法
-每个View必须包含以下生命周期方法：
+每个View使用标准Unity生命周期方法：
 ```csharp
-void Start()
+protected override void Start()
 {
+    base.Start();
     InitializeView();
     SubscribeEvents();
 }
 
-// ✅ 使用OnViewDestroy替代OnDestroy
-protected override void OnViewDestroy()
+protected override void OnDestroy()
 {
+    base.OnDestroy();
     UnsubscribeEvents();
-    // 注意：资源会自动释放，无需手动处理
+    // 手动清理资源和协程
 }
+```
+
+## BaseView便捷API
+
+### Manager调用方法
+继承BaseView后，可直接使用以下便捷方法：
+
+```csharp
+// 资源加载
+protected T LoadResource<T>(string path) where T : UnityEngine.Object
+
+// 配置获取
+protected ConfigReader GetConfig(string configName)
+
+// 事件管理
+protected void SubscribeEvent<T>(System.Action<T> handler) where T : IEvent
+protected void UnsubscribeEvent<T>(System.Action<T> handler) where T : IEvent
+protected void PublishEvent<T>(T eventData) where T : IEvent
+
+// UI便捷方法
+protected GameObject FindChildByName(string childName)
+protected T FindChildComponent<T>(string childName) where T : Component
+public void Show() // 显示View
+public void Hide() // 隐藏View
+
+// 图片加载（调用ResourceUtils）
+protected bool LoadAndSetSprite(Image image, string imagePath, bool isAtlas = true)
 ```
 
 ## 资源管理规范
 
-### BaseView资源管理API
-继承BaseView后，可直接使用以下资源管理方法：
+### 使用ResourceUtils工具类
+项目提供ResourceUtils工具类进行资源加载和管理：
 
-```csharp
-// 图片资源加载
-protected bool LoadAndSetSprite(Image image, string spritePath)
-protected bool LoadAndSetSprite(string imagePath, string spritePath)
-
-// 物品图标加载
-protected bool LoadAndSetItemIcon(string imagePath, int itemId)
-
-// 通用资源加载
-protected T LoadResource<T>(string path) where T : Object
-```
-
-### 资源使用示例
 ```csharp
 private void InitializeView()
 {
-    // ✅ 一行代码设置物品图标，自动管理资源生命周期
-    LoadAndSetItemIcon("img_icon", 1000);
+    // ✅ 使用ResourceUtils加载并设置物品图标
+    var imgIcon = FindChildComponent<Image>("img_icon");
+    ResourceUtils.LoadAndSetItemIcon(imgIcon, itemId);
     
-    // ✅ 一行代码设置背景图片
-    LoadAndSetSprite("img_background", "UI/background");
+    // ✅ 使用ResourceUtils加载并设置背景图片
+    var imgBackground = FindChildComponent<Image>("img_background");
+    ResourceUtils.LoadAndSetSprite(imgBackground, "UI/background");
     
-    // ✅ 加载其他类型资源
+    // ✅ 使用BaseView便捷方法加载资源
     var audioClip = LoadResource<AudioClip>("Audio/UI/click");
     var effectPrefab = LoadResource<GameObject>("Prefabs/Effects/ui_glow");
+}
+```
+
+### 资源释放管理
+```csharp
+private List<Object> _loadedResources = new List<Object>();
+
+private void LoadResourcesWithCache()
+{
+    var imgIcon = FindChildComponent<Image>("img_icon");
+    // 使用cache参数自动收集加载的资源
+    ResourceUtils.LoadAndSetItemIcon(imgIcon, itemId, false, _loadedResources);
+}
+
+protected override void OnDestroy()
+{
+    base.OnDestroy();
+    // 手动释放资源
+    ResourceUtils.ReleaseResources(_loadedResources);
+    UnsubscribeEvents();
 }
 ```
 
 ## 组件查找规范
 
 ### UI组件声明
-- **禁止使用[SerializeField]**，所有UI组件通过代码动态查找
+- **禁止使用[SerializeField]**，所有UI组件通过代码动态查找（过渡期可暂时保留）
 - 使用private字段存储UI组件引用
 - 组件字段命名：使用组件类型简写+下划线+功能名称
 
@@ -80,6 +117,7 @@ private Button btn_close;
 private Toggle toggle_option;
 private Image img_icon;
 private Transform container_list;
+private Slider slider_health;
 ```
 
 ### 组件查找模式
@@ -87,12 +125,21 @@ private Transform container_list;
 ```csharp
 private void InitializeView()
 {
-    // 查找UI组件（如果未找到则为null，不报错）
-    txt_title = transform.Find("txt_title")?.GetComponent<TextMeshProUGUI>();
-    btn_close = transform.Find("btn_close")?.GetComponent<Button>();
+    // 使用BaseView便捷方法查找组件
+    txt_title = FindChildComponent<TextMeshProUGUI>("txt_title");
+    btn_close = FindChildComponent<Button>("btn_close");
+    
+    // 或使用传统transform.Find方式
+    slider_health = transform.Find("slider_health")?.GetComponent<Slider>();
+    
+    // 组件未找到时的错误处理
+    if (slider_health == null)
+    {
+        Debug.LogError("[ExampleView] slider_health component not found");
+    }
     
     // 设置初始状态
-    SetViewVisible(false);
+    Hide(); // 或 gameObject.SetActive(false);
 }
 ```
 
@@ -125,14 +172,22 @@ private Transform FindChildWithUIList()
 ```csharp
 private void SubscribeEvents()
 {
-    EventManager.Instance.Subscribe<ExampleEvent>(OnExampleEvent);
-    EventManager.Instance.Subscribe<CloseUIEvent>(OnCloseUI);
+    // 使用BaseView便捷方法
+    SubscribeEvent<ExampleEvent>(OnExampleEvent);
+    SubscribeEvent<CloseUIEvent>(OnCloseUI);
+    
+    // 或使用EventManager直接调用
+    EventManager.Instance.Subscribe<ItemChangeEvent>(OnItemChanged);
 }
 
 private void UnsubscribeEvents()
 {
-    EventManager.Instance.Unsubscribe<ExampleEvent>(OnExampleEvent);
-    EventManager.Instance.Unsubscribe<CloseUIEvent>(OnCloseUI);
+    // 使用BaseView便捷方法
+    UnsubscribeEvent<ExampleEvent>(OnExampleEvent);
+    UnsubscribeEvent<CloseUIEvent>(OnCloseUI);
+    
+    // 或使用EventManager直接调用
+    EventManager.Instance.Unsubscribe<ItemChangeEvent>(OnItemChanged);
 }
 ```
 
@@ -140,7 +195,7 @@ private void UnsubscribeEvents()
 ```csharp
 private void OnExampleEvent(ExampleEvent eventData)
 {
-    if (eventData == null || !ValidateEventData(eventData))
+    if (eventData == null)
     {
         Debug.LogWarning("Invalid event data received");
         return;
@@ -172,7 +227,8 @@ private void LoadViewData()
 ```csharp
 private void LoadConfigData()
 {
-    var reader = ConfigManager.Instance.GetReader("ConfigTableName");
+    // 使用BaseView便捷方法
+    var reader = GetConfig("ConfigTableName");
     if (reader == null)
     {
         Debug.LogError("Failed to get config reader");
@@ -227,17 +283,12 @@ private void SetupListItem(GameObject item, DataType data)
         txtName.text = data.Name;
     }
     
-    // ✅ 设置列表项图标（使用ResourceUtils或手动处理）
+    // ✅ 设置列表项图标（使用ResourceUtils）
     var imgIcon = item.transform.Find("img_icon")?.GetComponent<Image>();
     if (imgIcon != null && data.IconId > 0)
     {
-        // 方式1：使用ResourceUtils（不自动管理，适用于列表项）
+        // 使用ResourceUtils工具方法
         ResourceUtils.LoadAndSetItemIcon(imgIcon, data.IconId);
-        
-        // 方式2：使用BaseView的LoadResource，手动设置图标
-        // var iconPath = GetItemIconPath(data.IconId);
-        // var sprite = LoadResource<Sprite>(iconPath);
-        // if (sprite != null) imgIcon.sprite = sprite;
     }
     
     // 设置按钮交互
@@ -263,7 +314,11 @@ private void SetupButtonInteractions()
 
 private void OnCloseClick()
 {
-    CloseView();
+    // 使用UIManager关闭（推荐）
+    UIManager.Instance.Hide<ExampleView>();
+    
+    // 或传统方式
+    // Hide();
 }
 ```
 
@@ -306,27 +361,22 @@ public void CloseView()
 // ✅ 检查UI状态
 public bool IsViewVisible()
 {
-    return UIManager.Instance.IsVisible<YourView>();
+    return gameObject.activeInHierarchy;
 }
 ```
 
-#### 传统方式：直接控制GameObject（兼容现有代码）
+#### 传统方式：直接控制GameObject
 ```csharp
 // ⚠️ 传统方式：仍可使用，但推荐迁移到UIManager
-private void SetViewVisible(bool visible)
-{
-    gameObject.SetActive(visible);
-}
-
 public void ShowView()
 {
-    SetViewVisible(true);
+    Show(); // 或 gameObject.SetActive(true);
     RefreshViewContent();
 }
 
 public void CloseView()
 {
-    SetViewVisible(false);
+    Hide(); // 或 gameObject.SetActive(false);
     CleanupViewState();
 }
 ```
@@ -414,7 +464,7 @@ private void SetMenuVisible(bool visible)
 
 ### 1. 容错处理
 - 所有外部数据获取都要进行空值检查
-- UI组件查找失败时不应报错，只记录警告
+- UI组件查找失败时应记录错误日志，便于调试
 
 ### 2. 状态管理
 - 维护视图的当前状态字段
@@ -428,24 +478,29 @@ private void SetMenuVisible(bool visible)
 - View只负责显示和交互，不处理业务逻辑
 - 所有数据操作通过Model进行
 
-### 5. 资源管理（BaseView架构）
-- **自动资源释放**：继承BaseView后，所有通过LoadResource加载的资源会在View销毁时自动释放
-- **使用BaseView API**：优先使用LoadAndSetSprite、LoadAndSetItemIcon等便捷方法
-- **避免手动资源管理**：不要在OnViewDestroy中手动释放资源，BaseView会自动处理
-- **事件订阅清理**：在OnViewDestroy中清理事件订阅和协程等非资源对象
+### 5. 资源管理
+- **使用ResourceUtils工具类**：统一的资源加载和管理接口
+- **缓存机制**：使用cache参数收集加载的资源，便于后续释放
+- **手动资源清理**：在OnDestroy中清理事件订阅、协程和资源
 
 ```csharp
-protected override void OnViewDestroy()
+private List<Object> _loadedResources = new List<Object>();
+
+protected override void OnDestroy()
 {
-    // ✅ 只处理事件和协程清理
+    base.OnDestroy();
+    
+    // ✅ 清理事件订阅
     UnsubscribeEvents();
+    
+    // ✅ 清理协程
     if (_updateCoroutine != null)
     {
         StopCoroutine(_updateCoroutine);
     }
     
-    // ❌ 不要手动释放资源，BaseView自动处理
-    // ResourceManager.Instance.Release(sprite); // 错误做法
+    // ✅ 释放加载的资源
+    ResourceUtils.ReleaseResources(_loadedResources);
 }
 ```
 
@@ -453,14 +508,14 @@ protected override void OnViewDestroy()
 - **统一管理**：通过UIManager统一控制UI显示、隐藏、销毁
 - **层级控制**：支持UI层级管理，自动处理显示顺序
 - **事件驱动**：UI显示/隐藏自动发布事件，便于其他系统响应
-- **全局控制**：支持一键隐藏/显示所有UI
 
 ```csharp
 // ✅ UIManager集成示例
 public class ExampleView : BaseView
 {
-    void Start()
+    protected override void Start()
     {
+        base.Start();
         InitializeView();
         SubscribeEvents();
         // 不需要手动设置显示状态，由UIManager控制
@@ -488,27 +543,21 @@ public class SomeController : MonoBehaviour
 }
 ```
 
-### 7. 架构优势
-- **统一继承**：所有View继承BaseView，架构统一
-- **资源安全**：自动资源管理，避免内存泄漏
-- **代码简洁**：一行代码完成资源加载和UI设置
-- **易于维护**：标准化的生命周期管理
-- **集中管理**：UIManager提供统一的UI控制入口
-
 ## 参考代码位置
 
 本规范基于以下项目文件总结：
-- `Assets/Scripts/UI/Base/BaseView.cs` (View基类，资源管理核心)
-- `Assets/Scripts/UI/Base/BaseViewExample.cs` (BaseView使用示例)
-- `Assets/Scripts/Manager/UIManager.cs` (UI管理器，统一UI控制) 🔥**新增**
-- `Assets/Scripts/UI/Make/MakeMenuView.cs` (完整的复杂View示例)
-- `Assets/Scripts/UI/Make/MakeView.cs` (简单的列表View示例)  
-- `Assets/Scripts/UI/Package/PackageView.cs` (数据驱动View示例)
+- `Assets/Scripts/UI/Base/BaseView.cs` (View基类，Manager便捷调用)
+- `Assets/Scripts/Manager/UIManager.cs` (UI管理器，统一UI控制)
+- `Assets/Scripts/Utils/ResourceUtils.cs` (资源工具类，统一资源管理) 
+- `Assets/Scripts/UI/Menu/MenuView.cs` (简洁的View示例)
+- `Assets/Scripts/UI/PlayerInfo/PlayerInfoView.cs` (标准View示例)
+- `Assets/Scripts/UI/Package/PackageView.cs` (复杂View示例)
+- `Assets/Scripts/UI/UIDlg/NoticeView.cs` (事件驱动View示例)
 
 开发新的View时，建议：
-1. 继承BaseView而不是MonoBehaviour
-2. 参考BaseViewExample.cs学习资源管理用法
-3. **使用UIManager进行UI显示控制（推荐）** 🔥**新增**
+1. 继承BaseView获得Manager便捷调用能力
+2. 使用ResourceUtils进行统一资源管理
+3. **优先使用UIManager进行UI显示控制（推荐）**
 4. 参考现有View实现业务逻辑
 5. 创建对应的UI预制体放置在`Assets/Resources/Prefabs/UI/`
 
@@ -516,11 +565,11 @@ public class SomeController : MonoBehaviour
 
 ### 现有View改造步骤
 
-#### BaseView迁移（必选）
-1. **修改继承关系**：`MonoBehaviour` → `BaseView`
-2. **修改生命周期**：`OnDestroy()` → `OnViewDestroy()`
-3. **使用资源管理API**：将手动资源加载改为BaseView的便捷方法
-4. **移除手动资源释放代码**：BaseView自动处理
+#### 基础改造（必选）
+1. **确认继承关系**：确保继承BaseView而非直接继承MonoBehaviour
+2. **使用便捷方法**：将EventManager.Instance调用改为使用BaseView便捷方法
+3. **使用ResourceUtils**：将手动资源加载改为ResourceUtils工具类
+4. **手动资源管理**：在OnDestroy中清理事件订阅和资源
 
 #### UIManager集成（推荐）
 5. **移除SerializeField**：按照项目规范，所有UI组件通过代码查找
@@ -530,73 +579,44 @@ public class SomeController : MonoBehaviour
 
 ### 改造示例
 
-#### BaseView迁移示例
+#### 基础改造示例
 ```csharp
 // ❌ 改造前
-public class ItemView : MonoBehaviour
+public class ItemView : BaseView
 {
+    private void Start()
+    {
+        EventManager.Instance.Subscribe<ItemEvent>(OnItemEvent);
+        
+        // 手动加载资源
+        var iconSprite = ResourceManager.Instance.Load<Sprite>("UI/Icons/item_icon");
+        imgIcon.sprite = iconSprite;
+    }
+    
     private void OnDestroy()
     {
-        // 手动资源管理代码
-        foreach (var sprite in loadedSprites)
-        {
-            ResourceManager.Instance.Release(sprite);
-        }
+        EventManager.Instance.Unsubscribe<ItemEvent>(OnItemEvent);
     }
 }
 
 // ✅ 改造后
 public class ItemView : BaseView
 {
-    private void Start()
+    private List<Object> _loadedResources = new List<Object>();
+    
+    protected override void Start()
     {
-        // 使用BaseView API，自动资源管理
-        LoadAndSetItemIcon("img_icon", 1000);
+        base.Start();
+        SubscribeEvent<ItemEvent>(OnItemEvent); // 使用BaseView便捷方法
+        
+        // 使用ResourceUtils统一资源管理
+        ResourceUtils.LoadAndSetItemIcon(imgIcon, itemId, false, _loadedResources);
     }
     
-    protected override void OnViewDestroy()
+    protected override void OnDestroy()
     {
-        // 只处理事件清理，资源自动释放
-        UnsubscribeEvents();
+        base.OnDestroy();
+        UnsubscribeEvent<ItemEvent>(OnItemEvent); // 使用BaseView便捷方法
+        ResourceUtils.ReleaseResources(_loadedResources); // 清理资源
     }
 }
-```
-
-#### UIManager集成迁移示例
-```csharp
-// ❌ 传统方式
-public class InventoryController : MonoBehaviour
-{
-    [SerializeField] private GameObject inventoryView;
-    
-    private void OpenInventory()
-    {
-        inventoryView.SetActive(true);
-    }
-    
-    private void CloseInventory()
-    {
-        inventoryView.SetActive(false);
-    }
-}
-
-// ✅ UIManager方式
-public class InventoryController : MonoBehaviour
-{
-    private void OpenInventory()
-    {
-        UIManager.Instance.Show<InventoryView>(UILayer.Popup);
-    }
-    
-    private void CloseInventory()
-    {
-        UIManager.Instance.Hide<InventoryView>();
-    }
-    
-    private void PauseGame()
-    {
-        // 游戏暂停时隐藏所有UI
-        UIManager.Instance.HideAll();
-    }
-}
-``` 

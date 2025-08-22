@@ -239,7 +239,7 @@ float defense = equipReader.GetValue<float>(equipId, "Defense", 0f);
 
 ### 存档保存
 ```csharp
-// SaveModel.cs - 保存装备数据
+// SaveManager.cs - 保存装备数据
 var equippedItemIds = EquipManager.Instance.GetAllEquippedItemIds();
 foreach (var kvp in equippedItemIds)
 {
@@ -252,7 +252,7 @@ foreach (var kvp in equippedItemIds)
 
 ### 存档加载
 ```csharp
-// SaveModel.cs - 加载装备数据
+// SaveManager.cs - 加载装备数据
 EquipManager.Instance.LoadEquippedItemsFromSave(saveData.equippedItems);
 ```
 
@@ -354,7 +354,7 @@ private void OnEquipChanged(EquipChangeEvent eventData)
   - 改为调试和状态检查用途
   - 检查Player实际装备组件是否与EquipManager管理状态一致
 
-#### 2.2 SaveModel.cs
+#### 2.2 SaveManager.cs
 - **简化存档加载**：
   - 删除重复的装备加载逻辑
   - 直接调用`EquipManager.Instance.LoadEquippedItemsFromSave()`
@@ -411,7 +411,7 @@ private void OnEquipChanged(EquipChangeEvent eventData)
 **修改的文件**:
 - `EquipManager.cs`：类名和日志标识更新
 - `PackageView.cs`：所有`EquipmentManager.Instance`改为`EquipManager.Instance`
-- `SaveModel.cs`：装备状态同步调用更新
+- `SaveManager.cs`：装备状态同步调用更新
 - `EquipmentSystem_README.md`：文档中的类名引用更新
 
 **重命名优势**:

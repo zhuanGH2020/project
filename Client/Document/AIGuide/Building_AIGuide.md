@@ -402,7 +402,7 @@ public bool UpgradeLevel()
 
 #### 3. 保存系统集成
 ```csharp
-// Building数据会自动被SaveModel收集和保存
+// Building数据会自动被SaveManager收集和保存
 // 通过MapModel.MapDataList进行序列化
 ```
 
