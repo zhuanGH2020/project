@@ -15,6 +15,7 @@
 - **接口驱动**: 通过接口定义明确的契约
 - **继承层次**: 抽象基类提供通用功能，具体类实现特殊逻辑
 - **数据驱动**: 通过CSV配置表管理游戏参数
+- **事件驱动**: 使用事件系统实现组件间解耦通信
 
 ### 文件结构
 ```
@@ -26,7 +27,6 @@ Assets/Script/
 │   ├── Interfaces/                 # 接口定义
 │   ├── Base/                       # 抽象基类
 │   ├── Equip/                      # 装备系统
-│   │   └── Weapons/               # 武器实现
 │   ├── Monster/                    # 怪物系统
 │   ├── Partner/                    # 伙伴系统
 │   └── Source/                     # 可交互物体
@@ -102,7 +102,76 @@ public interface IEquippable
 
 ## 具体实现
 
+### 长按连续攻击系统
+
+#### 系统架构
+```
+InputManager (输入检测 + 长按事件)
+    ↓
+Player (直接处理攻击逻辑)
+    ↓
+EquipBase (装备CD控制)
+```
+
+#### 核心特性
+- **长按阈值**: 0.15秒（可配置）
+- **攻击频率**: 完全由装备CD控制
+- **方向跟随**: 攻击方向始终跟随鼠标移动
+- **事件驱动**: 通过OnAttackHold事件实现状态管理
+
+#### 实现细节
+```csharp
+// InputManager中的长按检测
+public event Action<bool> OnAttackHold; // true=按下, false=抬起
+private const float HOLD_THRESHOLD = 0.15f; // 长按阈值
+
+// Player中的连续攻击逻辑
+private void HandleContinuousAttack()
+{
+    if (!_isContinuousAttack) return;
+    TryAttackInMouseDirection(Input.mousePosition); // 装备CD自动控制频率
+}
+```
+
+#### 状态管理
+- **鼠标按下**: 开始长按检测计时
+- **达到阈值**: 发布长按开始事件，Player进入连续攻击状态
+- **持续长按**: 每帧尝试攻击，装备CD自动控制频率
+- **鼠标抬起**: 发布长按结束事件，Player退出连续攻击状态
+
 ### 武器系统
+
+#### 轨迹线系统优化
+
+##### 视觉参数调整
+- **持续时间**: 0.08秒（减少拖尾效果）
+- **宽度曲线**: EaseInOut(0, 1, 1, 0) - 快速消失
+- **透明度曲线**: EaseInOut(0, 1, 0.5f, 0) - 中间点快速下降
+- **LineRenderer宽度**: 起始0.03，结束0.01（更细的轨迹线）
+
+##### 技术实现
+```csharp
+// BulletTrail中的优化设置
+[SerializeField] private float _trailDuration = 0.08f;
+[SerializeField] private AnimationCurve _widthCurve = AnimationCurve.EaseInOut(0, 1, 1, 0);
+[SerializeField] private AnimationCurve _alphaCurve = AnimationCurve.EaseInOut(0, 1, 0.5f, 0);
+
+// LineRenderer属性优化
+_lineRenderer.startWidth = 0.03f;  // 减少起始宽度
+_lineRenderer.endWidth = 0.01f;    // 减少结束宽度
+```
+
+#### 装备CD平衡调整
+
+##### 冲锋枪优化
+- **原CD**: 0.1秒（每秒10次攻击）
+- **新CD**: 0.3秒（每秒3.3次攻击）
+- **效果**: 减少攻击频率，降低轨迹线拖尾效果
+
+##### 配置表更新
+```csv
+2001,冲锋枪,Hand,Uzi,Icons/Items/zombie_heart,冲锋枪，射速极快适合近战,Prefabs/Equips/pbsc_equip_uzi,,15,0,150,1,0.3,15
+```
 
 #### Uzi冲锋枪
 - **类型**: 远程武器
@@ -144,7 +213,7 @@ public interface IEquippable
 
 ### 配置表设计
 1. **Tool.csv**: 工具配置（ID: 1xxx）
-2. **Weapon.csv**: 武器配置（ID: 2xxx）
+2. **Equip.csv**: 装备配置（ID: 2xxx，包含武器、护甲等）
 3. **Source.csv**: 可交互物体配置（ID: 3xxx）
 4. **Item.csv**: 物品配置（ID: 4xxx）
 5. **Monster.csv**: 怪物配置（ID: 5xxx）
@@ -165,7 +234,7 @@ public interface IEquippable
 
 ## 关键设计决策
 
-### 1. 武器系统设计
+### 1. 装备系统设计
 - **问题**: 远程武器和近战武器是否需要分别实现基类
 - **决策**: 分别实现，因为攻击逻辑差异较大
 - **结果**: 更好的代码组织和扩展性
@@ -177,10 +246,22 @@ public interface IEquippable
 
 ### 3. 配置系统
 - **问题**: 是否支持枚举数组
-- **决策**: 支持，因为工具/武器需要配置多个目标类型
+- **决策**: 支持，因为工具/装备需要配置多个目标类型
 - **结果**: 更灵活的配置，减少配置表数量
 
 ## 性能优化
+
+### 长按连续攻击优化
+
+#### 攻击频率控制
+- **装备CD驱动**: 攻击频率完全由装备配置控制，避免过度频繁的攻击
+- **状态管理**: 使用布尔标志管理连续攻击状态，减少不必要的计算
+- **事件驱动**: 通过事件系统实现组件解耦，避免直接引用
+
+#### 轨迹线性能优化
+- **持续时间控制**: 0.08秒的轨迹线持续时间，减少内存占用
+- **快速消失**: 使用EaseInOut曲线，轨迹线快速消失，减少视觉干扰
+- **宽度优化**: 更细的轨迹线，减少渲染开销
 
 ### 对象池系统
 - 弹道特效使用临时对象，自动销毁
@@ -201,14 +282,25 @@ public interface IEquippable
 - 实时查看装备状态和属性变化
 
 ### 运行时测试
-- 武器攻击逻辑验证
+- 装备攻击逻辑验证
 - 怪物AI行为测试
 - 装备系统功能验证
 
 ## 后续扩展
 
+### 长按连续攻击系统改进
+
+#### 已解决的问题
+1. **鼠标松开后仍在攻击**: 通过添加`_hasTriggeredHold`状态变量解决
+2. **轨迹线拖尾效果**: 通过调整装备CD和轨迹线参数优化
+3. **架构冗余**: 移除CombatInputManager，简化系统架构
+
+#### 未来改进方向
+1. **攻击模式多样化**: 支持不同装备的不同连续攻击模式
+2. **视觉反馈增强**: 添加连续攻击的视觉和音效反馈
+
 ### 可能的改进
-1. **音效系统**: 添加武器射击音效
+1. **音效系统**: 添加装备使用音效
 2. **粒子特效**: 增强视觉效果
 3. **AI系统**: 改进怪物和伙伴的AI逻辑
 4. **装备系统**: 添加更多装备类型和部位
@@ -224,7 +316,7 @@ public interface IEquippable
 本次战斗系统实现成功建立了完整的架构框架，包括：
 - 清晰的接口定义和继承层次
 - 灵活的配置系统支持
-- 可扩展的武器和怪物系统
+- 可扩展的装备和怪物系统
 - 合理的玩家系统设计
 - 实用的编辑器工具
 

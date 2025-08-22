@@ -7,9 +7,9 @@ using System.Collections;
 public class BulletTrail : MonoBehaviour
 {
     [Header("轨迹设置")]
-    [SerializeField] private float _trailDuration = 0.2f;    // 轨迹显示持续时间
-    [SerializeField] private AnimationCurve _widthCurve = AnimationCurve.Linear(0, 1, 1, 0); // 宽度动画曲线
-    [SerializeField] private AnimationCurve _alphaCurve = AnimationCurve.Linear(0, 1, 1, 0); // 透明度动画曲线
+    [SerializeField] private float _trailDuration = 0.2f;    // 轨迹显示持续时间（减少拖尾效果）
+    [SerializeField] private AnimationCurve _widthCurve = AnimationCurve.EaseInOut(0, 1, 1, 0); // 宽度动画曲线（快速消失）
+    [SerializeField] private AnimationCurve _alphaCurve = AnimationCurve.EaseInOut(0, 1, 1, 0); // 透明度动画曲线（快速消失）
     
     private LineRenderer _lineRenderer;
     private Material _trailMaterial;
@@ -61,8 +61,8 @@ public class BulletTrail : MonoBehaviour
         _originalColor = _trailMaterial.color;
         
         // Setup LineRenderer properties
-        _lineRenderer.startWidth = 0.05f;
-        _lineRenderer.endWidth = 0.02f;
+        _lineRenderer.startWidth = 0.03f;  // 减少起始宽度
+        _lineRenderer.endWidth = 0.01f;    // 减少结束宽度
         _originalWidth = _lineRenderer.startWidth;
         _lineRenderer.useWorldSpace = true;
         _lineRenderer.sortingOrder = 10;

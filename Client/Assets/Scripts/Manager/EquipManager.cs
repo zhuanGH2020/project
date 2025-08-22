@@ -13,9 +13,6 @@ public class EquipManager
     // 装备数据（单一数据源）- 直接存储装备ID
     private Dictionary<EquipPart, int> _equippedItems = new Dictionary<EquipPart, int>();
     
-    // 装备变化事件
-    public event System.Action<EquipPart, int, bool> OnEquipmentChanged; // equipPart, equipId, isEquipped
-    
     private EquipManager() { }
     
     /// <summary>
@@ -29,7 +26,7 @@ public class EquipManager
         // 检查物品是否为装备类型
         var itemConfig = ItemManager.Instance.GetItem(itemId);
         if (itemConfig == null || !itemConfig.IsEquip())
-    {
+        {
             Debug.LogWarning($"[EquipManager] 物品 {itemId} 不是装备类型");
             return false;
         }
@@ -40,9 +37,10 @@ public class EquipManager
         {
             Debug.LogWarning($"[EquipManager] 无法获取装备 {itemId} 的配置");
             return false;
-    }
+        }
 
         EquipPart configEquipPart = equipReader.GetValue<EquipPart>(itemId, "Type", EquipPart.None);
+        
         if (configEquipPart != equipPart)
         {
             Debug.LogWarning($"[EquipManager] 物品 {itemId} 不能装备到 {equipPart} 部位，配置部位为 {configEquipPart}");
@@ -51,7 +49,7 @@ public class EquipManager
         
         // 检查背包中是否有该物品
         if (!PackageModel.Instance.HasEnoughItem(itemId, 1))
-    {
+        {
             Debug.LogWarning($"[EquipManager] 背包中没有物品 {itemId}");
             return false;
         }
@@ -62,7 +60,7 @@ public class EquipManager
         // 从背包移除物品
         PackageModel.Instance.RemoveItem(itemId, 1);
         
-                // 创建装备组件并装备到Player
+        // 创建装备组件并装备到Player
         var player = Player.Instance;
         if (player != null)
         {
@@ -72,8 +70,8 @@ public class EquipManager
                 // 直接存储装备ID
                 _equippedItems[equipPart] = itemId;
                 
-                // 触发装备变化事件
-                OnEquipmentChanged?.Invoke(equipPart, itemId, true);
+                // 使用事件系统发布装备变化事件
+                EventManager.Instance.Publish(new EquipChangeEvent(equipPart, itemId, true));
                 
                 Debug.Log($"[EquipManager] 成功装备物品 {itemId} 到 {equipPart} 部位");
                 return true;
@@ -88,7 +86,7 @@ public class EquipManager
     /// </summary>
     /// <param name="equipPart">装备部位</param>
     /// <returns>是否卸下成功</returns>
-        public bool UnequipItem(EquipPart equipPart)
+    public bool UnequipItem(EquipPart equipPart)
     {
         if (!_equippedItems.ContainsKey(equipPart))
         {
@@ -119,8 +117,8 @@ public class EquipManager
             Debug.LogWarning($"[EquipManager] 背包已满，无法卸下装备 {equipId}");
         }
         
-        // 触发装备变化事件
-        OnEquipmentChanged?.Invoke(equipPart, equipId, false);
+        // 使用事件系统发布装备变化事件
+        EventManager.Instance.Publish(new EquipChangeEvent(equipPart, equipId, false));
         
         Debug.Log($"[EquipManager] 成功卸下 {equipPart} 部位的装备 {equipId}");
         return true;
@@ -167,12 +165,16 @@ public class EquipManager
     {
         _equippedItems.Clear();
         
-        if (equippedItems == null || equippedItems.Count == 0) return;
+        if (equippedItems == null || equippedItems.Count == 0) 
+        {
+            return;
+        }
         
         var player = Player.Instance;
-        if (player == null) return;
-        
-        Debug.Log($"[EquipManager] Loading {equippedItems.Count} equipped items from save");
+        if (player == null) 
+        {
+            return;
+        }
         
         foreach (int equipId in equippedItems)
         {
@@ -199,7 +201,6 @@ public class EquipManager
             {
                 // 直接存储装备ID
                 _equippedItems[equipPart] = equipId;
-                Debug.Log($"[EquipManager] Successfully loaded equipment {equipId} to {equipPart} slot");
             }
             else
             {
@@ -207,7 +208,11 @@ public class EquipManager
             }
         }
         
-        Debug.Log($"[EquipManager] Loaded {_equippedItems.Count} equipped items from save");
+        // 存档加载完成后，发布装备刷新事件，通知UI更新所有装备槽位
+        if (_equippedItems.Count > 0)
+        {
+            EventManager.Instance.Publish(new EquipRefreshEvent(_equippedItems.Count));
+        }
     }
     
     /// <summary>

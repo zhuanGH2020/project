@@ -76,6 +76,21 @@ public abstract class CombatEntity : DamageableObject, IAttacker
         
         // 初始化NavMeshAgent
         InitializeNavMeshAgent();
+        
+        // 自动查找手部节点
+        InitializeHandPoint();
+    }
+    
+    /// <summary>
+    /// 初始化手部挂载点
+    /// </summary>
+    protected virtual void InitializeHandPoint()
+    {
+        _handPoint = transform.Find("hand");
+        if (_handPoint == null)
+        {
+            Debug.LogWarning($"[{name}] Hand point not found! Please ensure there's a child GameObject named 'hand'");
+        }
     }
 
     protected virtual void Update()

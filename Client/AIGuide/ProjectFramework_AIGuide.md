@@ -336,15 +336,15 @@ public class HarvestableObject : Building
 
 **Drop.csv格式**：
 ```csv
-Id,Name,RequiredWeaponId,AnyWeapon,DropItemId1,DropCount1,DropChance1,...
+Id,Name,RequiredEquipId,AnyEquip,DropItemId1,DropCount1,DropChance1,...
 30001,树,1001,false,13001,3,0.8,11001,1,0.3
 30005,浆果丛,,false,12001,2,1
 5000,僵尸,,true,16001,1,0.3,15001,1,0.5
 ```
 
 **配置说明**：
-- **RequiredWeaponId**: 专用工具ID（空表示无需专用工具）
-- **AnyWeapon**: true表示需要任意武器攻击，false表示可直接采集
+- **RequiredEquipId**: 专用装备ID（空表示无需专用装备）
+- **AnyEquip**: true表示需要任意装备攻击，false表示可直接采集
 - **DropItemId1-5**: 最多支持5种掉落物品
 - **DropCount/Chance**: 对应的掉落数量和概率
 

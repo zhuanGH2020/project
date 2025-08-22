@@ -15,7 +15,7 @@
 - 装备状态管理：`_equippedItems`字典直接存储装备ID，避免序列化问题
 - 装备操作：`EquipItem()`、`UnequipItem()`等核心方法，返回操作结果
 - 数据同步：与Player组件保持状态一致，支持存档持久化
-- 事件通知：`OnEquipmentChanged`事件通知UI更新，参数为装备ID
+- 事件通知：使用`EquipChangeEvent`事件系统通知UI更新，参数为装备部位、装备ID和操作类型
 
 **关键方法**:
 ```csharp
@@ -62,6 +62,12 @@ private void UpdateEquipSlot(EquipPart equipPart)
 
 // 处理装备槽位点击
 private void OnEquipSlotClicked(EquipPart equipPart)
+
+// 初始化装备槽位（动态查找节点）
+private void InitializeEquipSlots()
+
+// 更新所有装备槽位
+private void UpdateAllEquipSlots()
 ```
 
 ### 3. ConfigManager - 配置管理
@@ -261,31 +267,34 @@ EquipManager.Instance.LoadEquippedItemsFromSave(saveData.equippedItems);
 
 ### 装备变化事件
 ```csharp
-// EquipManager中的事件定义
-public event System.Action<EquipPart, int, bool> OnEquipmentChanged;
+// EquipChangeEvent事件定义
+public class EquipChangeEvent : IEvent
+{
+    public EquipPart EquipPart { get; }    // 装备部位
+    public int EquipId { get; }            // 装备物品ID
+    public bool IsEquipped { get; }        // 是否装备（true表示装备，false表示卸下）
+}
 
-// 事件参数说明
-// equipPart: 装备部位
-// equipId: 装备物品ID
-// isEquipped: true表示装备，false表示卸下
+// EquipManager中发布事件
+EventManager.Instance.Publish(new EquipChangeEvent(equipPart, itemId, true));
 ```
 
 ### 事件订阅示例
 ```csharp
 // PackageView中订阅装备变化事件
-EquipManager.Instance.OnEquipmentChanged += OnEquipmentChanged;
+EventManager.Instance.Subscribe<EquipChangeEvent>(OnEquipChanged);
 
-private void OnEquipmentChanged(EquipPart equipPart, int equipId, bool isEquipped)
+private void OnEquipChanged(EquipChangeEvent eventData)
 {
-    if (isEquipped)
+    if (eventData.IsEquipped)
     {
-        UpdateEquipSlot(equipPart);
-        Debug.Log($"装备 {equipId} 到 {equipPart} 部位");
+        UpdateEquipSlot(eventData.EquipPart);
+        Debug.Log($"装备 {eventData.EquipId} 到 {eventData.EquipPart} 部位");
     }
     else
     {
-        UpdateEquipSlot(equipPart);
-        Debug.Log($"从 {equipPart} 部位卸下装备 {equipId}");
+        UpdateEquipSlot(eventData.EquipPart);
+        Debug.Log($"从 {eventData.EquipPart} 部位卸下装备 {eventData.EquipId}");
     }
 }
 ```
@@ -577,6 +586,27 @@ foreach (var kvp in allEquipIds)
 **时间**: 开发完成后  
 **状态**: 已完成
 
+### 阶段7：事件系统统一
+**时间**: 架构优化后  
+**状态**: 已完成
+
+**优化原因**:
+- 装备系统使用委托事件，与项目整体的事件系统架构不一致
+- 委托事件需要手动管理订阅和取消订阅，容易出现内存泄漏
+- 事件系统提供统一的发布订阅机制，更易维护和扩展
+
+**主要优化**:
+- **事件类创建**: 新增`EquipChangeEvent`事件类，继承`IEvent`接口
+- **EquipManager重构**: 移除`OnEquipmentChanged`委托事件，改为使用`EventManager.Publish()`
+- **PackageView更新**: 改为订阅`EquipChangeEvent`事件，使用统一的事件系统
+- **架构统一**: 装备系统完全融入项目的事件系统架构
+
+**优化效果**:
+- **架构一致性**: 装备系统与项目整体事件系统保持一致
+- **内存安全**: 避免委托事件可能的内存泄漏问题
+- **维护性提升**: 统一的事件管理机制，便于调试和扩展
+- **代码清晰**: 事件发布和订阅逻辑更加清晰明确
+
 **文档整理内容**:
 
 #### 6.1 新增装备系统技术文档
@@ -756,7 +786,12 @@ EquipManager.Instance.OnEquipmentChanged += (part, id, isEquipped) => {
 
 ## 版本历史
 
-### v3.1 (当前版本)
+### v3.2 (当前版本)
+- **事件系统统一**: 将`OnEquipmentChanged`委托事件改为`EquipChangeEvent`事件系统
+- **架构一致性**: 装备系统完全融入项目统一的事件系统架构
+- **内存安全**: 避免委托事件可能的内存泄漏问题
+
+### v3.1
 - **接口清理**: 删除冗余的`GetEquippedItem()`和`GetAllEquippedItems()`方法
 - **数据存储优化**: `_equippedItems`直接存储装备ID，避免序列化问题
 - **事件系统更新**: `OnEquipmentChanged`事件参数改为装备ID，提升性能
@@ -786,7 +821,8 @@ EquipManager.Instance.OnEquipmentChanged += (part, id, isEquipped) => {
 2. **命名优化**: 统一了项目命名规范，提高了代码可读性
 3. **接口增强**: 提供了便捷的装备信息获取方法，提升了开发效率
 4. **接口清理**: 删除了冗余接口，优化了数据存储方式，提升了性能
-5. **文档完善**: 建立了完整的技术文档体系，支持团队协作
+5. **事件系统统一**: 将委托事件改为统一的事件系统，提升架构一致性
+6. **文档完善**: 建立了完整的技术文档体系，支持团队协作
 
 最终形成了：
 - **清晰的架构**: 职责分离，数据流向明确
@@ -794,5 +830,6 @@ EquipManager.Instance.OnEquipmentChanged += (part, id, isEquipped) => {
 - **灵活的扩展**: 支持新装备类型和部位
 - **稳定的状态**: 与存档系统完美集成，重启后完整恢复
 - **简洁的接口**: 精简的API设计，提升开发效率
+- **统一的事件**: 完全融入项目事件系统架构，提升一致性和可维护性
 
 装备系统为游戏提供了强大的装备管理能力，支持复杂的装备交互和属性系统，是整个游戏框架的重要组成部分。 

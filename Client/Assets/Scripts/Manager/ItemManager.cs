@@ -27,6 +27,10 @@ public class Item
         return Type == ItemType.Equip;
     }
 
+    /// <summary>
+    /// 检查是否为装备类型（包括武器、护甲等）
+    /// 注意：已从Weapon改为Equip，统一使用装备系统
+    /// </summary>
     public bool IsWeapon()
     {
         return Type == ItemType.Equip;

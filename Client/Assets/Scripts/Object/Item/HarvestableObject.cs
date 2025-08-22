@@ -8,8 +8,8 @@ public class HarvestableObject : Building
 {
     [SerializeField] private ParticleSystem _harvestEffect;
     
-    private int _requiredWeaponId;
-    private bool _anyWeapon;
+    private int _requiredEquipId;
+    private bool _anyEquip;
     private bool _isHarvested;
     private bool _isBeingHarvested;
 
@@ -48,8 +48,8 @@ public class HarvestableObject : Building
         }
 
         // 读取基础配置
-        _requiredWeaponId = dropConfig.GetValue<int>(ItemId, "RequiredWeaponId", 0);
-        _anyWeapon = dropConfig.GetValue<bool>(ItemId, "AnyWeapon", false);
+        _requiredEquipId = dropConfig.GetValue<int>(ItemId, "RequiredEquipId", 0);
+        _anyEquip = dropConfig.GetValue<bool>(ItemId, "AnyEquip", false);
 
         // 配置掉落物品
         ClearDrops();
@@ -89,18 +89,18 @@ public class HarvestableObject : Building
         if (player == null) return false;
 
         // 需要特定工具
-        if (_requiredWeaponId > 0)
+        if (_requiredEquipId > 0)
         {
-            return HasRequiredWeapon(player, _requiredWeaponId);
+            return HasRequiredEquip(player, _requiredEquipId);
         }
         
-        // 需要任意武器
-        if (_anyWeapon)
+        // 需要任意装备
+        if (_anyEquip)
         {
-            return HasAnyWeapon(player);
+            return HasAnyEquip(player);
         }
-        
-        // 直接采集
+
+        // 不需要工具，可以直接采集
         return true;
     }
 
@@ -129,40 +129,39 @@ public class HarvestableObject : Building
 
     private void ShowHarvestHint()
     {
-        // 移除Debug.Log，符合项目日志规范
-        if (_requiredWeaponId > 0)
+        if (_requiredEquipId > 0)
         {
-            var weaponName = GetWeaponName(_requiredWeaponId);
-            // TODO: 通过UI系统显示提示：需要使用{weaponName}才能采集
+            var equipName = GetEquipName(_requiredEquipId);
+            // TODO: 通过UI系统显示提示：需要使用{equipName}才能采集
         }
-        else if (_anyWeapon)
+        else if (_anyEquip)
         {
-            // TODO: 通过UI系统显示提示：需要装备武器才能攻击
+            // TODO: 通过UI系统显示提示：需要使用装备才能采集
         }
     }
 
-    private bool HasRequiredWeapon(Player player, int weaponId)
+    private bool HasRequiredEquip(Player player, int equipId)
     {
-        // TODO: 检查玩家是否装备了指定武器
-        // 示例实现：return player.GetEquippedWeaponId() == weaponId;
-        return true; // 临时返回true用于测试，待装备系统完成后实现
+        // 检查玩家是否装备了指定ID的装备
+        // 示例实现：return player.GetEquippedEquipId() == equipId;
+        return true; // 临时返回true，需要根据实际Player实现调整
     }
 
-    private bool HasAnyWeapon(Player player)
+    private bool HasAnyEquip(Player player)
     {
-        // TODO: 检查玩家是否装备了任意武器
-        // 示例实现：return player.HasEquippedWeapon();
-        return true; // 临时返回true用于测试，待装备系统完成后实现
+        // 检查玩家是否装备了任意装备
+        // 示例实现：return player.HasEquippedEquip();
+        return true; // 临时返回true，需要根据实际Player实现调整
     }
 
-    private string GetWeaponName(int weaponId)
+    private string GetEquipName(int equipId)
     {
-        var toolConfig = ConfigManager.Instance.GetReader("Tool");
-        if (toolConfig?.HasKey(weaponId) == true)
+        var equipConfig = ConfigManager.Instance.GetReader("Equip");
+        if (equipConfig?.HasKey(equipId) == true)
         {
-            return toolConfig.GetValue<string>(weaponId, "Name", "工具");
+            return equipConfig.GetValue<string>(equipId, "Name", "装备");
         }
-        return "未知工具";
+        return "装备";
     }
 
     private void PlayHarvestEffect()
@@ -182,10 +181,10 @@ public class HarvestableObject : Building
     public override float TakeDamage(DamageInfo damageInfo)
     {
         // 只有需要工具的物体才能被工具伤害
-        if (_requiredWeaponId == 0 && !_anyWeapon) return 0;
+        if (_requiredEquipId == 0 && !_anyEquip) return 0;
         
         // 检查工具是否符合要求
-        if (!IsValidWeaponDamage(damageInfo)) return 0;
+        if (!IsValidEquipDamage(damageInfo)) return 0;
 
         float damage = base.TakeDamage(damageInfo);
         
@@ -198,7 +197,7 @@ public class HarvestableObject : Building
         return damage;
     }
 
-    private bool IsValidWeaponDamage(DamageInfo damageInfo)
+    private bool IsValidEquipDamage(DamageInfo damageInfo)
     {
         // TODO: 检查伤害来源是否是合适的工具
         return damageInfo.Type == DamageType.Physical;
