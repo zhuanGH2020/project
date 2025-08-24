@@ -13,7 +13,6 @@ GameObject:
   - component: {fileID: 139020112696298882}
   - component: {fileID: 5216313621426068908}
   - component: {fileID: 6324392428893391587}
-  - component: {fileID: 3851722408343307957}
   - component: {fileID: 6324392428893391586}
   m_Layer: 0
   m_Name: pbsc_player_main
@@ -52,6 +51,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08544b5f5f9f7704abb32b60a4bf5545, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _handPoint: {fileID: 6821122492692259630}
+  _headMesh: {fileID: 6821122492695736922}
+  _bodyMesh: {fileID: 6821122492695736882}
 --- !u!136 &139020112696298882
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -104,22 +106,6 @@ MonoBehaviour:
   m_Area: 0
   m_IgnoreFromBuild: 1
   m_AffectedAgents: ffffffff
---- !u!54 &3851722408343307957
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 536025504138231658}
-  serializedVersion: 2
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
-  m_UseGravity: 1
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 126
-  m_CollisionDetection: 0
 --- !u!95 &6324392428893391586
 Animator:
   serializedVersion: 5

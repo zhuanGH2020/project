@@ -12,9 +12,9 @@ public abstract class CombatEntity : DamageableObject, IAttacker
     protected float _baseDefense = 0f;    // 基础防御值
     protected float _attackCooldown = 1f;
     protected float _moveSpeed = 5f;
-    protected Transform _handPoint;           // 手部挂载点
-    protected SkinnedMeshRenderer _headMesh; // 头部渲染器
-    protected SkinnedMeshRenderer _bodyMesh; // 身体渲染器
+    [SerializeField] protected Transform _handPoint;           // 手部挂载点
+    [SerializeField] protected SkinnedMeshRenderer _headMesh; // 头部渲染器
+    [SerializeField] protected SkinnedMeshRenderer _bodyMesh; // 身体渲染器
     protected List<EquipBase> _equips = new List<EquipBase>();  // 装备列表
 
     // 对话系统相关
@@ -76,21 +76,6 @@ public abstract class CombatEntity : DamageableObject, IAttacker
         
         // 初始化NavMeshAgent
         InitializeNavMeshAgent();
-        
-        // 自动查找手部节点
-        InitializeHandPoint();
-    }
-    
-    /// <summary>
-    /// 初始化手部挂载点
-    /// </summary>
-    protected virtual void InitializeHandPoint()
-    {
-        _handPoint = transform.Find("hand");
-        if (_handPoint == null)
-        {
-            Debug.LogWarning($"[{name}] Hand point not found! Please ensure there's a child GameObject named 'hand'");
-        }
     }
 
     protected virtual void Update()
