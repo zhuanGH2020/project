@@ -42,6 +42,10 @@ public class PackageView : BaseView
         cellHead = transform.Find("cell_head");
         cellBody = transform.Find("cell_body");
         cellHand = transform.Find("cell_hand");
+
+        cellHead.gameObject.SetActive(true);
+        cellBody.gameObject.SetActive(true);
+        cellHand.gameObject.SetActive(true);
         
         UpdateAllEquipSlots();
     }
