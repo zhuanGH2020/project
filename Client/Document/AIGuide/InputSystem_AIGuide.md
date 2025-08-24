@@ -140,13 +140,6 @@ GameMain
 - **事件**: `OnUseEquipInput()`
 - **触发**: 按下空格键时
 
-### 7. 装备快捷键
-- **事件**: `OnEquipShortcutInput(int equipId)`
-- **触发**: 按下Q键或E键时
-- **参数**: 
-  - Q键 → equipId = 30001
-  - E键 → equipId = 30002
-
 ## 使用方法
 
 ### 1. 系统初始化

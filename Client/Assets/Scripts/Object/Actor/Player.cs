@@ -11,6 +11,9 @@ public partial class Player : CombatEntity
     private Vector3 _moveDirection;     // 移动方向
     private bool _inBuildingPlacementMode = false; // 是否在建筑放置模式（阻止移动）
     
+    // 添加Animator引用
+    private Animator _animator;
+    
     // 攻击系统相关
     private Transform _attackTarget;           // 当前攻击目标
     private float _lastAttackTime;             // 上次攻击时间
@@ -55,6 +58,13 @@ public partial class Player : CombatEntity
             return;
         }
         _instance = this;
+        
+        // 获取Animator组件
+        _animator = GetComponent<Animator>();
+        if (_animator == null)
+        {
+            Debug.LogError("[Player] 未找到Animator组件！");
+        }
         
         // 从NavMeshAgent获取移动速度（如果存在的话）
         if (_navMeshAgent != null)
@@ -139,6 +149,9 @@ public partial class Player : CombatEntity
     private void OnMoveInput(Vector3 moveDirection)
     {
         _moveDirection = moveDirection;
+        
+        // 设置Animator参数
+        UpdateAnimatorMovementParams();
     }
 
     // 处理使用装备输入
@@ -163,10 +176,18 @@ public partial class Player : CombatEntity
     // ========== 鼠标朝向系统 ==========
 
     /// <summary>
-    /// 处理鼠标朝向 - 确保Player始终面向鼠标位置
+    /// 处理鼠标朝向 - 寻路时不朝向鼠标，而是朝向移动方向
     /// </summary>
     private void HandleMouseRotation()
     {
+        // 如果正在寻路中，不朝向鼠标，而是朝向移动方向
+        if (IsMovingToTarget())
+        {
+            HandleMovementRotation();
+            return;
+        }
+        
+        // 不在寻路时，正常朝向鼠标
         if (Camera.main == null) return;
         
         // 获取鼠标屏幕位置
@@ -197,6 +218,41 @@ public partial class Player : CombatEntity
                 HandleRotationToPosition(mouseWorldPos);
             }
         }
+    }
+    
+    /// <summary>
+    /// 处理移动朝向 - 朝向移动方向
+    /// </summary>
+    private void HandleMovementRotation()
+    {
+        if (_navMeshAgent == null || !_navMeshAgent.hasPath) return;
+        
+        // 获取移动方向
+        Vector3 moveDirection = _navMeshAgent.velocity.normalized;
+        if (moveDirection != Vector3.zero)
+        {
+            // 只考虑水平方向
+            moveDirection.y = 0;
+            if (moveDirection != Vector3.zero)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+                float rotationSpeed = 15f; // 移动时旋转速度稍慢，更自然
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 检查是否正在寻路移动
+    /// </summary>
+    private bool IsMovingToTarget()
+    {
+        if (_navMeshAgent == null) return false;
+        
+        // 检查是否有路径且正在移动
+        return _navMeshAgent.hasPath && 
+               _navMeshAgent.remainingDistance > 0.1f && 
+               _navMeshAgent.velocity.magnitude > 0.1f;
     }
     
     /// <summary>
@@ -234,6 +290,9 @@ public partial class Player : CombatEntity
             // 移动
             transform.position += _moveDirection * currentSpeed * Time.deltaTime;
         }
+        
+        // 统一更新动画参数（包括停止移动的情况）
+        UpdateAnimatorMovementParams();
     }
 
     /// <summary>
@@ -248,8 +307,10 @@ public partial class Player : CombatEntity
         }
         
         // 调用基类的统一移动接口
-        return base.MoveToPosition(targetPosition);
-        }
+        bool result = base.MoveToPosition(targetPosition);
+        
+        return result;
+    }
 
     /// <summary>
     /// 重写移动接口，增加建筑放置模式检查
@@ -474,6 +535,57 @@ public partial class Player : CombatEntity
         
         // 直接尝试攻击，装备CD会自动控制频率
         TryAttackInMouseDirection(Input.mousePosition);
+    }
+
+    // 更新Animator移动参数
+    private void UpdateAnimatorMovementParams()
+    {
+        if (_animator == null) return;
+        
+        // 如果正在寻路移动，设置动画参数为前进
+        if (IsMovingToTarget())
+        {
+            _animator.SetFloat("MoveX", 0f);
+            _animator.SetFloat("MoveY", 1f);
+            return;
+        }
+        
+        // 键盘移动时，根据实际移动方向设置动画参数
+        if (_moveDirection != Vector3.zero)
+        {
+            // 获取世界坐标的移动方向
+            Vector3 worldMoveDirection = _moveDirection.normalized;
+            
+            // 将世界坐标的移动方向转换为角色本地坐标
+            Vector3 localMoveDirection = transform.InverseTransformDirection(worldMoveDirection);
+            
+            // 设置Animator参数
+            // MoveX: 左右移动 (-1左, 0中, 1右)
+            // MoveY: 前后移动 (-1后, 0中, 1前)
+            _animator.SetFloat("MoveX", localMoveDirection.x);
+            _animator.SetFloat("MoveY", localMoveDirection.z);
+        }
+        else
+        {
+            // 停止移动时，将动画参数设为0
+            _animator.SetFloat("MoveX", 0f);
+            _animator.SetFloat("MoveY", 0f);
+        }
+    }
+
+    /// <summary>
+    /// 重写停止移动方法，确保动画参数正确设置
+    /// </summary>
+    public override void StopMovement()
+    {
+        base.StopMovement();
+        
+        // 停止移动时，将动画参数设为0
+        if (_animator != null)
+        {
+            _animator.SetFloat("MoveX", 0f);
+            _animator.SetFloat("MoveY", 0f);
+        }
     }
 
 } 
