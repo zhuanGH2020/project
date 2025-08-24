@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7192173029473866987}
   - component: {fileID: 7192173029473866986}
   - component: {fileID: 7192173029473866989}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: shotgun
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -106,7 +106,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7192173029640856277}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: pbsc_equip_shotgun
   m_TagString: Untagged
   m_Icon: {fileID: 0}

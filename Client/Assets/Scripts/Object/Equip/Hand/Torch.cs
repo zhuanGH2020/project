@@ -30,11 +30,16 @@ public class Torch : HandEquipBase
         }
 
         // 已点燃状态下可以造成火焰伤害
+        // 设置LayerMask，排除Equip Layer，避免射线被自己的碰撞体阻挡
+        int equipLayer = LayerMask.NameToLayer("Equip");
+        int layerMask = ~(1 << equipLayer); // 排除Equip Layer
+        
         var hit = Physics.Raycast(
             GetAttackPoint(),
             GetAttackDirection(),
             out RaycastHit hitInfo,
-            _range // 使用基类的范围
+            _range, // 使用基类的范围
+            layerMask // 使用LayerMask排除Equip Layer
         );
 
         if (hit)

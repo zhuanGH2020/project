@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4369676222498188506}
   - component: {fileID: 8773450519130758854}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -103,7 +103,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2765701297852669514}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: pbsc_equip_torch
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -139,7 +139,7 @@ GameObject:
   - component: {fileID: 8480063303012703015}
   - component: {fileID: 4228408340157593314}
   - component: {fileID: 8368294347826853407}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: torch
   m_TagString: Untagged
   m_Icon: {fileID: 0}
