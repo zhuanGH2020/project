@@ -55,12 +55,23 @@ Thumbs.db
 *.ttf
 *.prefab
 
-# TextMeshPro files
+# TextMeshPro files and resources
 Assets/TextMesh Pro/
+Assets/Resources/Font/
 
-# Package files that are typically not edited
+# Package management files
 Packages/
 packages-lock.json
+ProjectSettings/Packages/
 
-# Reference files
+# Reference and third-party assets (not version controlled)
+Assets/Ref/
 Assets/Resources/Ref/
+
+# Asset store packages and demos
+Assets/Plugins/
+
+# Documentation that AI doesn't need to index frequently  
+README.md
+LICENSE
+*.pdf
