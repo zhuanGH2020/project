@@ -148,8 +148,8 @@ ObjectBase (基类)
     ├── CombatEntity (战斗实体)
     │   ├── Player (玩家)
     │   └── Monster (怪物)
-    ├── Building (建筑物)
-    └── HarvestableObject (可采集物)
+    └── Building (建筑物)
+        └── HarvestableObject (可采集物)
 ```
 
 ### 管理器体系

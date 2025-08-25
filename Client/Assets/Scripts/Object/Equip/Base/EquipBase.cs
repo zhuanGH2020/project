@@ -9,6 +9,9 @@ public abstract class EquipBase : MonoBehaviour, IEquipable
     [SerializeField] protected EquipPart _equipPart;    // 装备部位
     [SerializeField] protected int _configId;           // 配置ID
 
+    [Header("动画设置")]
+    [SerializeField] protected string _animatorPath;    // 动画状态机路径
+
     [Header("战斗设置")]
     [SerializeField] protected float _damage = 0f;      // 攻击力
     [SerializeField] protected float _defense = 0f;     // 防御力
@@ -24,6 +27,7 @@ public abstract class EquipBase : MonoBehaviour, IEquipable
     protected IAttacker _owner;
 
     public EquipPart EquipPart => _equipPart;
+    public string AnimatorPath => _animatorPath;        // 新增：获取动画路径
     public float MaxDurability => _maxDurability;
     public float CurrentDurability => _currentDurability;
     public bool IsEquipped => _owner != null;
@@ -31,6 +35,7 @@ public abstract class EquipBase : MonoBehaviour, IEquipable
     public float Damage => _damage;
     public float Defense => _defense;
     public float Range => _range;
+    public float UseCooldown => _useCooldown;
 
     protected virtual void Awake()
     {
@@ -63,6 +68,9 @@ public abstract class EquipBase : MonoBehaviour, IEquipable
         // 初始化基础属性
         _equipPart = equipReader.GetValue<EquipPart>(_configId, "Type", EquipPart.None);
 
+        // 读取动画路径
+        _animatorPath = equipReader.GetValue<string>(_configId, "AnimatorPath", "");
+
         _damage = equipReader.GetValue<float>(_configId, "Damage", 0f);
         _defense = equipReader.GetValue<float>(_configId, "Defense", 0f);
         _maxDurability = equipReader.GetValue<float>(_configId, "Durability", 100f);
@@ -74,7 +82,7 @@ public abstract class EquipBase : MonoBehaviour, IEquipable
         _currentDurability = _maxDurability;
         _useTimer = new CooldownTimer(_useCooldown);
 
-        Debug.Log($"[EquipBase] Initialized equipment {configId}: Part={_equipPart}, Damage={_damage}, Defense={_defense}, Durability={_maxDurability}");
+        Debug.Log($"[EquipBase] Initialized equipment {configId}: Part={_equipPart}, Damage={_damage}, Defense={_defense}, Durability={_maxDurability}, AnimatorPath={_animatorPath}");
     }
 
     public virtual void OnEquip(IAttacker owner)
@@ -143,4 +151,5 @@ public abstract class EquipBase : MonoBehaviour, IEquipable
         
         // 由子类实现具体逻辑（如特效、音效等）
     }
+    
 } 

@@ -11,11 +11,6 @@ public class GameMain : MonoBehaviour
 
     void Start()
     {
-        // 临时：配置系统示例代码
-        ConfigExample.Example();
-        ConfigExample.AdvancedExample();
-        ConfigExample.ValidationExample();
-
         InitializeSystems();
     }
 
@@ -47,8 +42,7 @@ public class GameMain : MonoBehaviour
         
         // === 依赖系统初始化（需要其他系统支持） ===
         InteractionManager.Instance.Initialize();
-        CombatInputManager.Instance.Initialize();
-        SaveModel.Instance.Initialize();
+        SaveManager.Instance.Initialize();
     }
 
     /// <summary>
@@ -72,7 +66,7 @@ public class GameMain : MonoBehaviour
         InteractionManager.Instance.Update();
         
         // 数据持久化系统
-        SaveModel.Instance.Update();
+        SaveManager.Instance.Update();
         
         // UI系统 - 最后更新
         DialogManager.Instance.Update();
@@ -97,8 +91,7 @@ public class GameMain : MonoBehaviour
     private void CleanupSystems()
     {
         // 先清理依赖系统
-        SaveModel.Instance.Cleanup();
-        CombatInputManager.Instance.Cleanup();
+        SaveManager.Instance.Cleanup();
         InteractionManager.Instance.Cleanup();
         
         // 再清理基础系统

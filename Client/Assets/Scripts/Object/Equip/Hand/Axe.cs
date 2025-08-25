@@ -12,12 +12,17 @@ public class Axe : HandEquipBase
     {
         if (!CanUse || _owner == null) return;
 
+        // 设置LayerMask，排除Equip Layer，避免射线被自己的碰撞体阻挡
+        int equipLayer = LayerMask.NameToLayer("Equip");
+        int layerMask = ~(1 << equipLayer); // 排除Equip Layer
+
         // 射击检测
         var hit = Physics.Raycast(
             GetAttackPoint(),
             GetAttackDirection(),
             out RaycastHit hitInfo,
-            _range
+            _range,
+            layerMask // 使用LayerMask排除Equip Layer
         );
 
         if (hit)

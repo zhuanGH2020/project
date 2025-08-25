@@ -71,6 +71,17 @@ public abstract class HandEquipBase : EquipBase
     /// </summary>
     protected virtual Vector3 GetAttackDirection()
     {
+        // 优先使用CombatEntity的朝向，确保攻击方向跟随角色朝向
+        if (_owner != null)
+        {
+            var combatEntity = _owner as CombatEntity;
+            if (combatEntity != null)
+            {
+                return combatEntity.transform.forward;
+            }
+        }
+        
+        // 备用方案：使用武器模型朝向
         return _model != null ? _model.forward : transform.forward;
     }
 

@@ -1,6 +1,6 @@
-Id,Name,RequiredWeaponId,AnyWeapon,DropItemId1,DropCount1,DropChance1,DropItemId2,DropCount2,DropChance2,DropItemId3,DropCount3,DropChance3,DropItemId4,DropCount4,DropChance4,DropItemId5,DropCount5,DropChance5
+Id,Name,RequiredEquipId,AnyEquip,DropItemId1,DropCount1,DropChance1,DropItemId2,DropCount2,DropChance2,DropItemId3,DropCount3,DropChance3,DropItemId4,DropCount4,DropChance4,DropItemId5,DropCount5,DropChance5
 int,string,int,bool,int,int,float,int,int,float,int,int,float,int,int,float,int,int,float
-编号,名称,专用武器ID,任意武器,掉落物品1,掉落数量1,掉落概率1,掉落物品2,掉落数量2,掉落概率2,掉落物品3,掉落数量3,掉落概率3,掉落物品4,掉落数量4,掉落概率4,掉落物品5,掉落数量5,掉落概率5
+编号,名称,专用装备ID,任意装备,掉落物品1,掉落数量1,掉落概率1,掉落物品2,掉落数量2,掉落概率2,掉落物品3,掉落数量3,掉落概率3,掉落物品4,掉落数量4,掉落概率4,掉落物品5,掉落数量5,掉落概率5
 30005,浆果丛,,false,12001,2,1,0,0,0,0,0,0,0,0,0,0,0,0
 5001,公鸡,,true,15001,1,1,12002,1,0.6,0,0,0,0,0,0,0,0,0
 5002,母鸡,,true,15001,2,0.6,12001,2,0.4,15002,1,0.3,0,0,0,0,0,0

@@ -60,11 +60,11 @@ public class MenuView : BaseView
     /// </summary>
     private void OnRevertButtonClick()
     {
-        bool deleteSuccess = DebugModel.Instance.DeleteCurrentSaveAndReset();
+        bool deleteSuccess = DebugManager.Instance.DeleteCurrentSaveAndReset();
         if (deleteSuccess)
         {
             // 恢复时间系统
-            DebugModel.Instance.SetTimeEnabled(true);
+            DebugManager.Instance.SetTimeEnabled(true);
             
             CloseMenu();
         }

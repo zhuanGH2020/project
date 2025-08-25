@@ -13,6 +13,10 @@ public class Shotgun : HandEquipBase
     {
         if (!CanUse || _owner == null) return;
 
+        // 设置LayerMask，排除Equip Layer，避免射线被自己的碰撞体阻挡
+        int equipLayer = LayerMask.NameToLayer("Equip");
+        int layerMask = ~(1 << equipLayer); // 排除Equip Layer
+
         // 发射多颗子弹
         Vector3 shootPoint = GetAttackPoint();
         for (int i = 0; i < _pelletCount; i++)
@@ -30,7 +34,8 @@ public class Shotgun : HandEquipBase
                 shootPoint,
                 spreadDirection,
                 out RaycastHit hitInfo,
-                _range // 使用基类的射程
+                _range, // 使用基类的射程
+                layerMask // 使用LayerMask排除Equip Layer
             );
 
             // 计算轨迹线终点并显示

@@ -8,10 +8,9 @@ using TMPro;
 
 public class PackageView : BaseView
 {
-    [Header("装备槽位")]
-    [SerializeField] private Transform cellHead;    // 头部装备槽
-    [SerializeField] private Transform cellBody;    // 身体装备槽
-    [SerializeField] private Transform cellHand;    // 手部装备槽
+    private Transform cellHead;    // 头部装备槽
+    private Transform cellBody;    // 身体装备槽
+    private Transform cellHand;    // 手部装备槽
     
     protected override void Start()
     {
@@ -19,24 +18,6 @@ public class PackageView : BaseView
         InitializePackageList();
         InitializeEquipSlots();
         SubscribeEvents();
-        
-        // 延迟一帧检查装备状态同步，确保Player已经完全初始化
-        StartCoroutine(CheckEquipmentSync());
-    }
-    
-    /// <summary>
-    /// 检查装备状态同步
-    /// </summary>
-    private IEnumerator CheckEquipmentSync()
-    {
-        // 等待一帧确保Player完全初始化
-        yield return null;
-        
-        // 检查装备状态一致性（用于调试）
-        EquipManager.Instance.SyncPlayerEquipmentState();
-        
-        // 更新装备槽位显示
-        UpdateAllEquipSlots();
     }
 
     protected override void OnDestroy()
@@ -58,15 +39,15 @@ public class PackageView : BaseView
     /// </summary>
     private void InitializeEquipSlots()
     {
-        // 查找装备槽位节点
-        if (cellHead == null) cellHead = transform.Find("cell_head");
-        if (cellBody == null) cellBody = transform.Find("cell_body");
-        if (cellHand == null) cellHand = transform.Find("cell_hand");
+        cellHead = transform.Find("cell_head");
+        cellBody = transform.Find("cell_body");
+        cellHand = transform.Find("cell_hand");
+
+        cellHead.gameObject.SetActive(true);
+        cellBody.gameObject.SetActive(true);
+        cellHand.gameObject.SetActive(true);
         
-        // 更新装备槽位显示
-        UpdateEquipSlot(EquipPart.Head, cellHead);
-        UpdateEquipSlot(EquipPart.Body, cellBody);
-        UpdateEquipSlot(EquipPart.Hand, cellHand);
+        UpdateAllEquipSlots();
     }
 
     private UIList GetUIList()
@@ -214,6 +195,13 @@ public class PackageView : BaseView
         
         // 根据装备部位尝试装备
         EquipPart equipPart = equipReader.GetValue<EquipPart>(itemId, "Type", EquipPart.None);
+        
+        if (equipPart == EquipPart.None)
+        {
+            Debug.LogWarning($"[PackageView] 装备 {itemId} 的配置部位为None，无法装备");
+            return;
+        }
+        
         bool equipSuccess = EquipManager.Instance.EquipItem(itemId, equipPart);
         
         if (equipSuccess)
@@ -325,8 +313,8 @@ public class PackageView : BaseView
         EventManager.Instance.Subscribe<ItemChangeEvent>(OnItemChanged);
         EventManager.Instance.Subscribe<PackageRefreshEvent>(OnPackageRefresh);
         
-        // 订阅装备变化事件
-        EquipManager.Instance.OnEquipmentChanged += OnEquipmentChanged;
+        EventManager.Instance.Subscribe<EquipChangeEvent>(OnEquipChanged);
+        EventManager.Instance.Subscribe<EquipRefreshEvent>(OnEquipRefresh);
         
         // 订阅右键点击事件，用于取消选中物品和装备物品
         if (InputManager.Instance != null)
@@ -340,8 +328,8 @@ public class PackageView : BaseView
         EventManager.Instance.Unsubscribe<ItemChangeEvent>(OnItemChanged);
         EventManager.Instance.Unsubscribe<PackageRefreshEvent>(OnPackageRefresh);
         
-        // 取消订阅装备变化事件
-        EquipManager.Instance.OnEquipmentChanged -= OnEquipmentChanged;
+        EventManager.Instance.Unsubscribe<EquipChangeEvent>(OnEquipChanged);
+        EventManager.Instance.Unsubscribe<EquipRefreshEvent>(OnEquipRefresh);
         
         // 取消订阅右键点击事件
         if (InputManager.Instance != null)
@@ -368,22 +356,30 @@ public class PackageView : BaseView
     /// <summary>
     /// 处理装备变化事件
     /// </summary>
-    /// <param name="equipPart">装备部位</param>
-    /// <param name="equipId">装备ID</param>
-    /// <param name="isEquipped">是否装备</param>
-    private void OnEquipmentChanged(EquipPart equipPart, int equipId, bool isEquipped)
+    /// <param name="eventData">装备变化事件数据</param>
+    private void OnEquipChanged(EquipChangeEvent eventData)
     {
         // 更新对应装备槽位的显示
-        UpdateEquipSlot(equipPart);
+        UpdateEquipSlot(eventData.EquipPart);
         
-        if (isEquipped)
+        if (eventData.IsEquipped)
         {
-            Debug.Log($"[PackageView] Equipment {equipId} equipped to {equipPart}");
+            Debug.Log($"[PackageView] Equipment {eventData.EquipId} equipped to {eventData.EquipPart}");
         }
         else
         {
-            Debug.Log($"[PackageView] Equipment {equipId} unequipped from {equipPart}");
+            Debug.Log($"[PackageView] Equipment {eventData.EquipId} unequipped from {eventData.EquipPart}");
         }
+    }
+    
+    /// <summary>
+    /// 处理装备刷新事件
+    /// </summary>
+    /// <param name="eventData">装备刷新事件数据</param>
+    private void OnEquipRefresh(EquipRefreshEvent eventData)
+    {
+        // 更新所有装备槽位显示
+        UpdateAllEquipSlots();
     }
     
     /// <summary>
