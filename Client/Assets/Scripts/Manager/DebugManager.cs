@@ -1,25 +1,25 @@
 using UnityEngine;
 
 /// <summary>
-/// 调试模型 - 管理调试相关的状态和业务逻辑
-/// 遵循项目MVC架构，统一管理所有调试功能
+/// 调试管理器 - 管理调试相关的状态和业务逻辑
+/// 遵循项目管理器架构，统一管理所有调试功能
 /// </summary>
-public class DebugModel
+public class DebugManager
 {
-    private static DebugModel _instance;
-    public static DebugModel Instance
+    private static DebugManager _instance;
+    public static DebugManager Instance
     {
         get
         {
             if (_instance == null)
-                _instance = new DebugModel();
+                _instance = new DebugManager();
             return _instance;
         }
     }
 
     private bool _enableUIPathPrint = false; // UI路径打印开关
 
-    private DebugModel() { }
+    private DebugManager() { }
 
     /// <summary>
     /// 设置UI路径打印开关
@@ -63,7 +63,7 @@ public class DebugModel
     public void ForceSetNightTime()
     {
         ClockModel.Instance.SetGameTime(1, 0.9f, TimeOfDay.Night);
-        Debug.Log("[DebugModel] Forced set to Night time for testing");
+        Debug.Log("[DebugManager] Forced set to Night time for testing");
     }
 
     /// <summary>
@@ -122,12 +122,12 @@ public class DebugModel
             string itemName = itemConfig?.Csv.GetValue<string>(itemId, "Name", $"Item_{itemId}") ?? $"Item_{itemId}";
             string noticeMessage = $"获得物品：{itemName} x1";
             EventManager.Instance.Publish(new NoticeEvent(noticeMessage));
-            Debug.Log($"[DebugModel] Successfully obtained item: {itemName} (ID: {itemId})");
+            Debug.Log($"[DebugManager] Successfully obtained item: {itemName} (ID: {itemId})");
         }
         else
         {
             EventManager.Instance.Publish(new NoticeEvent($"获取物品失败 (ID: {itemId})"));
-            Debug.LogWarning($"[DebugModel] Failed to obtain item with ID: {itemId}");
+            Debug.LogWarning($"[DebugManager] Failed to obtain item with ID: {itemId}");
         }
     }
 
@@ -147,7 +147,7 @@ public class DebugModel
         bool hasData = SaveManager.Instance.HasSaveData(0);
         if (!hasData)
         {
-            Debug.Log("[DebugModel] No save data to delete");
+            Debug.Log("[DebugManager] No save data to delete");
             return false;
         }
 
@@ -156,7 +156,7 @@ public class DebugModel
         {
             // 重置游戏状态
             SaveManager.Instance.ClearCurrentGameData();
-            Debug.Log("[DebugModel] Current save deleted and game state reset");
+            Debug.Log("[DebugManager] Current save deleted and game state reset");
             return true;
         }
 

@@ -27,13 +27,13 @@ public class DebugView : BaseView
     // UI路径打印开关状态变化事件处理
     private void OnUIPathToggleChanged(bool isOn)
     {
-        DebugModel.Instance.SetUIPathPrintEnabled(isOn);
+        DebugManager.Instance.SetUIPathPrintEnabled(isOn);
     }
     
     // 时间系统开关状态变化事件处理
     private void OnUITimeToggleChanged(bool isOn)
     {
-        DebugModel.Instance.SetTimeEnabled(isOn);
+        DebugManager.Instance.SetTimeEnabled(isOn);
     }
     
     protected override void Start()
@@ -78,15 +78,15 @@ public class DebugView : BaseView
         _toggleUIPath?.onValueChanged.AddListener(OnUIPathToggleChanged);
         _toggleUITime?.onValueChanged.AddListener(OnUITimeToggleChanged);
         
-        // 同步Toggle状态和DebugModel状态
+        // 同步Toggle状态和DebugManager状态
         if (_toggleUIPath != null)
         {
-            _toggleUIPath.isOn = DebugModel.Instance.IsUIPathPrintEnabled;
+            _toggleUIPath.isOn = DebugManager.Instance.IsUIPathPrintEnabled;
         }
         
         if (_toggleUITime != null)
         {
-            _toggleUITime.isOn = DebugModel.Instance.IsTimeEnabled;
+            _toggleUITime.isOn = DebugManager.Instance.IsTimeEnabled;
         }
     }
     
@@ -168,7 +168,7 @@ public class DebugView : BaseView
     /// </summary>
     private void AutoSaveDaily(int currentDay)
     {
-        bool saveSuccess = DebugModel.Instance.ManualSave();
+        bool saveSuccess = DebugManager.Instance.ManualSave();
         if (saveSuccess)
         {
             Debug.Log($"[DebugView] Daily auto save completed on day {currentDay}");
@@ -185,7 +185,7 @@ public class DebugView : BaseView
     /// </summary>
     private void ManualSave()
     {
-        bool saveSuccess = DebugModel.Instance.ManualSave();
+        bool saveSuccess = DebugManager.Instance.ManualSave();
         if (saveSuccess)
         {
             // 更新最后保存天数，避免当天重复自动保存
@@ -200,39 +200,37 @@ public class DebugView : BaseView
     
     /// <summary>
     /// 获取材料 - 向背包添加多种材料
-    /// 通过DebugModel封装业务逻辑
+    /// 通过DebugManager封装业务逻辑
     /// </summary>
     private void GetMaterials()
     {
-        DebugModel.Instance.GetMaterials();
+        DebugManager.Instance.GetMaterials();
     }
     
     /// <summary>
-    /// 获取自定义物品 - 根据输入框中的物品ID获得一个物品
+    /// 获取指定物品 - 向背包添加指定ID的物品
     /// </summary>
     private void GetCustomItem()
     {
-        if (_inputItemId == null)
-        {
-            Debug.LogWarning("[DebugView] Item ID input field not found");
-            return;
-        }
+        string inputText = _inputItemId.text?.Trim();
         
-        string inputText = _inputItemId.text.Trim();
         if (string.IsNullOrEmpty(inputText))
         {
-            Debug.LogWarning("[DebugView] Please enter an item ID");
+            Debug.LogWarning("[DebugView] Item ID input is empty");
             return;
         }
         
         if (int.TryParse(inputText, out int itemId))
         {
-            DebugModel.Instance.GetCustomItem(itemId);
+            DebugManager.Instance.GetCustomItem(itemId);
         }
         else
         {
             Debug.LogWarning($"[DebugView] Invalid item ID format: {inputText}");
         }
+        
+        // 清空输入框
+        _inputItemId.text = "";
     }
     
     /// <summary>
@@ -319,32 +317,27 @@ public class DebugView : BaseView
     
     /// <summary>
     /// 打印当前进度信息
-    /// 通过DebugModel获取格式化的进度信息
+    /// 通过DebugManager获取格式化的进度信息
     /// </summary>
     private void PrintCurrentProgressInfo()
     {
-        string progressInfo = DebugModel.Instance.GetCurrentProgressInfo();
+        string progressInfo = DebugManager.Instance.GetCurrentProgressInfo();
         Debug.Log(progressInfo);
     }
     
-
-    
     /// <summary>
-    /// 删除当前存档
-    /// 删除槽位0的存档数据，并重置游戏状态到初始状态
+    /// 删除当前存档数据
     /// </summary>
     private void DeleteCurrentSave()
     {
-        bool deleteSuccess = DebugModel.Instance.DeleteCurrentSaveAndReset();
+        bool deleteSuccess = DebugManager.Instance.DeleteCurrentSaveAndReset();
         if (deleteSuccess)
         {
-            // 更新最后保存天数
-            _lastSavedDay = 1;
-            Debug.Log("[DebugView] Current save deleted and game state reset successfully");
+            Debug.Log("[DebugView] Current save deleted successfully");
         }
         else
         {
-            Debug.LogError("[DebugView] Failed to delete current save or no save data to delete");
+            Debug.LogError("[DebugView] Failed to delete current save");
         }
     }
     
