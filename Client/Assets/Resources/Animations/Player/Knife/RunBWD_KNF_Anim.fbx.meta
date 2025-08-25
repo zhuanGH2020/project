@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: f8ec15f845555b94faa283997c84290b
+guid: d41ee814ee524304a828968588bcc12c
 ModelImporter:
   serializedVersion: 21300
   internalIDToNameTable:
@@ -278,7 +278,7 @@ ModelImporter:
     second: Body01
   - first:
       74: 7400000
-    second: RunRight_AR
+    second: RunBWD_KNF_Anim
   - first:
       95: 9500000
     second: //RootNode
@@ -318,7 +318,7 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: RunRight_AR
+      name: RunBWD_KNF_Anim
       takeName: Take 001
       internalID: 0
       firstFrame: 0

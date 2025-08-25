@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 /// <summary>
 /// 玩家角色
@@ -10,9 +11,6 @@ public partial class Player : CombatEntity
 
     private Vector3 _moveDirection;     // 移动方向
     private bool _inBuildingPlacementMode = false; // 是否在建筑放置模式（阻止移动）
-    
-    // 添加Animator引用
-    private Animator _animator;
     
     // 攻击系统相关
     private Transform _attackTarget;           // 当前攻击目标
@@ -58,13 +56,6 @@ public partial class Player : CombatEntity
             return;
         }
         _instance = this;
-        
-        // 获取Animator组件
-        _animator = GetComponent<Animator>();
-        if (_animator == null)
-        {
-            Debug.LogError("[Player] 未找到Animator组件！");
-        }
         
         // 从NavMeshAgent获取移动速度（如果存在的话）
         if (_navMeshAgent != null)
@@ -587,5 +578,4 @@ public partial class Player : CombatEntity
             _animator.SetFloat("MoveY", 0f);
         }
     }
-
 } 

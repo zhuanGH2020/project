@@ -26,6 +26,10 @@ public abstract class CombatEntity : DamageableObject, IAttacker
 
     protected CooldownTimer _attackTimer;
     protected NavMeshAgent _navMeshAgent;
+    
+    // 动画系统相关
+    protected Animator _animator;
+    protected RuntimeAnimatorController _baseAnimatorController; // 基础动画控制器
 
     public float BaseAttack => _baseAttack;
     public bool CanAttack => _attackTimer.IsReady;
@@ -76,6 +80,9 @@ public abstract class CombatEntity : DamageableObject, IAttacker
         
         // 初始化NavMeshAgent
         InitializeNavMeshAgent();
+        
+        // 初始化动画系统
+        InitializeAnimationSystem();
     }
 
     protected virtual void Update()
@@ -227,6 +234,9 @@ public abstract class CombatEntity : DamageableObject, IAttacker
         // 添加新装备
         _equips.Add(equip);
         equip.OnEquip(this);
+        
+        // 根据装备类型切换动画控制器
+        SwitchAnimatorController(equip);
     }
     
     /// <summary>
@@ -239,6 +249,12 @@ public abstract class CombatEntity : DamageableObject, IAttacker
         {
             equip.OnUnequip();
             _equips.Remove(equip);
+            
+            // 如果卸下的是手部装备，恢复基础动画控制器
+            if (part == EquipPart.Hand)
+            {
+                RestoreBaseAnimatorController();
+            }
         }
     }
 
@@ -265,6 +281,10 @@ public abstract class CombatEntity : DamageableObject, IAttacker
         var handEquip = GetEquipByPart(EquipPart.Hand);
         if (handEquip != null && handEquip.CanUse)
         {
+            // 触发攻击动画
+            TriggerAttackAnimation();
+            
+            // 使用装备
             handEquip.Use();
         }
     }
@@ -317,6 +337,24 @@ public abstract class CombatEntity : DamageableObject, IAttacker
             _navMeshAgent.stoppingDistance = 0.5f;
             _navMeshAgent.angularSpeed = 120f;
             _navMeshAgent.acceleration = 8f;
+        }
+    }
+    
+    /// <summary>
+    /// 初始化动画系统
+    /// </summary>
+    protected virtual void InitializeAnimationSystem()
+    {
+        // 获取Animator组件
+        if (_animator == null)
+        {
+            _animator = GetComponent<Animator>();
+        }
+        
+        // 设置基础动画控制器
+        if (_animator != null && _baseAnimatorController != null)
+        {
+            _animator.runtimeAnimatorController = _baseAnimatorController;
         }
     }
 
@@ -522,5 +560,50 @@ public abstract class CombatEntity : DamageableObject, IAttacker
         }
     }
 
+    #endregion
+    
+    #region 动画系统
+    
+    /// <summary>
+    /// 根据装备类型切换动画控制器
+    /// </summary>
+    protected virtual void SwitchAnimatorController(EquipBase equip)
+    {
+        if (_animator == null || equip == null) return;
+
+        // 获取动画控制器路径
+        string animatorPath = equip.AnimatorPath;
+        if (string.IsNullOrEmpty(animatorPath)) return;
+        
+        // 加载并设置动画控制器
+        var animatorController = ResourceManager.Instance.Load<RuntimeAnimatorController>(animatorPath);
+        if (animatorController != null)
+        {
+            _animator.runtimeAnimatorController = animatorController;
+        }
+    }
+    
+    /// <summary>
+    /// 恢复基础动画控制器
+    /// </summary>
+    protected virtual void RestoreBaseAnimatorController()
+    {
+        if (_animator != null && _baseAnimatorController != null)
+        {
+            _animator.runtimeAnimatorController = _baseAnimatorController;
+        }
+    }
+    
+    /// <summary>
+    /// 触发攻击动画
+    /// </summary>
+    public virtual void TriggerAttackAnimation()
+    {
+        if (_animator != null)
+        {
+            _animator.SetTrigger("Apply");
+        }
+    }
+    
     #endregion
 } 

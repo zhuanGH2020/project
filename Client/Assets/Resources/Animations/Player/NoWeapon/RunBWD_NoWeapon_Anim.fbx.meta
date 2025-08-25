@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 52a9b05fca7d69443b01d360777f1eb9
+guid: 0746ef6872bb7d3458f9ddff63264642
 ModelImporter:
   serializedVersion: 21300
   internalIDToNameTable:
@@ -278,7 +278,7 @@ ModelImporter:
     second: Body01
   - first:
       74: 7400000
-    second: RunFWD_AR
+    second: RunBWD_NoWeapon_Anim
   - first:
       95: 9500000
     second: //RootNode
@@ -318,7 +318,7 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: RunFWD_AR
+      name: RunBWD_NoWeapon_Anim
       takeName: Take 001
       internalID: 0
       firstFrame: 0
