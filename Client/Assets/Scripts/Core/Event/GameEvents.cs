@@ -374,6 +374,66 @@ public class CookingSuccessEvent : IEvent
     }
 }
 
+/// <summary>
+/// 科技台交互事件 - 玩家进入/离开科技台的交互范围
+/// </summary>
+public class TechTableInteractionEvent : IEvent
+{
+    public bool InRange { get; private set; }
+    public TechTable TechTable { get; private set; }
+    
+    public TechTableInteractionEvent(bool inRange, TechTable techTable)
+    {
+        InRange = inRange;
+        TechTable = techTable;
+    }
+}
+
+/// <summary>
+/// 科技台材料添加事件
+/// </summary>
+public class TechTableMaterialAddedEvent : IEvent
+{
+    public int ItemId { get; private set; }
+    public int Count { get; private set; }
+    public string MaterialName { get; private set; }
+    
+    public TechTableMaterialAddedEvent(int itemId, int count, string materialName)
+    {
+        ItemId = itemId;
+        Count = count;
+        MaterialName = materialName;
+    }
+}
+
+/// <summary>
+/// 科技台升级完成事件
+/// </summary>
+public class TechTableUpgradeCompleteEvent : IEvent
+{
+    public TechTable TechTable { get; private set; }
+    
+    public TechTableUpgradeCompleteEvent(TechTable techTable)
+    {
+        TechTable = techTable;
+    }
+}
+
+/// <summary>
+/// 科技台等级提升事件
+/// </summary>
+public class TechTableLevelUpEvent : IEvent
+{
+    public int OldLevel { get; private set; }
+    public int NewLevel { get; private set; }
+    
+    public TechTableLevelUpEvent(int oldLevel, int newLevel)
+    {
+        OldLevel = oldLevel;
+        NewLevel = newLevel;
+    }
+}
+
 // 事件系统仅用于真正需要的一对多通知场景
 // View-Model的一对一交互直接使用方法调用，更加简洁高效
 

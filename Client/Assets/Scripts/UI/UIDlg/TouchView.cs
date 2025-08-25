@@ -139,11 +139,24 @@ public class TouchView : BaseView
         }
         else
         {
-            // 检查新的采集物系统
-            HarvestableObject harvestable = e.HoveredObject.GetComponent<HarvestableObject>();
-            if (harvestable != null && harvestable.CanInteract)
+            // 检查科技台
+            TechTable techTable = e.HoveredObject.GetComponent<TechTable>();
+            if (techTable != null && techTable.CanInteract)
             {
-                touchText = "采集";
+                // 当鼠标持有物品时，不显示科技台提示信息
+                if (!PackageModel.Instance.HasSelectedItem())
+                {
+                    touchText = GetTechTableProgressText();
+                }
+            }
+            else
+            {
+                // 检查新的采集物系统
+                HarvestableObject harvestable = e.HoveredObject.GetComponent<HarvestableObject>();
+                if (harvestable != null && harvestable.CanInteract)
+                {
+                    touchText = "采集";
+                }
             }
         }
         
@@ -508,5 +521,66 @@ public class TouchView : BaseView
         EventManager.Instance.Publish(new BuildingPlacementModeEvent(false));
         
         HidePendingBuildingIcon();
+    }
+    
+    /// <summary>
+    /// 获取科技台升级进度文本
+    /// </summary>
+    private string GetTechTableProgressText()
+    {
+        var techTableModel = TechTableModel.Instance;
+        
+        // 构建详细进度文本
+        var progressLines = new List<string>();
+        
+        // 添加等级信息
+        int currentLevel = techTableModel.CurrentLevel;
+        string levelInfo = $"Level:{currentLevel}";
+        
+        // 如果是3级，添加发光状态
+        if (currentLevel >= 3)
+        {
+            TimeOfDay currentTime = ClockModel.Instance.CurrentTimeOfDay;
+            bool isNightTime = (currentTime == TimeOfDay.Dusk || currentTime == TimeOfDay.Night);
+            string lightStatus = isNightTime ? "发光中" : "待夜晚发光";
+            levelInfo += $" ({lightStatus})";
+        }
+        
+        progressLines.Add(levelInfo);
+        
+        // 检查是否已经升级完成
+        if (techTableModel.IsMaxLevel)
+        {
+            progressLines.Add("已达最高等级");
+            return string.Join("\n", progressLines);
+        }
+        
+        // 获取材料进度信息
+        var requiredMaterials = techTableModel.RequiredMaterials;
+        var collectedMaterials = techTableModel.CollectedMaterials;
+        
+        int nextLevel = currentLevel + 1;
+        int totalCollected = 0;
+        int totalRequired = 0;
+        
+        // 计算总进度
+        foreach (var kvp in requiredMaterials)
+        {
+            int itemId = kvp.Key;
+            int required = kvp.Value;
+            int collected = collectedMaterials.ContainsKey(itemId) ? collectedMaterials[itemId] : 0;
+            
+            totalCollected += collected;
+            totalRequired += required;
+        }
+        
+        // 添加升级信息
+        if (totalRequired > 0)
+        {
+            //progressLines.Add($"升级到{nextLevel}级");
+            progressLines.Add($"进度: {totalCollected}/{totalRequired}");
+        }
+        
+        return string.Join("\n", progressLines);
     }
 }

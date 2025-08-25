@@ -133,7 +133,7 @@ public class Building : DamageableObject
         Demolish();
     }
     
-    public void Demolish()
+    public virtual void Demolish()
     {
         OnDemolished?.Invoke(this);
         MapModel.Instance.RemoveBuildingByUid(Uid);

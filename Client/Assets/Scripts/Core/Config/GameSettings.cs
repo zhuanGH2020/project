@@ -70,6 +70,43 @@ public static class GameSettings
     public const float ClockDuskToNightRotationTime = 4f;    // 黄昏到夜晚旋转时间（秒）
     #endregion
 
+    #region TechTable配置
+    // 科技台升级到2级所需材料 - 物品ID和数量的键值对
+    public static readonly System.Collections.Generic.Dictionary<int, int> TechTableLevel2UpgradeMaterials = 
+        new System.Collections.Generic.Dictionary<int, int>
+        {
+            { 13001, 1 },  // 木头 - 基础材料
+            { 14001, 1 },  // 石头 - 基础材料
+            { 14003, 1 },  // 金块 - 基础材料
+        };
+
+    // 科技台升级到3级所需材料 - 物品ID和数量的键值对
+    public static readonly System.Collections.Generic.Dictionary<int, int> TechTableLevel3UpgradeMaterials = 
+        new System.Collections.Generic.Dictionary<int, int>
+        {
+            { 13001, 2 },  // 木头 - 更多基础材料
+            { 14001, 2 },  // 石头 - 更多基础材料
+            { 14002, 1 },  // 燧石 - 高级材料
+            { 14003, 2 },  // 金块 - 更多高级材料
+            { 15002, 1 },  // 布料 - 特殊材料
+        };
+
+    // 科技台3级发光配置
+    public const float TechTableLightIntensity = 1.5f;           // 发光强度
+    public const float TechTableLightRange = 6f;                // 发光范围
+    public static readonly Color TechTableLightColor = new Color(0.9f, 0.85f, 0.6f, 1f);  // 发光颜色（暖黄色）
+
+    // 废弃的旧配置（保持兼容性）
+    [System.Obsolete("请使用 TechTableLevel2UpgradeMaterials")]
+    public static readonly System.Collections.Generic.Dictionary<int, int> TechTableUpgradeMaterials = 
+        new System.Collections.Generic.Dictionary<int, int>
+        {
+            { 13001, 1 },  // 木头 - 基础材料
+            { 14001, 1 },  // 石头 - 基础材料
+            { 14003, 1 },  // 金块 - 基础材料
+        };
+    #endregion
+
     #region Debug配置
     // 调试模式获取材料的物品列表 - 物品ID和数量的键值对
     public static readonly System.Collections.Generic.Dictionary<int, int> DebugMaterials = 
